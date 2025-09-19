@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   RefreshControl,
   ScrollView,
   Text,
@@ -39,6 +40,7 @@ const HomeScreen: React.FC = () => {
   const [subscribedSubjects, setSubscribedSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [navigatingToFlow, setNavigatingToFlow] = useState<string | null>(null);
 
   // Load user's subscribed subjects
   const loadSubscribedSubjects = async () => {
@@ -59,6 +61,19 @@ const HomeScreen: React.FC = () => {
     setRefreshing(true);
     await loadSubscribedSubjects();
     setRefreshing(false);
+  };
+
+  // Handle navigation to flow with loading state
+  const handleNavigateToFlow = async (subject: Subject) => {
+    setNavigatingToFlow(subject.id);
+    // Small delay to show loading state
+    setTimeout(() => {
+      router.push({
+        pathname: "/study/flow",
+        params: { subject: JSON.stringify(subject) },
+      });
+      setNavigatingToFlow(null);
+    }, 300);
   };
 
   // Load subjects on component mount
@@ -134,19 +149,23 @@ const HomeScreen: React.FC = () => {
           </Text>
           <TouchableOpacity
             className="bg-slate-800 rounded-3xl overflow-hidden"
-            onPress={() =>
-              router.push({
-                pathname: "/study/topics",
-                params: { subject: JSON.stringify(subscribedSubjects[0]) },
-              })
-            }
+            onPress={() => handleNavigateToFlow(subscribedSubjects[0])}
+            disabled={navigatingToFlow === subscribedSubjects[0].id}
           >
             <LinearGradient
-              colors={subscribedSubjects[0].color}
+              colors={subscribedSubjects[0].color as [string, string]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               className="p-6"
             >
+              {navigatingToFlow === subscribedSubjects[0].id && (
+                <View className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center z-10">
+                  <View className="bg-slate-800 p-4 rounded-2xl flex-row items-center">
+                    <ActivityIndicator size="small" color="#00d4ff" />
+                    <Text className="text-white ml-3 font-medium">Loading...</Text>
+                  </View>
+                </View>
+              )}
               <View className="flex-row items-center">
                 <View className="flex-1">
                   <Text className="text-white text-lg font-bold">
@@ -221,17 +240,21 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity
                   key={subject.id}
                   className="w-[48%] mb-4"
-                  onPress={() =>
-                    router.push({
-                      pathname: "/study/topics",
-                      params: { subject: JSON.stringify(subject) },
-                    })
-                  }
+                  onPress={() => handleNavigateToFlow(subject)}
+                  disabled={navigatingToFlow === subject.id}
                 >
                   <LinearGradient
-                    colors={subject.color}
+                    colors={subject.color as [string, string]}
                     className="p-5 rounded-2xl"
                   >
+                    {navigatingToFlow === subject.id && (
+                      <View className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center z-10">
+                        <View className="bg-slate-800 p-3 rounded-xl flex-row items-center">
+                          <ActivityIndicator size="small" color="#00d4ff" />
+                          <Text className="text-white ml-2 text-sm font-medium">Loading...</Text>
+                        </View>
+                      </View>
+                    )}
                     <Ionicons
                       name={subject.icon as any}
                       size={32}

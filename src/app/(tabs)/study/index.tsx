@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   RefreshControl,
   ScrollView,
   Text,
@@ -39,6 +40,7 @@ export default function StudyScreen() {
   );
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [navigatingToFlow, setNavigatingToFlow] = useState<string | null>(null);
 
   // Load user's subscribed subjects
   const loadSubscribedSubjects = async () => {
@@ -69,11 +71,24 @@ export default function StudyScreen() {
     router.push("/study/subscribe");
   };
 
-  // If we have a subject from navigation, redirect to topics screen
+  // Handle navigation to flow with loading state
+  const handleNavigateToFlow = async (subject: MockSubject) => {
+    setNavigatingToFlow(subject.id);
+    // Small delay to show loading state
+    setTimeout(() => {
+      router.push({
+        pathname: "/study/flow",
+        params: { subject: JSON.stringify(subject) },
+      });
+      setNavigatingToFlow(null);
+    }, 300);
+  };
+
+  // If we have a subject from navigation, redirect directly to flow screen
   React.useEffect(() => {
     if (parsedSubject) {
       router.replace({
-        pathname: "/study/topics",
+        pathname: "/study/flow",
         params: { subject: JSON.stringify(parsedSubject) },
       });
     }
@@ -143,17 +158,21 @@ export default function StudyScreen() {
             <TouchableOpacity
               key={subject.id}
               className="mb-4"
-              onPress={() =>
-                router.push({
-                  pathname: "/study/topics",
-                  params: { subject: JSON.stringify(subject) },
-                })
-              }
+              onPress={() => handleNavigateToFlow(subject)}
+              disabled={navigatingToFlow === subject.id}
             >
               <LinearGradient
                 colors={["#1a1a2e", "#16213e"]}
                 className="p-6 rounded-3xl"
               >
+                {navigatingToFlow === subject.id && (
+                  <View className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center z-10">
+                    <View className="bg-slate-800 p-4 rounded-2xl flex-row items-center">
+                      <ActivityIndicator size="small" color="#00d4ff" />
+                      <Text className="text-white ml-3 font-medium">Loading...</Text>
+                    </View>
+                  </View>
+                )}
                 <View className="flex-row items-center">
                   <LinearGradient
                     colors={subject.color}
