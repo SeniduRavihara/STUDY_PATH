@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import { AppState, Platform } from "react-native";
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
 import { ENV } from "../config/env";
 
 // Use environment variables for Supabase credentials
@@ -17,8 +19,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    flowType: "pkce",
-  },
+    flowType: "pkce"
+  }
 });
 
 if (Platform.OS !== "web") {

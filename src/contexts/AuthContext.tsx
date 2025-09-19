@@ -1,3 +1,4 @@
+import { AuthService } from "@/superbase/services/AuthService";
 import { Session, User } from "@supabase/supabase-js";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { SupabaseService } from "../superbase/services/supabaseService";
@@ -10,11 +11,11 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    name: string,
+    name: string
   ) => Promise<{ data: any; error: any }>;
   signIn: (
     email: string,
-    password: string,
+    password: string
   ) => Promise<{ data: any; error: any }>;
   signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: any) => Promise<{ data: any; error: any }>;
@@ -31,7 +32,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
+  children
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -45,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         const {
           data: { session },
-          error,
+          error
         } = await supabase.auth.getSession();
 
         if (error) {
@@ -54,16 +55,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         console.log(
           "AuthContext: Initial session restored:",
-          session?.user?.email,
+          session?.user?.email
         ); // Debug log
 
         if (session) {
           console.log(
-            "AuthContext: User session found - auto login successful!",
+            "AuthContext: User session found - auto login successful!"
           ); // Debug log
           console.log(
             "AuthContext: Session expires at:",
-            new Date(session.expires_at! * 1000),
+            new Date(session.expires_at! * 1000)
           ); // Debug log
         } else {
           console.log("AuthContext: No session found - user needs to login"); // Debug log
@@ -82,12 +83,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Listen for auth changes
     const {
-      data: { subscription },
+      data: { subscription }
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log(
         "AuthContext: Auth state change:",
         event,
-        session?.user?.email,
+        session?.user?.email
       ); // Debug log
 
       // Immediately update state for SIGNED_OUT
@@ -108,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("AuthContext: User signed in, checking profile..."); // Debug log
         try {
           const { data: profile, error } = await SupabaseService.getUserProfile(
-            session.user.id,
+            session.user.id
           );
 
           console.log("AuthContext: Profile:", profile);
@@ -123,12 +124,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 level: "Beginner",
                 points: 0,
                 streak: 0,
-                rank: "Novice",
+                rank: "Novice"
               });
             if (createError) {
               console.error(
                 "AuthContext: Failed to create user profile:",
-                createError,
+                createError
               );
             } else {
               console.log("AuthContext: User profile created successfully");
@@ -148,12 +149,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signUp = async (email: string, password: string, name: string) => {
     console.log("AuthContext: Signing up user:", email); // Debug log
-    return await SupabaseService.signUp(email, password, name);
+    return await AuthService.signUp(email, password, name);
   };
 
   const signIn = async (email: string, password: string) => {
     console.log("AuthContext: Signing in user:", email); // Debug log
-    return await SupabaseService.signIn(email, password);
+    return await AuthService.signIn(email, password);
   };
 
   const signOut = async () => {
@@ -164,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(false);
 
     try {
-      const result = await SupabaseService.signOut();
+      const result = await AuthService.signOut();
       console.log("AuthContext: Sign out result:", result); // Debug log
       return result;
     } catch (error) {
@@ -186,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signUp,
     signIn,
     signOut,
-    updateProfile,
+    updateProfile
   };
 
   console.log("AuthContext: Current user:", user?.email, "Loading:", loading); // Debug log

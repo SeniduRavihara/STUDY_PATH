@@ -1,35 +1,6 @@
 import { supabase } from "../supabase";
 
 export class SupabaseService {
-  // User Management
-  static async signUp(email: string, password: string, name: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        },
-      },
-    });
-    return { data, error };
-  }
-
-  static async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
-  }
-
-  static async signOut() {
-    console.log("SupabaseService: Attempting to sign out..."); // Debug log
-    const { error } = await supabase.auth.signOut();
-    console.log("SupabaseService: Sign out result:", { error }); // Debug log
-    return { error };
-  }
-
   static async getCurrentUser() {
     const {
       data: { user },
@@ -115,7 +86,7 @@ export class SupabaseService {
           *,
           subjects (*)
         )
-      `,
+      `
       )
       .eq("user_id", userId);
     return { data, error };
@@ -125,7 +96,7 @@ export class SupabaseService {
     userId: string,
     chapterId: string,
     completed: boolean,
-    points: number,
+    points: number
   ) {
     const { data, error } = await supabase
       .from("user_progress")
@@ -155,7 +126,7 @@ export class SupabaseService {
           streak,
           rank
         )
-      `,
+      `
       )
       .order("created_at", { ascending: false });
     return { data, error };
@@ -174,7 +145,7 @@ export class SupabaseService {
           streak,
           rank
         )
-      `,
+      `
       )
       .eq("id", postId)
       .single();
@@ -203,7 +174,7 @@ export class SupabaseService {
           streak,
           rank
         )
-      `,
+      `
       )
       .single();
     return { data, error };
@@ -216,7 +187,7 @@ export class SupabaseService {
       subject?: string;
       achievement?: string;
       media_url?: string;
-    },
+    }
   ) {
     const { data, error } = await supabase
       .from("feed_posts")
@@ -232,7 +203,7 @@ export class SupabaseService {
           streak,
           rank
         )
-      `,
+      `
       )
       .single();
     return { data, error };
@@ -324,7 +295,7 @@ export class SupabaseService {
           streak,
           rank
         )
-      `,
+      `
       )
       .eq("post_id", postId)
       .order("created_at", { ascending: true });
@@ -356,7 +327,7 @@ export class SupabaseService {
           streak,
           rank
         )
-      `,
+      `
       )
       .single();
 
@@ -375,14 +346,14 @@ export class SupabaseService {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "feed_posts" },
-        callback,
+        callback
       )
       .subscribe();
   }
 
   static subscribeToUserProgress(
     userId: string,
-    callback: (payload: any) => void,
+    callback: (payload: any) => void
   ) {
     return supabase
       .channel("user_progress")
@@ -394,7 +365,7 @@ export class SupabaseService {
           table: "user_progress",
           filter: `user_id=eq.${userId}`,
         },
-        callback,
+        callback
       )
       .subscribe();
   }

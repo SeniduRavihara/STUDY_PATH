@@ -7,6 +7,9 @@ import "../../global.css";
 import { validateEnv } from "../config/env";
 import { AuthProvider } from "../contexts/AuthContext";
 
+import "react-native-get-random-values";
+import "react-native-url-polyfill/auto";
+
 // Validate environment variables
 validateEnv();
 

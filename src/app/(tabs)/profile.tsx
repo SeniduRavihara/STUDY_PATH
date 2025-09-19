@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
+import { UserService } from "@/superbase/services/userService";
 
 type UserStats = {
   name: string;
@@ -39,14 +40,13 @@ type MenuItem = {
 export default function ProfileScreen() {
   const { user, signOut, loading } = useAuth();
 
-  console.log("Profile Screen - User:", user); // Debug log
-
+  
   // If no user, redirect to login immediately
   if (!loading && !user) {
     console.log("Profile Screen - NO USER, redirecting to login!"); // Debug log
     return <Redirect href="/auth/login" />;
   }
-
+  
   // If still loading, show loading state
   if (loading) {
     return (
@@ -55,6 +55,7 @@ export default function ProfileScreen() {
       </View>
     );
   }
+
 
   const userStats: UserStats = {
     name: user?.user_metadata?.name || "Student",
