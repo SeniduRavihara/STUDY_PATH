@@ -1,6 +1,8 @@
 import {
   BarChart3,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
   Database,
   FileText,
   HelpCircle,
@@ -23,6 +25,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,8 +64,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-dark-900 border-r border-dark-800 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 bg-dark-900 border-r border-dark-800 transform transition-all duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } ${
+          sidebarCollapsed ? "w-16" : "w-64"
         }`}
       >
         <div className="flex items-center justify-between h-16 px-6 border-b border-dark-800">
@@ -70,14 +75,29 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-purple rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">StudyPath</span>
+            {!sidebarCollapsed && (
+              <span className="text-xl font-bold text-white">StudyPath</span>
+            )}
           </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-dark-400 hover:text-white"
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="hidden lg:block text-dark-400 hover:text-white transition-colors"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <ChevronLeft className="w-5 h-5" />
+              )}
+            </button>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-dark-400 hover:text-white"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <nav className="mt-6 px-3">
@@ -93,16 +113,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <button
                   key={item.name}
                   onClick={() => navigate(item.path)}
-                  className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors relative ${
                     isActive
                       ? "bg-primary-600 text-white shadow-lg"
                       : "text-dark-300 hover:bg-dark-800 hover:text-white"
                   }`}
+                  title={sidebarCollapsed ? item.name : undefined}
                 >
-                  <Icon className="mr-3 w-5 h-5" />
-                  {item.name}
-                  {isActive && (
-                    <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                  <Icon className={`w-5 h-5 ${sidebarCollapsed ? "" : "mr-3"}`} />
+                  {!sidebarCollapsed && (
+                    <>
+                      {item.name}
+                      {isActive && (
+                        <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </>
+                  )}
+                  {sidebarCollapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-dark-800 text-white text-sm rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      {item.name}
+                    </div>
                   )}
                 </button>
               );
@@ -116,12 +146,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-dark-300" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
-                {user?.email || "Admin"}
-              </p>
-              <p className="text-xs text-dark-400">Administrator</p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.email || "Admin"}
+                </p>
+                <p className="text-xs text-dark-400">Administrator</p>
+              </div>
+            )}
             <button
               onClick={handleSignOut}
               className="text-dark-400 hover:text-white transition-colors"
@@ -134,7 +166,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"}`}>
         {/* Top header */}
         <div className="sticky top-0 z-30 bg-dark-900 border-b border-dark-800">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">

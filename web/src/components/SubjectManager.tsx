@@ -1,5 +1,6 @@
 import { Edit, Plus, Trash2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SupabaseService } from "../lib/supabaseService";
 
 interface Subject {
@@ -14,6 +15,7 @@ interface Subject {
 }
 
 const SubjectManager: React.FC = () => {
+  const navigate = useNavigate();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -66,9 +68,41 @@ const SubjectManager: React.FC = () => {
 
   const fetchSubjects = async () => {
     try {
-      const { data, error } = await SupabaseService.getSubjects();
-      if (error) throw error;
-      setSubjects(data || []);
+      setLoading(true);
+      // Mock data for testing
+      const mockSubjects = [
+        {
+          id: "1",
+          name: "JavaScript Fundamentals",
+          description: "Learn the basics of JavaScript programming",
+          icon: "javascript",
+          color: ["#f7df1e", "#000000"],
+          difficulty: "Beginner",
+          chapters: 5,
+          created_at: "2024-01-15T10:00:00Z",
+        },
+        {
+          id: "2", 
+          name: "React Development",
+          description: "Master React for building modern web applications",
+          icon: "react",
+          color: ["#61dafb", "#282c34"],
+          difficulty: "Intermediate",
+          chapters: 8,
+          created_at: "2024-01-10T14:30:00Z",
+        },
+        {
+          id: "3",
+          name: "Node.js Backend",
+          description: "Build scalable server-side applications with Node.js",
+          icon: "nodejs",
+          color: ["#339933", "#ffffff"],
+          difficulty: "Advanced",
+          chapters: 6,
+          created_at: "2024-01-05T09:15:00Z",
+        },
+      ];
+      setSubjects(mockSubjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     } finally {
@@ -80,18 +114,25 @@ const SubjectManager: React.FC = () => {
     e.preventDefault();
 
     try {
-      const { data, error } = await SupabaseService.createSubject({
-        ...formData,
-        color: formData.color.join(","), // Convert array to string for database
-      });
+      // Create mock subject data for testing
+      const mockSubject = {
+        id: `subject-${Date.now()}`,
+        name: formData.name,
+        description: formData.description,
+        icon: formData.icon,
+        color: formData.color,
+        difficulty: formData.difficulty,
+        chapters: 0,
+        created_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
-
-      setSubjects(prev => [data, ...prev]);
+      // Add to local state
+      setSubjects(prev => [mockSubject, ...prev]);
       setShowCreateForm(false);
       resetForm();
 
-      alert("Subject created successfully!");
+      // Redirect to SubjectBuilder for enhanced flow creation
+      navigate(`/admin/subject-builder/${mockSubject.id}`);
     } catch (error) {
       console.error("Error creating subject:", error);
       alert("Error creating subject. Please try again.");
@@ -151,18 +192,8 @@ const SubjectManager: React.FC = () => {
   };
 
   const handleEditSubject = (subject: Subject) => {
-    setEditingSubject(subject);
-    setFormData({
-      name: subject.name,
-      description: subject.description || "",
-      icon: subject.icon || "📚",
-      color: subject.color,
-      difficulty: subject.difficulty as
-        | "Beginner"
-        | "Intermediate"
-        | "Advanced",
-    });
-    setShowCreateForm(true);
+    // Redirect to SubjectBuilder for enhanced editing
+    navigate(`/admin/subject-builder/${subject.id}`);
   };
 
   const resetForm = () => {

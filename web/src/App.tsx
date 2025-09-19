@@ -14,6 +14,7 @@ import MCQManager from "./components/MCQManager";
 import QuizPackManager from "./components/QuizPackManager";
 import Settings from "./components/Settings";
 import StudyPackManager from "./components/StudyPackManager";
+import SubjectBuilder from "./components/SubjectBuilder";
 import SubjectManager from "./components/SubjectManager";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import "./index.css";
@@ -67,6 +68,7 @@ const AdminRoutes: React.FC = () => {
         <Route path="/feed-posts" element={<FeedPostManager />} />
         <Route path="/quiz-packs" element={<QuizPackManager />} />
         <Route path="/study-packs" element={<StudyPackManager />} />
+        <Route path="/subject-builder/:subjectId" element={<SubjectBuilder />} />
         <Route path="/database" element={<DatabaseOverview />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="*" element={<Navigate to="/" replace />} />
