@@ -39,6 +39,7 @@ interface LearningFlowPathProps {
   };
   courseTitle: string;
   courseProgress: number;
+  onTitlePress?: () => void;
 }
 
 // 3-Column Grid System Configuration
@@ -448,6 +449,7 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
   userStats,
   courseTitle,
   courseProgress,
+  onTitlePress,
 }) => {
   // Generate vertical flow positions and paths
   const flowNodes = generateVerticalFlowPositions(nodes);
@@ -506,12 +508,25 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
         <View className="bg-slate-800 bg-opacity-50 px-6 py-4 rounded-2xl mb-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
-              <Text className="text-white text-2xl font-bold">
-                {courseTitle}
-              </Text>
-              <Text className="text-gray-400 text-sm mt-1">
-                {Math.round(courseProgress)}% Complete
-              </Text>
+              <TouchableOpacity
+                onPress={onTitlePress}
+                disabled={!onTitlePress}
+                activeOpacity={onTitlePress ? 0.7 : 1}
+              >
+                <Text className={`text-2xl font-bold ${
+                  onTitlePress ? "text-blue-400" : "text-white"
+                }`}>
+                  {courseTitle}
+                </Text>
+                <Text className="text-gray-400 text-sm mt-1">
+                  {Math.round(courseProgress)}% Complete
+                </Text>
+                {onTitlePress && (
+                  <Text className="text-blue-300 text-xs mt-1">
+                    Tap to change topic
+                  </Text>
+                )}
+              </TouchableOpacity>
             </View>
             <View className="items-end">
               <Text className="text-white text-xl font-bold">
