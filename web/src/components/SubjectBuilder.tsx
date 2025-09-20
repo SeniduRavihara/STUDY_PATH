@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSidebar } from "../contexts/SidebarContext";
 import FlowBuilder from "./FlowBuilder";
 
 interface Subject {
@@ -35,8 +36,10 @@ interface FlowNode {
 const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
+  const { sidebarCollapsed } = useSidebar();
   const [activeTab, setActiveTab] = useState("overview");
   const [currentStep, setCurrentStep] = useState(1);
+  const [viewMode, setViewMode] = useState<"tabs" | "stepper">("tabs");
   const [subject, setSubject] = useState<Subject>({
     id: subjectId || "",
     name: "JavaScript Fundamentals",
@@ -211,20 +214,37 @@ const SubjectBuilder: React.FC = () => {
   }, [subjectId]);
 
   const steps = [
-    { id: 1, name: "Subject Basics", icon: BookOpen },
-    { id: 2, name: "Flow Structure", icon: FileText },
-    { id: 3, name: "Content Creation", icon: Play },
-    { id: 4, name: "Testing & Preview", icon: Eye },
-    { id: 5, name: "Publish", icon: CheckCircle },
+    { id: 1, name: "Subject Basics", icon: BookOpen, tabId: "overview" },
+    { id: 2, name: "Flow Structure", icon: FileText, tabId: "flow" },
+    { id: 3, name: "Content Creation", icon: Play, tabId: "content" },
+    { id: 4, name: "Testing & Preview", icon: Eye, tabId: "preview" },
+    { id: 5, name: "Publish", icon: CheckCircle, tabId: "settings" },
   ];
 
   const tabs = [
-    { id: "overview", name: "Overview", icon: BookOpen },
-    { id: "flow", name: "Flow Builder", icon: FileText },
-    { id: "content", name: "Content Library", icon: Play },
-    { id: "settings", name: "Settings", icon: Settings },
-    { id: "preview", name: "Preview", icon: Eye },
+    { id: "overview", name: "Overview", icon: BookOpen, stepId: 1 },
+    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 2 },
+    { id: "content", name: "Content Library", icon: Play, stepId: 3 },
+    { id: "settings", name: "Settings", icon: Settings, stepId: 5 },
+    { id: "preview", name: "Preview", icon: Eye, stepId: 4 },
   ];
+
+  // Synchronize tab and step navigation
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab) {
+      setCurrentStep(tab.stepId);
+    }
+  };
+
+  const handleStepChange = (stepId: number) => {
+    setCurrentStep(stepId);
+    const step = steps.find(s => s.id === stepId);
+    if (step) {
+      setActiveTab(step.tabId);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -425,6 +445,11 @@ const SubjectBuilder: React.FC = () => {
             nodes={flowNodes}
             onNodesChange={setFlowNodes}
             subjectName={subject.name}
+            sidebarCollapsed={sidebarCollapsed}
+            onSubjectChange={(topicId) => {
+              // Handle topic change - you can update the subject name or other properties
+              console.log("Topic changed to:", topicId);
+            }}
           />
         );
 
@@ -506,6 +531,30 @@ const SubjectBuilder: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              {/* View Mode Toggle */}
+              <div className="flex bg-dark-800 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode("tabs")}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    viewMode === "tabs" 
+                      ? "bg-primary-500 text-white" 
+                      : "text-dark-400 hover:text-white"
+                  }`}
+                >
+                  Tabs
+                </button>
+                <button
+                  onClick={() => setViewMode("stepper")}
+                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                    viewMode === "stepper" 
+                      ? "bg-primary-500 text-white" 
+                      : "text-dark-400 hover:text-white"
+                  }`}
+                >
+                  Stepper
+                </button>
+              </div>
+              
               <button
                 onClick={handleSave}
                 disabled={isSaving}
@@ -535,63 +584,68 @@ const SubjectBuilder: React.FC = () => {
         </div>
       </div>
 
-      {/* Stepper */}
-      <div className="bg-dark-900 border-b border-dark-800">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = currentStep === step.id;
-              const isCompleted = currentStep > step.id;
-              
-              return (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-primary-500 text-white"
-                        : isCompleted
-                        ? "bg-green-500 text-white"
-                        : "bg-dark-800 text-dark-400"
+      {/* Stepper - Only show when in stepper mode */}
+      {viewMode === "stepper" && (
+        <div className="bg-dark-900 border-b border-dark-800">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = currentStep === step.id;
+                const isCompleted = currentStep > step.id;
+                
+                return (
+                  <div key={step.id} className="flex items-center">
+                    <button
+                      onClick={() => handleStepChange(step.id)}
+                      className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors ${
+                        isActive
+                          ? "bg-primary-500 text-white"
+                          : isCompleted
+                          ? "bg-green-500 text-white hover:bg-green-600"
+                          : "bg-dark-800 text-dark-400 hover:bg-dark-700 hover:text-white"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{step.name}</span>
+                    </button>
+                    {index < steps.length - 1 && (
+                      <div className="w-8 h-0.5 bg-dark-700 mx-2" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tabs - Only show when in tabs mode */}
+      {viewMode === "tabs" && (
+        <div className="bg-dark-900 border-b border-dark-800">
+          <div className="px-6">
+            <div className="flex space-x-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                      activeTab === tab.id
+                        ? "bg-dark-800 text-white border-b-2 border-primary-500"
+                        : "text-dark-400 hover:text-white hover:bg-dark-800"
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{step.name}</span>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className="w-8 h-0.5 bg-dark-700 mx-2" />
-                  )}
-                </div>
-              );
-            })}
+                    <Icon className="w-4 h-4" />
+                    <span>{tab.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-dark-900 border-b border-dark-800">
-        <div className="px-6">
-          <div className="flex space-x-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
-                    activeTab === tab.id
-                      ? "bg-dark-800 text-white border-b-2 border-primary-500"
-                      : "text-dark-400 hover:text-white hover:bg-dark-800"
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.name}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Content */}
       <div className="p-6">
@@ -599,6 +653,50 @@ const SubjectBuilder: React.FC = () => {
           {renderTabContent()}
         </div>
       </div>
+
+      {/* Stepper Navigation - Only show when in stepper mode */}
+      {viewMode === "stepper" && (
+        <div className="bg-dark-900 border-t border-dark-800">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => {
+                  if (currentStep > 1) {
+                    handleStepChange(currentStep - 1);
+                  }
+                }}
+                disabled={currentStep === 1}
+                className="flex items-center space-x-2 px-4 py-2 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Previous</span>
+              </button>
+
+              <div className="text-center">
+                <p className="text-white font-medium">
+                  Step {currentStep} of {steps.length}
+                </p>
+                <p className="text-dark-400 text-sm">
+                  {steps.find(s => s.id === currentStep)?.name}
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (currentStep < steps.length) {
+                    handleStepChange(currentStep + 1);
+                  }
+                }}
+                disabled={currentStep === steps.length}
+                className="flex items-center space-x-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>Next</span>
+                <ArrowLeft className="w-4 h-4 rotate-180" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

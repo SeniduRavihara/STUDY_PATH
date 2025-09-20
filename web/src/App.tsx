@@ -17,6 +17,7 @@ import StudyPackManager from "./components/StudyPackManager";
 import SubjectBuilder from "./components/SubjectBuilder";
 import SubjectManager from "./components/SubjectManager";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SidebarProvider } from "./contexts/SidebarContext";
 import "./index.css";
 import "./utils/sessionDebug"; // Import debug utility
 
@@ -44,36 +45,38 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 // Admin Routes Component
 const AdminRoutes: React.FC = () => {
   return (
-    <AdminLayout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/subjects" element={<SubjectManager />} />
-        <Route
-          path="/chapters"
-          element={
-            <div className="text-white text-center py-20">
-              Chapters Management - Coming Soon
-            </div>
-          }
-        />
-        <Route
-          path="/lessons"
-          element={
-            <div className="text-white text-center py-20">
-              Lessons Management - Coming Soon
-            </div>
-          }
-        />
-        <Route path="/mcqs" element={<MCQManager />} />
-        <Route path="/feed-posts" element={<FeedPostManager />} />
-        <Route path="/quiz-packs" element={<QuizPackManager />} />
-        <Route path="/study-packs" element={<StudyPackManager />} />
-        <Route path="/subject-builder/:subjectId" element={<SubjectBuilder />} />
-        <Route path="/database" element={<DatabaseOverview />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AdminLayout>
+    <SidebarProvider>
+      <AdminLayout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/subjects" element={<SubjectManager />} />
+          <Route
+            path="/chapters"
+            element={
+              <div className="text-white text-center py-20">
+                Chapters Management - Coming Soon
+              </div>
+            }
+          />
+          <Route
+            path="/lessons"
+            element={
+              <div className="text-white text-center py-20">
+                Lessons Management - Coming Soon
+              </div>
+            }
+          />
+          <Route path="/mcqs" element={<MCQManager />} />
+          <Route path="/feed-posts" element={<FeedPostManager />} />
+          <Route path="/quiz-packs" element={<QuizPackManager />} />
+          <Route path="/study-packs" element={<StudyPackManager />} />
+          <Route path="/subject-builder/:subjectId" element={<SubjectBuilder />} />
+          <Route path="/database" element={<DatabaseOverview />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AdminLayout>
+    </SidebarProvider>
   );
 };
 

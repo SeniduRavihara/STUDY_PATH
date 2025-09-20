@@ -14,7 +14,7 @@ import {
   Trophy,
   Menu,
 } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 
 interface FlowNode {
   id: string;
@@ -36,6 +36,8 @@ interface FlowBuilderProps {
   nodes: FlowNode[];
   onNodesChange: (nodes: FlowNode[]) => void;
   subjectName: string;
+  sidebarCollapsed?: boolean;
+  onSubjectChange?: (subjectId: string) => void;
 }
 
 // 3-Column Grid System Configuration (matching mobile app)
@@ -76,13 +78,13 @@ const getSmartPosition = (index: number): "left" | "center" | "right" => {
 // Generate vertical flow positions for nodes using 3-column system
 const generateVerticalFlowPositions = (
   nodes: FlowNode[],
-  containerWidth: number,
+  containerWidth: number = 800, // Use fixed width for consistent positioning
 ): FlowNode[] => {
   return nodes.map((node, index) => {
     // Get position from organic pattern
     const positionKey = getSmartPosition(index);
 
-    // Map position to actual X coordinate
+    // Map position to actual X coordinate using fixed width
     let x: number;
     switch (positionKey) {
       case "left":
@@ -230,14 +232,33 @@ const generateVerticalFlowPaths = (nodes: FlowNode[]): string[] => {
   return paths;
 };
 
+// Sri Lankan AL Physics Topics
+const AL_PHYSICS_TOPICS = [
+  { id: "mechanics", name: "Mechanics", description: "Motion, forces, and energy" },
+  { id: "waves", name: "Waves", description: "Wave properties and behavior" },
+  { id: "electricity", name: "Electricity", description: "Electric fields and circuits" },
+  { id: "magnetism", name: "Magnetism", description: "Magnetic fields and electromagnetic induction" },
+  { id: "thermodynamics", name: "Thermodynamics", description: "Heat, temperature, and energy transfer" },
+  { id: "optics", name: "Optics", description: "Light, reflection, and refraction" },
+  { id: "atomic", name: "Atomic Physics", description: "Atomic structure and quantum mechanics" },
+  { id: "nuclear", name: "Nuclear Physics", description: "Nuclear reactions and radioactivity" },
+  { id: "particles", name: "Particle Physics", description: "Fundamental particles and interactions" },
+  { id: "astrophysics", name: "Astrophysics", description: "Stars, galaxies, and cosmology" },
+  { id: "electronics", name: "Electronics", description: "Electronic devices and circuits" },
+  { id: "practical", name: "Practical Physics", description: "Laboratory work and experiments" },
+];
+
 const FlowBuilder: React.FC<FlowBuilderProps> = ({
   nodes,
   onNodesChange,
   subjectName,
+  sidebarCollapsed = false,
+  onSubjectChange,
 }) => {
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
   const [showNodeCreator, setShowNodeCreator] = useState(false);
-  const [containerWidth, setContainerWidth] = useState(1200);
+  const [showTopicSelector, setShowTopicSelector] = useState(false);
+  const [currentTopicId, setCurrentTopicId] = useState("mechanics");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const nodeTypes = [
@@ -299,18 +320,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     },
   ];
 
-  // Track container width for responsive positioning
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
-    };
-
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
 
   const getNodeIcon = (type: string) => {
     const nodeType = nodeTypes.find(nt => nt.type === type);
@@ -364,8 +373,20 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     setSelectedNode(null);
   };
 
-  // Generate positioned nodes and paths
-  const flowNodes = generateVerticalFlowPositions(nodes, containerWidth);
+  const handleTopicChange = (topicId: string) => {
+    setCurrentTopicId(topicId);
+    setShowTopicSelector(false);
+    if (onSubjectChange) {
+      onSubjectChange(topicId);
+    }
+  };
+
+  const getCurrentTopic = () => {
+    return AL_PHYSICS_TOPICS.find(topic => topic.id === currentTopicId) || AL_PHYSICS_TOPICS[0];
+  };
+
+  // Generate positioned nodes and paths using fixed width for consistent centering
+  const flowNodes = generateVerticalFlowPositions(nodes, 800); // Fixed width for consistent positioning
   const verticalPaths = generateVerticalFlowPaths(flowNodes);
   
   // Calculate total content height
@@ -394,6 +415,11 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
           <h2 className="text-xl font-semibold text-white">Learning Flow Builder</h2>
           <p className="text-dark-400">
             Design the learning path for "{subjectName}"
+            {sidebarCollapsed && (
+              <span className="ml-2 text-xs bg-primary-500/20 text-primary-400 px-2 py-1 rounded">
+                Sidebar Collapsed - Flow Centered
+              </span>
+            )}
           </p>
         </div>
         <button
@@ -405,8 +431,12 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         </button>
       </div>
 
-      {/* Flow Container */}
-      <div className="bg-dark-800 rounded-2xl overflow-hidden">
+      {/* Flow Container - Responsive to sidebar state */}
+      <div className={`bg-dark-800 rounded-2xl overflow-hidden transition-all duration-300 ${
+        sidebarCollapsed 
+          ? 'max-w-7xl mx-auto w-full' 
+          : 'max-w-6xl mx-auto w-full'
+      }`}>
         {/* Header Section (matching mobile app) */}
         <div 
           className="px-6 pt-6 pb-6"
@@ -446,10 +476,28 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
           <div className="bg-dark-700 bg-opacity-50 px-6 py-4 rounded-2xl mb-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h3 className="text-white text-2xl font-bold">{subjectName}</h3>
-                <p className="text-gray-400 text-sm mt-1">
-                  {Math.round(courseProgress)}% Complete
-                </p>
+                <button
+                  onClick={() => {
+                    console.log("Topic selector button clicked!");
+                    setShowTopicSelector(true);
+                  }}
+                  className="text-left hover:bg-dark-600 rounded-lg p-2 -m-2 transition-colors group"
+                >
+                  <h3 className="text-white text-2xl font-bold group-hover:text-primary-400 transition-colors">
+                    {getCurrentTopic().name}
+                  </h3>
+                  <p className="text-gray-400 text-sm mt-1">
+                    {Math.round(courseProgress)}% Complete
+                  </p>
+                  <p className="text-primary-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Click to change topic
+                  </p>
+                  {showTopicSelector && (
+                    <p className="text-green-400 text-xs mt-1">
+                      Modal is open! (Debug)
+                    </p>
+                  )}
+                </button>
               </div>
               <div className="text-right">
                 <p className="text-white text-xl font-bold">{userStats.totalXp}</p>
@@ -470,7 +518,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         {/* Flow Canvas */}
         <div 
           ref={containerRef}
-          className="relative overflow-auto"
+          className="relative overflow-auto flex justify-center"
           style={{ 
             height: "600px",
             background: "radial-gradient(circle, #374151 1px, transparent 1px)",
@@ -478,16 +526,17 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
           }}
         >
           <div
-            className="relative"
+            className="relative mx-auto"
             style={{
               minHeight: totalContentHeight,
-              width: "100%",
+              width: "800px", // Fixed width for consistent centering
+              maxWidth: "100%",
             }}
           >
             {/* SVG Connections */}
             <svg
               height={totalContentHeight}
-              width="100%"
+              width="800"
               style={{ position: "absolute", top: 0, left: 0 }}
             >
               {verticalPaths.map((path, index) => (
@@ -780,6 +829,56 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                   {selectedNode.type.charAt(0).toUpperCase() + selectedNode.type.slice(1)} Node
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Topic Selector Modal */}
+      {showTopicSelector && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" style={{ zIndex: 9999 }}>
+          <div className="bg-dark-900 rounded-2xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-semibold text-white">
+                  Select AL Physics Topic
+                </h3>
+                <p className="text-dark-400 text-sm mt-1">
+                  Choose from the 12 main topics in Sri Lankan AL Physics
+                </p>
+              </div>
+              <button
+                onClick={() => setShowTopicSelector(false)}
+                className="text-dark-400 hover:text-white transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {AL_PHYSICS_TOPICS.map((topic) => (
+                <button
+                  key={topic.id}
+                  onClick={() => handleTopicChange(topic.id)}
+                  className={`p-4 rounded-xl transition-colors text-left ${
+                    currentTopicId === topic.id
+                      ? "bg-primary-500 text-white"
+                      : "bg-dark-800 hover:bg-dark-700 text-white"
+                  }`}
+                >
+                  <h4 className="font-semibold text-lg mb-2">{topic.name}</h4>
+                  <p className={`text-sm ${
+                    currentTopicId === topic.id ? "text-white/80" : "text-dark-400"
+                  }`}>
+                    {topic.description}
+                  </p>
+                  {currentTopicId === topic.id && (
+                    <div className="mt-2 text-xs text-white/60">
+                      Currently Selected
+                    </div>
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </div>
