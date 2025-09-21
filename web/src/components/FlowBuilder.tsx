@@ -32,13 +32,148 @@ interface FlowNode {
   estimatedTime?: string;
 }
 
+interface Topic {
+  id: string;
+  name: string;
+  description: string;
+  parentId?: string;
+  level: number;
+  hasFlow: boolean;
+  flowId?: string;
+  children: Topic[];
+  isExpanded?: boolean;
+}
+
 interface FlowBuilderProps {
   nodes: FlowNode[];
   onNodesChange: (nodes: FlowNode[]) => void;
   subjectName: string;
   sidebarCollapsed?: boolean;
+  topics: Topic[];
+  onTopicsChange: (topics: Topic[]) => void;
   onSubjectChange?: (subjectId: string) => void;
 }
+
+interface TopicHierarchySelectorProps {
+  topic: Topic;
+  currentTopicId: string;
+  onTopicSelect: (topicId: string) => void;
+  allTopics: Topic[];
+}
+
+const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({ 
+  topic, 
+  currentTopicId, 
+  onTopicSelect, 
+  allTopics 
+}) => {
+  const [isExpanded, setIsExpanded] = useState(topic.level === 0); // Auto-expand top level
+
+  const getIndentStyle = () => {
+    return {
+      marginLeft: `${topic.level * 20}px`,
+      borderLeft: topic.level > 0 ? `2px solid #374151` : 'none',
+      paddingLeft: topic.level > 0 ? '12px' : '0'
+    };
+  };
+
+  const isSelected = currentTopicId === topic.id;
+  const hasChildren = topic.children.length > 0;
+  const isLeafTopic = !hasChildren; // Only leaf topics (no children) can be selected
+
+  return (
+    <div style={getIndentStyle()} className="relative">
+      {/* Topic Card */}
+      <div className={`rounded-lg p-3 transition-colors ${
+        isLeafTopic ? 'cursor-pointer' : 'cursor-default'
+      } ${
+        isSelected 
+          ? "bg-primary-500 text-white" 
+          : topic.hasFlow
+          ? "bg-green-500/20 border border-green-500/30 text-white hover:bg-green-500/30"
+          : isLeafTopic
+          ? "bg-dark-800 hover:bg-dark-700 text-white"
+          : "bg-dark-700 text-dark-400" // Non-selectable topics are dimmed
+      }`} onClick={() => isLeafTopic && onTopicSelect(topic.id)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3 flex-1">
+            {/* Expand/Collapse Button */}
+            {hasChildren && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(!isExpanded);
+                }}
+                className="text-dark-400 hover:text-white transition-colors"
+              >
+                {isExpanded ? '▼' : '▶'}
+              </button>
+            )}
+            
+            {/* Topic Icon */}
+            <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs ${
+              topic.hasFlow ? 'bg-green-500/20 text-green-400' : 
+              isLeafTopic ? 'bg-blue-500/20 text-blue-400' : 'bg-dark-600 text-dark-400'
+            }`}>
+              {topic.hasFlow ? '✓' : isLeafTopic ? '●' : '○'}
+            </div>
+
+            {/* Topic Content */}
+            <div className="flex-1">
+              <div className="flex items-center space-x-2">
+                <h4 className="font-semibold">{topic.name}</h4>
+                {topic.hasFlow && (
+                  <span className="text-green-400 text-xs">✓ Has Flow</span>
+                )}
+                {isLeafTopic && !topic.hasFlow && (
+                  <span className="text-blue-400 text-xs">● Selectable</span>
+                )}
+                {!isLeafTopic && (
+                  <span className="text-dark-500 text-xs">○ Not Selectable</span>
+                )}
+              </div>
+              <p className={`text-sm ${
+                isSelected ? "text-white/80" : "text-dark-400"
+              }`}>
+                {topic.description}
+              </p>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-xs text-dark-500">Level {topic.level}</span>
+                {hasChildren && (
+                  <span className="text-xs text-dark-500">
+                    {topic.children.length} children
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Selection Indicator */}
+          {isSelected && (
+            <div className="text-white text-sm font-bold">
+              SELECTED
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Children */}
+      {isExpanded && hasChildren && (
+        <div className="mt-2 space-y-2">
+          {topic.children.map((child) => (
+            <TopicHierarchySelector
+              key={child.id}
+              topic={child}
+              currentTopicId={currentTopicId}
+              onTopicSelect={onTopicSelect}
+              allTopics={allTopics}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // 3-Column Grid System Configuration (matching mobile app)
 const FLOW_CONFIG = {
@@ -253,13 +388,44 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   onNodesChange,
   subjectName,
   sidebarCollapsed = false,
+  topics,
+  onTopicsChange,
   onSubjectChange,
 }) => {
+  // Debug: Log received props
+  console.log("FlowBuilder received topics:", topics);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
   const [showNodeCreator, setShowNodeCreator] = useState(false);
   const [showTopicSelector, setShowTopicSelector] = useState(false);
-  const [currentTopicId, setCurrentTopicId] = useState("mechanics");
+  const [currentTopicId, setCurrentTopicId] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Get all leaf topics (topics without children) for flow assignment
+  const getLeafTopics = (topics: Topic[]): Topic[] => {
+    const leafTopics: Topic[] = [];
+    
+    const traverse = (topicList: Topic[]) => {
+      topicList.forEach(topic => {
+        console.log(`Checking topic: ${topic.name}, level: ${topic.level}, children: ${topic.children.length}`);
+        if (topic.children.length === 0) {
+          console.log(`Found leaf topic: ${topic.name}`);
+          leafTopics.push(topic);
+        } else {
+          traverse(topic.children);
+        }
+      });
+    };
+    
+    traverse(topics);
+    console.log(`Total leaf topics found: ${leafTopics.length}`);
+    return leafTopics;
+  };
+
+  const leafTopics = getLeafTopics(topics);
+  
+  // Debug: Log the topics and leaf topics
+  console.log("All topics:", topics);
+  console.log("Leaf topics:", leafTopics);
 
   const nodeTypes = [
     { 
@@ -376,14 +542,45 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const handleTopicChange = (topicId: string) => {
     setCurrentTopicId(topicId);
     setShowTopicSelector(false);
+    
+    // Mark the topic as having a flow
+    const updateTopicFlow = (topicList: Topic[]): Topic[] => {
+      return topicList.map(topic => {
+        if (topic.id === topicId) {
+          return { ...topic, hasFlow: true, flowId: `flow-${topicId}` };
+        }
+        if (topic.children.length > 0) {
+          return { ...topic, children: updateTopicFlow(topic.children) };
+        }
+        return topic;
+      });
+    };
+    
+    onTopicsChange(updateTopicFlow(topics));
+    
     if (onSubjectChange) {
       onSubjectChange(topicId);
     }
   };
 
   const getCurrentTopic = () => {
-    return AL_PHYSICS_TOPICS.find(topic => topic.id === currentTopicId) || AL_PHYSICS_TOPICS[0];
+    if (!currentTopicId) return null;
+    
+    const findTopic = (topicList: Topic[]): Topic | null => {
+      for (const topic of topicList) {
+        if (topic.id === currentTopicId) return topic;
+        if (topic.children.length > 0) {
+          const found = findTopic(topic.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    
+    return findTopic(topics);
   };
+
+  const currentTopic = getCurrentTopic();
 
   // Generate positioned nodes and paths using fixed width for consistent centering
   const flowNodes = generateVerticalFlowPositions(nodes, 800); // Fixed width for consistent positioning
@@ -484,13 +681,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                   className="text-left hover:bg-dark-600 rounded-lg p-2 -m-2 transition-colors group"
                 >
                   <h3 className="text-white text-2xl font-bold group-hover:text-primary-400 transition-colors">
-                    {getCurrentTopic().name}
+                    {currentTopic ? currentTopic.name : "Select a Topic"}
                   </h3>
                   <p className="text-gray-400 text-sm mt-1">
-                    {Math.round(courseProgress)}% Complete
+                    {currentTopic ? `${Math.round(courseProgress)}% Complete` : "Choose a topic to build flow"}
                   </p>
                   <p className="text-primary-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Click to change topic
+                    Click to {currentTopic ? "change topic" : "select topic"}
                   </p>
                   {showTopicSelector && (
                     <p className="text-green-400 text-xs mt-1">
@@ -841,11 +1038,22 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-xl font-semibold text-white">
-                  Select AL Physics Topic
+                  Select Topic for Flow
                 </h3>
                 <p className="text-dark-400 text-sm mt-1">
-                  Choose from the 12 main topics in Sri Lankan AL Physics
+                  Only the latest/deepest topics (leaf topics) can have flows assigned. Each leaf topic gets its own separate flow.
                 </p>
+                <div className="mt-2">
+                  <button
+                    onClick={() => {
+                      console.log("All topics:", topics);
+                      console.log("Leaf topics:", leafTopics);
+                    }}
+                    className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded"
+                  >
+                    Debug: Check Console
+                  </button>
+                </div>
               </div>
               <button
                 onClick={() => setShowTopicSelector(false)}
@@ -855,29 +1063,15 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {AL_PHYSICS_TOPICS.map((topic) => (
-                <button
+            <div className="space-y-4">
+              {topics.map((topic) => (
+                <TopicHierarchySelector
                   key={topic.id}
-                  onClick={() => handleTopicChange(topic.id)}
-                  className={`p-4 rounded-xl transition-colors text-left ${
-                    currentTopicId === topic.id
-                      ? "bg-primary-500 text-white"
-                      : "bg-dark-800 hover:bg-dark-700 text-white"
-                  }`}
-                >
-                  <h4 className="font-semibold text-lg mb-2">{topic.name}</h4>
-                  <p className={`text-sm ${
-                    currentTopicId === topic.id ? "text-white/80" : "text-dark-400"
-                  }`}>
-                    {topic.description}
-                  </p>
-                  {currentTopicId === topic.id && (
-                    <div className="mt-2 text-xs text-white/60">
-                      Currently Selected
-                    </div>
-                  )}
-                </button>
+                  topic={topic}
+                  currentTopicId={currentTopicId}
+                  onTopicSelect={handleTopicChange}
+                  allTopics={topics}
+                />
               ))}
             </div>
           </div>

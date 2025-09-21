@@ -5,6 +5,7 @@ import {
   Eye,
   FileText,
   Play,
+  Plus,
   Save,
   Settings,
 } from "lucide-react";
@@ -32,6 +33,285 @@ interface FlowNode {
   config: any;
   connections: string[];
 }
+
+interface Topic {
+  id: string;
+  name: string;
+  description: string;
+  parentId?: string;
+  level: number;
+  hasFlow: boolean;
+  flowId?: string;
+  children: Topic[];
+  isExpanded?: boolean;
+}
+
+interface TopicHierarchyItemProps {
+  topic: Topic;
+  onUpdate: (topics: Topic[]) => void;
+  allTopics: Topic[];
+}
+
+const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate, allTopics }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAddingChild, setIsAddingChild] = useState(false);
+  const [editName, setEditName] = useState(topic.name);
+  const [editDescription, setEditDescription] = useState(topic.description);
+  const [newChildName, setNewChildName] = useState("");
+  const [newChildDescription, setNewChildDescription] = useState("");
+
+  const updateTopic = (topicId: string, updates: Partial<Topic>) => {
+    const updateTopics = (topics: Topic[]): Topic[] => {
+      return topics.map(t => {
+        if (t.id === topicId) {
+          return { ...t, ...updates };
+        }
+        if (t.children.length > 0) {
+          return { ...t, children: updateTopics(t.children) };
+        }
+        return t;
+      });
+    };
+    onUpdate(updateTopics(allTopics));
+  };
+
+  const addChildTopic = (parentId: string) => {
+    const newTopic: Topic = {
+      id: `topic-${Date.now()}`,
+      name: newChildName,
+      description: newChildDescription,
+      parentId,
+      level: topic.level + 1,
+      hasFlow: false,
+      children: []
+    };
+
+    const addChildToTopics = (topics: Topic[]): Topic[] => {
+      return topics.map(t => {
+        if (t.id === parentId) {
+          return { ...t, children: [...t.children, newTopic] };
+        }
+        if (t.children.length > 0) {
+          return { ...t, children: addChildToTopics(t.children) };
+        }
+        return t;
+      });
+    };
+
+    onUpdate(addChildToTopics(allTopics));
+    setNewChildName("");
+    setNewChildDescription("");
+    setIsAddingChild(false);
+  };
+
+  const deleteTopic = (topicId: string) => {
+    const deleteFromTopics = (topics: Topic[]): Topic[] => {
+      return topics.filter(t => {
+        if (t.id === topicId) {
+          return false;
+        }
+        if (t.children.length > 0) {
+          return { ...t, children: deleteFromTopics(t.children) };
+        }
+        return true;
+      });
+    };
+    onUpdate(deleteFromTopics(allTopics));
+  };
+
+  const toggleExpanded = () => {
+    updateTopic(topic.id, { isExpanded: !topic.isExpanded });
+  };
+
+  const saveEdit = () => {
+    updateTopic(topic.id, { 
+      name: editName, 
+      description: editDescription 
+    });
+    setIsEditing(false);
+  };
+
+  const cancelEdit = () => {
+    setEditName(topic.name);
+    setEditDescription(topic.description);
+    setIsEditing(false);
+  };
+
+  const getIndentStyle = () => {
+    return {
+      marginLeft: `${topic.level * 24}px`,
+      borderLeft: topic.level > 0 ? `2px solid #374151` : 'none',
+      paddingLeft: topic.level > 0 ? '16px' : '0'
+    };
+  };
+
+  return (
+    <div style={getIndentStyle()} className="relative">
+      {/* Topic Card */}
+      <div className="bg-dark-700 rounded-lg p-4 hover:bg-dark-600 transition-colors">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3 flex-1">
+            {/* Expand/Collapse Button */}
+            {topic.children.length > 0 && (
+              <button
+                onClick={toggleExpanded}
+                className="text-dark-400 hover:text-white transition-colors"
+              >
+                {topic.isExpanded ? '▼' : '▶'}
+              </button>
+            )}
+            
+            {/* Topic Icon */}
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              topic.hasFlow ? 'bg-green-500/20 text-green-400' : 'bg-dark-600 text-dark-400'
+            }`}>
+              {topic.hasFlow ? '✓' : '○'}
+            </div>
+
+            {/* Topic Content */}
+            <div className="flex-1">
+              {isEditing ? (
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full px-3 py-1 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    placeholder="Topic name"
+                  />
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full px-3 py-1 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    placeholder="Topic description"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <h4 className="text-white font-medium">{topic.name}</h4>
+                  <p className="text-dark-400 text-sm">{topic.description}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-xs text-dark-500">Level {topic.level}</span>
+                    {topic.hasFlow && (
+                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                        Has Flow
+                      </span>
+                    )}
+                    {topic.children.length > 0 && (
+                      <span className="text-xs text-dark-500">
+                        {topic.children.length} children
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            {isEditing ? (
+              <>
+                <button
+                  onClick={saveEdit}
+                  className="text-green-400 hover:text-green-300 transition-colors"
+                >
+                  ✓
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                >
+                  ✕
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                  title="Edit topic"
+                >
+                  ✏️
+                </button>
+                <button
+                  onClick={() => setIsAddingChild(true)}
+                  className="text-primary-400 hover:text-primary-300 transition-colors"
+                  title="Add subtopic"
+                >
+                  ➕
+                </button>
+                <button
+                  onClick={() => deleteTopic(topic.id)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                  title="Delete topic"
+                >
+                  🗑️
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Add Child Form */}
+        {isAddingChild && (
+          <div className="mt-4 p-3 bg-dark-800 rounded border border-dark-600">
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={newChildName}
+                onChange={(e) => setNewChildName(e.target.value)}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                placeholder="Subtopic name"
+              />
+              <input
+                type="text"
+                value={newChildDescription}
+                onChange={(e) => setNewChildDescription(e.target.value)}
+                className="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                placeholder="Subtopic description"
+              />
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => addChildTopic(topic.id)}
+                  disabled={!newChildName.trim()}
+                  className="px-3 py-1 bg-primary-500 text-white rounded text-sm hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Add Subtopic
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAddingChild(false);
+                    setNewChildName("");
+                    setNewChildDescription("");
+                  }}
+                  className="px-3 py-1 bg-dark-600 text-white rounded text-sm hover:bg-dark-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Children */}
+      {topic.isExpanded && topic.children.length > 0 && (
+        <div className="mt-2 space-y-2">
+          {topic.children.map((child) => (
+            <TopicHierarchyItem
+              key={child.id}
+              topic={child}
+              onUpdate={onUpdate}
+              allTopics={allTopics}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
@@ -159,6 +439,135 @@ const SubjectBuilder: React.FC = () => {
   ]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [topics, setTopics] = useState<Topic[]>([
+    {
+      id: "mechanics",
+      name: "Mechanics",
+      description: "Motion, forces, and energy",
+      level: 0,
+      hasFlow: false,
+      children: [
+        {
+          id: "kinematics",
+          name: "Kinematics",
+          description: "Motion in one and two dimensions",
+          parentId: "mechanics",
+          level: 1,
+          hasFlow: false,
+          children: [
+            {
+              id: "linear-motion",
+              name: "Linear Motion",
+              description: "Motion along a straight line",
+              parentId: "kinematics",
+              level: 2,
+              hasFlow: true,
+              flowId: "flow-linear-motion",
+              children: []
+            },
+            {
+              id: "projectile-motion",
+              name: "Projectile Motion",
+              description: "Motion under gravity",
+              parentId: "kinematics",
+              level: 2,
+              hasFlow: true,
+              flowId: "flow-projectile-motion",
+              children: []
+            }
+          ]
+        },
+        {
+          id: "dynamics",
+          name: "Dynamics",
+          description: "Forces and Newton's laws",
+          parentId: "mechanics",
+          level: 1,
+          hasFlow: false,
+          children: [
+            {
+              id: "newtons-laws",
+              name: "Newton's Laws",
+              description: "Three laws of motion",
+              parentId: "dynamics",
+              level: 2,
+              hasFlow: true,
+              flowId: "flow-newtons-laws",
+              children: []
+            },
+            {
+              id: "friction",
+              name: "Friction",
+              description: "Frictional forces",
+              parentId: "dynamics",
+              level: 2,
+              hasFlow: true,
+              flowId: "flow-friction",
+              children: []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: "waves",
+      name: "Waves",
+      description: "Wave properties and behavior",
+      level: 0,
+      hasFlow: false,
+      children: [
+        {
+          id: "wave-properties",
+          name: "Wave Properties",
+          description: "Amplitude, frequency, wavelength",
+          parentId: "waves",
+          level: 1,
+          hasFlow: true,
+          flowId: "flow-wave-properties",
+          children: []
+        },
+        {
+          id: "wave-behavior",
+          name: "Wave Behavior",
+          description: "Reflection, refraction, interference",
+          parentId: "waves",
+          level: 1,
+          hasFlow: false,
+          children: [
+            {
+              id: "interference",
+              name: "Interference",
+              description: "Constructive and destructive interference",
+              parentId: "wave-behavior",
+              level: 2,
+              hasFlow: true,
+              flowId: "flow-interference",
+              children: []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      id: "electricity",
+      name: "Electricity",
+      description: "Electric fields and circuits",
+      level: 0,
+      hasFlow: false,
+      children: [
+        {
+          id: "electric-fields",
+          name: "Electric Fields",
+          description: "Electric field strength and potential",
+          parentId: "electricity",
+          level: 1,
+          hasFlow: true,
+          flowId: "flow-electric-fields",
+          children: []
+        }
+      ]
+    }
+  ]);
 
   // Mock subjects data (same as in SubjectManager)
   const mockSubjects = [
@@ -215,18 +624,20 @@ const SubjectBuilder: React.FC = () => {
 
   const steps = [
     { id: 1, name: "Subject Basics", icon: BookOpen, tabId: "overview" },
-    { id: 2, name: "Flow Structure", icon: FileText, tabId: "flow" },
-    { id: 3, name: "Content Creation", icon: Play, tabId: "content" },
-    { id: 4, name: "Testing & Preview", icon: Eye, tabId: "preview" },
-    { id: 5, name: "Publish", icon: CheckCircle, tabId: "settings" },
+    { id: 2, name: "Topic Structure", icon: FileText, tabId: "topics" },
+    { id: 3, name: "Flow Structure", icon: FileText, tabId: "flow" },
+    { id: 4, name: "Content Creation", icon: Play, tabId: "content" },
+    { id: 5, name: "Testing & Preview", icon: Eye, tabId: "preview" },
+    { id: 6, name: "Publish", icon: CheckCircle, tabId: "settings" },
   ];
 
   const tabs = [
     { id: "overview", name: "Overview", icon: BookOpen, stepId: 1 },
-    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 2 },
-    { id: "content", name: "Content Library", icon: Play, stepId: 3 },
-    { id: "settings", name: "Settings", icon: Settings, stepId: 5 },
-    { id: "preview", name: "Preview", icon: Eye, stepId: 4 },
+    { id: "topics", name: "Topics", icon: FileText, stepId: 2 },
+    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 3 },
+    { id: "content", name: "Content Library", icon: Play, stepId: 4 },
+    { id: "settings", name: "Settings", icon: Settings, stepId: 6 },
+    { id: "preview", name: "Preview", icon: Eye, stepId: 5 },
   ];
 
   // Synchronize tab and step navigation
@@ -439,6 +850,37 @@ const SubjectBuilder: React.FC = () => {
           </div>
         );
 
+      case "topics":
+        return (
+          <div className="space-y-6">
+            <div className="bg-dark-800 rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Topic Hierarchy</h3>
+                  <p className="text-dark-400 mt-1">
+                    Organize your subject into topics, subtopics, and sub-subtopics with unlimited depth
+                  </p>
+                </div>
+                <button className="btn-primary flex items-center space-x-2">
+                  <Plus className="w-4 h-4" />
+                  <span>Add Topic</span>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {topics.map((topic) => (
+                  <TopicHierarchyItem 
+                    key={topic.id} 
+                    topic={topic} 
+                    onUpdate={setTopics}
+                    allTopics={topics}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
       case "flow":
         return (
           <FlowBuilder
@@ -446,6 +888,8 @@ const SubjectBuilder: React.FC = () => {
             onNodesChange={setFlowNodes}
             subjectName={subject.name}
             sidebarCollapsed={sidebarCollapsed}
+            topics={topics}
+            onTopicsChange={setTopics}
             onSubjectChange={(topicId) => {
               // Handle topic change - you can update the subject name or other properties
               console.log("Topic changed to:", topicId);
