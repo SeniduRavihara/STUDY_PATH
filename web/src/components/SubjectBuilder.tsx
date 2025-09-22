@@ -13,16 +13,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSidebar } from "../contexts/SidebarContext";
 import FlowBuilder from "./FlowBuilder";
-
-interface Subject {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  difficulty: string;
-  color: string[];
-  icon: string;
-}
+import { DatabaseService } from "../lib/database";
+import type { TopicWithChildren, Subject, SubjectInsert } from "../lib/database";
 
 interface FlowNode {
   id: string;
@@ -34,25 +26,14 @@ interface FlowNode {
   connections: string[];
 }
 
-interface Topic {
-  id: string;
-  name: string;
-  description: string;
-  parentId?: string;
-  level: number;
-  hasFlow: boolean;
-  flowId?: string;
-  children: Topic[];
-  isExpanded?: boolean;
-}
-
 interface TopicHierarchyItemProps {
-  topic: Topic;
-  onUpdate: (topics: Topic[]) => void;
-  allTopics: Topic[];
+  topic: TopicWithChildren;
+  onUpdate: (topics: TopicWithChildren[]) => void;
+  allTopics: TopicWithChildren[];
+  subjectId: string;
 }
 
-const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate, allTopics }) => {
+const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate, allTopics, subjectId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [editName, setEditName] = useState(topic.name);
@@ -60,63 +41,55 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
   const [newChildName, setNewChildName] = useState("");
   const [newChildDescription, setNewChildDescription] = useState("");
 
-  const updateTopic = (topicId: string, updates: Partial<Topic>) => {
-    const updateTopics = (topics: Topic[]): Topic[] => {
-      return topics.map(t => {
-        if (t.id === topicId) {
-          return { ...t, ...updates };
-        }
-        if (t.children.length > 0) {
-          return { ...t, children: updateTopics(t.children) };
-        }
-        return t;
-      });
-    };
-    onUpdate(updateTopics(allTopics));
+  const updateTopic = async (topicId: string, updates: Partial<TopicWithChildren>) => {
+    try {
+      await DatabaseService.updateTopic(topicId, updates);
+      // Reload topics from database
+      const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
+      onUpdate(updatedTopics);
+    } catch (error) {
+      console.error('Error updating topic:', error);
+      alert('Error updating topic. Please try again.');
+    }
   };
 
-  const addChildTopic = (parentId: string) => {
-    const newTopic: Topic = {
-      id: `topic-${Date.now()}`,
-      name: newChildName,
-      description: newChildDescription,
-      parentId,
-      level: topic.level + 1,
-      hasFlow: false,
-      children: []
-    };
-
-    const addChildToTopics = (topics: Topic[]): Topic[] => {
-      return topics.map(t => {
-        if (t.id === parentId) {
-          return { ...t, children: [...t.children, newTopic] };
-        }
-        if (t.children.length > 0) {
-          return { ...t, children: addChildToTopics(t.children) };
-        }
-        return t;
+  const addChildTopic = async (parentId: string) => {
+    try {
+      await DatabaseService.createTopic({
+        subject_id: subjectId,
+        parent_id: parentId,
+        name: newChildName,
+        description: newChildDescription,
+        level: topic.level + 1,
+        sort_order: topic.children.length + 1,
       });
-    };
-
-    onUpdate(addChildToTopics(allTopics));
-    setNewChildName("");
-    setNewChildDescription("");
-    setIsAddingChild(false);
+      
+      // Reload topics from database
+      const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
+      onUpdate(updatedTopics);
+      
+      setIsAddingChild(false);
+      setNewChildName("");
+      setNewChildDescription("");
+    } catch (error) {
+      console.error('Error creating topic:', error);
+      alert('Error creating topic. Please try again.');
+    }
   };
 
-  const deleteTopic = (topicId: string) => {
-    const deleteFromTopics = (topics: Topic[]): Topic[] => {
-      return topics.filter(t => {
-        if (t.id === topicId) {
-          return false;
-        }
-        if (t.children.length > 0) {
-          return { ...t, children: deleteFromTopics(t.children) };
-        }
-        return true;
-      });
-    };
-    onUpdate(deleteFromTopics(allTopics));
+  const deleteTopic = async (topicId: string) => {
+    if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
+      try {
+        await DatabaseService.deleteTopic(topicId);
+        
+        // Reload topics from database
+        const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
+        onUpdate(updatedTopics);
+      } catch (error) {
+        console.error('Error deleting topic:', error);
+        alert('Error deleting topic. Please try again.');
+      }
+    }
   };
 
   const toggleExpanded = () => {
@@ -305,6 +278,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
               topic={child}
               onUpdate={onUpdate}
               allTopics={allTopics}
+              subjectId={subjectId}
             />
           ))}
         </div>
@@ -320,15 +294,7 @@ const SubjectBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [currentStep, setCurrentStep] = useState(1);
   const [viewMode, setViewMode] = useState<"tabs" | "stepper">("tabs");
-  const [subject, setSubject] = useState<Subject>({
-    id: subjectId || "",
-    name: "JavaScript Fundamentals",
-    description: "Learn the basics of JavaScript programming with interactive lessons and quizzes",
-    category: "programming",
-    difficulty: "Beginner",
-    color: ["#667eea", "#764ba2"],
-    icon: "book",
-  });
+  const [subject, setSubject] = useState<Subject | null>(null);
   const [flowNodes, setFlowNodes] = useState<FlowNode[]>([
     // Mock nodes for testing with new interface
     {
@@ -439,187 +405,57 @@ const SubjectBuilder: React.FC = () => {
   ]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [topics, setTopics] = useState<Topic[]>([
-    {
-      id: "mechanics",
-      name: "Mechanics",
-      description: "Motion, forces, and energy",
-      level: 0,
-      hasFlow: false,
-      children: [
-        {
-          id: "kinematics",
-          name: "Kinematics",
-          description: "Motion in one and two dimensions",
-          parentId: "mechanics",
-          level: 1,
-          hasFlow: false,
-          children: [
-            {
-              id: "linear-motion",
-              name: "Linear Motion",
-              description: "Motion along a straight line",
-              parentId: "kinematics",
-              level: 2,
-              hasFlow: true,
-              flowId: "flow-linear-motion",
-              children: []
-            },
-            {
-              id: "projectile-motion",
-              name: "Projectile Motion",
-              description: "Motion under gravity",
-              parentId: "kinematics",
-              level: 2,
-              hasFlow: true,
-              flowId: "flow-projectile-motion",
-              children: []
-            }
-          ]
-        },
-        {
-          id: "dynamics",
-          name: "Dynamics",
-          description: "Forces and Newton's laws",
-          parentId: "mechanics",
-          level: 1,
-          hasFlow: false,
-          children: [
-            {
-              id: "newtons-laws",
-              name: "Newton's Laws",
-              description: "Three laws of motion",
-              parentId: "dynamics",
-              level: 2,
-              hasFlow: true,
-              flowId: "flow-newtons-laws",
-              children: []
-            },
-            {
-              id: "friction",
-              name: "Friction",
-              description: "Frictional forces",
-              parentId: "dynamics",
-              level: 2,
-              hasFlow: true,
-              flowId: "flow-friction",
-              children: []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: "waves",
-      name: "Waves",
-      description: "Wave properties and behavior",
-      level: 0,
-      hasFlow: false,
-      children: [
-        {
-          id: "wave-properties",
-          name: "Wave Properties",
-          description: "Amplitude, frequency, wavelength",
-          parentId: "waves",
-          level: 1,
-          hasFlow: true,
-          flowId: "flow-wave-properties",
-          children: []
-        },
-        {
-          id: "wave-behavior",
-          name: "Wave Behavior",
-          description: "Reflection, refraction, interference",
-          parentId: "waves",
-          level: 1,
-          hasFlow: false,
-          children: [
-            {
-              id: "interference",
-              name: "Interference",
-              description: "Constructive and destructive interference",
-              parentId: "wave-behavior",
-              level: 2,
-              hasFlow: true,
-              flowId: "flow-interference",
-              children: []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: "electricity",
-      name: "Electricity",
-      description: "Electric fields and circuits",
-      level: 0,
-      hasFlow: false,
-      children: [
-        {
-          id: "electric-fields",
-          name: "Electric Fields",
-          description: "Electric field strength and potential",
-          parentId: "electricity",
-          level: 1,
-          hasFlow: true,
-          flowId: "flow-electric-fields",
-          children: []
-        }
-      ]
-    }
-  ]);
+  const [topics, setTopics] = useState<TopicWithChildren[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
+  const [isAddingTopic, setIsAddingTopic] = useState(false);
+  const [newTopicName, setNewTopicName] = useState("");
+  const [newTopicDescription, setNewTopicDescription] = useState("");
 
-  // Mock subjects data (same as in SubjectManager)
-  const mockSubjects = [
-    {
-      id: "1",
-      name: "JavaScript Fundamentals",
-      description: "Learn the basics of JavaScript programming",
-      icon: "javascript",
-      color: ["#f7df1e", "#000000"],
-      difficulty: "Beginner",
-      chapters: 5,
-      created_at: "2024-01-15T10:00:00Z",
-    },
-    {
-      id: "2", 
-      name: "React Development",
-      description: "Master React for building modern web applications",
-      icon: "react",
-      color: ["#61dafb", "#282c34"],
-      difficulty: "Intermediate",
-      chapters: 8,
-      created_at: "2024-01-10T14:30:00Z",
-    },
-    {
-      id: "3",
-      name: "Node.js Backend",
-      description: "Build scalable server-side applications with Node.js",
-      icon: "nodejs",
-      color: ["#339933", "#ffffff"],
-      difficulty: "Advanced",
-      chapters: 6,
-      created_at: "2024-01-05T09:15:00Z",
-    },
-  ];
 
-  // Load existing subject data
+  // Load subject and topics data from database
   useEffect(() => {
-    if (subjectId) {
-      const existingSubject = mockSubjects.find(s => s.id === subjectId);
-      if (existingSubject) {
-        setSubject({
-          id: existingSubject.id,
-          name: existingSubject.name,
-          description: existingSubject.description,
-          category: "programming", // Default category
-          difficulty: existingSubject.difficulty,
-          color: existingSubject.color,
-          icon: existingSubject.icon,
-        });
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (subjectId) {
+          // Check if subjectId is a valid UUID format
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidRegex.test(subjectId)) {
+            console.log('Invalid subject ID format, loading available subjects');
+            // Load all available subjects instead
+            const allSubjects = await DatabaseService.getSubjects();
+            setAvailableSubjects(allSubjects);
+            setSubject(null);
+            setTopics([]);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Load subject data
+          const subjectData = await DatabaseService.getSubjectById(subjectId);
+          if (subjectData) {
+            setSubject(subjectData);
+            
+            // Load topics for this subject
+            const topicsData = await DatabaseService.getTopicsBySubject(subjectId);
+            setTopics(topicsData);
+          }
+        } else {
+          // Load all available subjects for selection
+          const allSubjects = await DatabaseService.getSubjects();
+          setAvailableSubjects(allSubjects);
+          setSubject(null);
+          setTopics([]);
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    loadData();
   }, [subjectId]);
 
   const steps = [
@@ -658,12 +494,37 @@ const SubjectBuilder: React.FC = () => {
   };
 
   const handleSave = async () => {
+    if (!subject) return;
+    
     setIsSaving(true);
-    // Simulate save operation
-    setTimeout(() => {
+    try {
+      if (subjectId) {
+        // Update existing subject
+        await DatabaseService.updateSubject(subjectId, {
+          name: subject.name,
+          description: subject.description,
+          icon: subject.icon,
+          color: subject.color,
+        });
+      } else {
+        // Create new subject
+        const newSubject = await DatabaseService.createSubject({
+          name: subject.name,
+          description: subject.description,
+          icon: subject.icon,
+          color: subject.color,
+        });
+        setSubject(newSubject);
+        // Navigate to the new subject
+        navigate(`/admin/subject-builder/${newSubject.id}`);
+      }
+      alert("Subject saved successfully!");
+    } catch (error) {
+      console.error('Error saving subject:', error);
+      alert("Error saving subject. Please try again.");
+    } finally {
       setIsSaving(false);
-      alert("Subject saved successfully! (Local state only)");
-    }, 1000);
+    }
   };
 
   const handlePublish = async () => {
@@ -679,6 +540,31 @@ const SubjectBuilder: React.FC = () => {
       alert("Subject published successfully! (Local state only)");
       navigate("/admin/subjects");
     }, 1500);
+  };
+
+  const addNewTopic = async () => {
+    if (!subject || !newTopicName.trim()) return;
+    
+    try {
+      await DatabaseService.createTopic({
+        subject_id: subject.id,
+        name: newTopicName,
+        description: newTopicDescription,
+        level: 0,
+        sort_order: topics.length + 1,
+      });
+      
+      // Reload topics from database
+      const updatedTopics = await DatabaseService.getTopicsBySubject(subject.id);
+      setTopics(updatedTopics);
+      
+      setIsAddingTopic(false);
+      setNewTopicName("");
+      setNewTopicDescription("");
+    } catch (error) {
+      console.error('Error creating topic:', error);
+      alert('Error creating topic. Please try again.');
+    }
   };
 
   const renderTabContent = () => {
@@ -861,11 +747,56 @@ const SubjectBuilder: React.FC = () => {
                     Organize your subject into topics, subtopics, and sub-subtopics with unlimited depth
                   </p>
                 </div>
-                <button className="btn-primary flex items-center space-x-2">
+                <button 
+                  onClick={() => setIsAddingTopic(true)}
+                  className="btn-primary flex items-center space-x-2"
+                >
                   <Plus className="w-4 h-4" />
                   <span>Add Topic</span>
                 </button>
               </div>
+              
+              {/* Add New Topic Form */}
+              {isAddingTopic && (
+                <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
+                  <h4 className="text-white font-medium mb-3">Add New Topic</h4>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={newTopicName}
+                      onChange={(e) => setNewTopicName(e.target.value)}
+                      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      placeholder="Topic name"
+                    />
+                    <input
+                      type="text"
+                      value={newTopicDescription}
+                      onChange={(e) => setNewTopicDescription(e.target.value)}
+                      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
+                      placeholder="Topic description"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={addNewTopic}
+                        disabled={!newTopicName.trim()}
+                        className="px-3 py-1 bg-primary-500 text-white rounded text-sm hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Add Topic
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsAddingTopic(false);
+                          setNewTopicName("");
+                          setNewTopicDescription("");
+                        }}
+                        className="px-3 py-1 bg-dark-600 text-white rounded text-sm hover:bg-dark-500"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-4">
                 {topics.map((topic) => (
@@ -874,6 +805,7 @@ const SubjectBuilder: React.FC = () => {
                     topic={topic} 
                     onUpdate={setTopics}
                     allTopics={topics}
+                    subjectId={subject?.id || ""}
                   />
                 ))}
               </div>
@@ -886,10 +818,11 @@ const SubjectBuilder: React.FC = () => {
           <FlowBuilder
             nodes={flowNodes}
             onNodesChange={setFlowNodes}
-            subjectName={subject.name}
+            subjectName={subject?.name || ""}
             sidebarCollapsed={sidebarCollapsed}
             topics={topics}
             onTopicsChange={setTopics}
+            subjectId={subject?.id || ""}
             onSubjectChange={(topicId) => {
               // Handle topic change - you can update the subject name or other properties
               console.log("Topic changed to:", topicId);
@@ -952,6 +885,75 @@ const SubjectBuilder: React.FC = () => {
     );
   }
 
+  // Show subject selection if no subject is selected
+  if (!subject && availableSubjects.length > 0) {
+    return (
+      <div className="min-h-screen bg-dark-950">
+        <div className="bg-dark-900 border-b border-dark-800">
+          <div className="px-6 py-4">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate("/admin/subjects")}
+                className="text-dark-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Select a Subject</h1>
+                <p className="text-dark-400">Choose a subject to edit or create a new one</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {availableSubjects.map((subj) => (
+              <div
+                key={subj.id}
+                onClick={() => navigate(`/admin/subject-builder/${subj.id}`)}
+                className="bg-dark-800 rounded-xl p-6 cursor-pointer hover:bg-dark-700 transition-colors border border-dark-700 hover:border-primary-500"
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <div 
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                    style={{ backgroundColor: subj.color }}
+                  >
+                    {subj.icon || "📚"}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{subj.name}</h3>
+                    <p className="text-dark-400 text-sm">{subj.description}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-dark-500">
+                    {subj.is_active ? "Active" : "Inactive"}
+                  </span>
+                  <button className="text-primary-500 hover:text-primary-400 text-sm font-medium">
+                    Edit Subject →
+                  </button>
+                </div>
+              </div>
+            ))}
+            
+            {/* Create New Subject Card */}
+            <div
+              onClick={() => navigate("/admin/subject-builder")}
+              className="bg-dark-800 rounded-xl p-6 cursor-pointer hover:bg-dark-700 transition-colors border-2 border-dashed border-dark-600 hover:border-primary-500 flex items-center justify-center"
+            >
+              <div className="text-center">
+                <Plus className="w-8 h-8 text-dark-400 mx-auto mb-2" />
+                <h3 className="text-lg font-semibold text-white mb-1">Create New Subject</h3>
+                <p className="text-dark-400 text-sm">Start building a new learning path</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-dark-950">
       {/* Header */}
@@ -967,7 +969,7 @@ const SubjectBuilder: React.FC = () => {
               </button>
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  {subject.name || "New Subject"}
+                  {subject?.name || "New Subject"}
                 </h1>
                 <p className="text-dark-400">
                   Build your learning flow and content

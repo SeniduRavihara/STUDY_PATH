@@ -51,6 +51,7 @@ interface FlowBuilderProps {
   sidebarCollapsed?: boolean;
   topics: Topic[];
   onTopicsChange: (topics: Topic[]) => void;
+  subjectId: string;
   onSubjectChange?: (subjectId: string) => void;
 }
 

@@ -1,21 +1,13 @@
 import { Edit, Plus, Trash2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SupabaseService } from "../lib/supabaseService";
-
-interface Subject {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  color: string[];
-  difficulty: string;
-  chapters: number;
-  created_at: string;
-}
+import { DatabaseService } from "../lib/database";
+import type { Subject } from "../lib/database";
+import { useAuth } from "../contexts/AuthContext";
 
 const SubjectManager: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -26,21 +18,20 @@ const SubjectManager: React.FC = () => {
     name: "",
     description: "",
     icon: "📚",
-    color: ["#00d4ff", "#0099cc"],
-    difficulty: "Beginner" as "Beginner" | "Intermediate" | "Advanced",
+    color: "#00d4ff",
   });
 
   const colorPresets = [
-    ["#ff6b6b", "#ee5a24"], // Red
-    ["#4ecdc4", "#44a08d"], // Teal
-    ["#45b7d1", "#96ceb4"], // Blue
-    ["#96ceb4", "#feca57"], // Green
-    ["#ff9ff3", "#54a0ff"], // Pink
-    ["#a8e6cf", "#ffd3a5"], // Light Green
-    ["#ffaaa5", "#ff8b94"], // Coral
-    ["#dcedc1", "#ffd3a5"], // Mint
-    ["#00d4ff", "#0099cc"], // Cyan
-    ["#667eea", "#764ba2"], // Purple
+    "#ff6b6b", // Red
+    "#4ecdc4", // Teal
+    "#45b7d1", // Blue
+    "#96ceb4", // Green
+    "#ff9ff3", // Pink
+    "#a8e6cf", // Light Green
+    "#ffaaa5", // Coral
+    "#dcedc1", // Mint
+    "#00d4ff", // Cyan
+    "#667eea", // Purple
   ];
 
   const iconPresets = [
@@ -69,40 +60,9 @@ const SubjectManager: React.FC = () => {
   const fetchSubjects = async () => {
     try {
       setLoading(true);
-      // Mock data for testing
-      const mockSubjects = [
-        {
-          id: "1",
-          name: "JavaScript Fundamentals",
-          description: "Learn the basics of JavaScript programming",
-          icon: "javascript",
-          color: ["#f7df1e", "#000000"],
-          difficulty: "Beginner",
-          chapters: 5,
-          created_at: "2024-01-15T10:00:00Z",
-        },
-        {
-          id: "2", 
-          name: "React Development",
-          description: "Master React for building modern web applications",
-          icon: "react",
-          color: ["#61dafb", "#282c34"],
-          difficulty: "Intermediate",
-          chapters: 8,
-          created_at: "2024-01-10T14:30:00Z",
-        },
-        {
-          id: "3",
-          name: "Node.js Backend",
-          description: "Build scalable server-side applications with Node.js",
-          icon: "nodejs",
-          color: ["#339933", "#ffffff"],
-          difficulty: "Advanced",
-          chapters: 6,
-          created_at: "2024-01-05T09:15:00Z",
-        },
-      ];
-      setSubjects(mockSubjects);
+      // Fetch real subjects from database
+      const realSubjects = await DatabaseService.getSubjects();
+      setSubjects(realSubjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     } finally {
@@ -113,26 +73,28 @@ const SubjectManager: React.FC = () => {
   const handleCreateSubject = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!user) {
+      alert("You must be logged in to create subjects.");
+      return;
+    }
+
     try {
-      // Create mock subject data for testing
-      const mockSubject = {
-        id: `subject-${Date.now()}`,
+      // Create subject in database
+      const newSubject = await DatabaseService.createSubject({
         name: formData.name,
         description: formData.description,
         icon: formData.icon,
         color: formData.color,
-        difficulty: formData.difficulty,
-        chapters: 0,
-        created_at: new Date().toISOString(),
-      };
+        created_by: user.id,
+      });
 
-      // Add to local state
-      setSubjects(prev => [mockSubject, ...prev]);
+      // Refresh subjects list
+      await fetchSubjects();
       setShowCreateForm(false);
       resetForm();
 
       // Redirect to SubjectBuilder for enhanced flow creation
-      navigate(`/admin/subject-builder/${mockSubject.id}`);
+      navigate(`/admin/subject-builder/${newSubject.id}`);
     } catch (error) {
       console.error("Error creating subject:", error);
       alert("Error creating subject. Please try again.");
@@ -145,21 +107,16 @@ const SubjectManager: React.FC = () => {
     if (!editingSubject) return;
 
     try {
-      const { data, error } = await SupabaseService.updateSubject(
-        editingSubject.id,
-        {
-          ...formData,
-          color: formData.color.join(","), // Convert array to string for database
-        },
-      );
+      // Update subject in database
+      await DatabaseService.updateSubject(editingSubject.id, {
+        name: formData.name,
+        description: formData.description,
+        icon: formData.icon,
+        color: formData.color,
+      });
 
-      if (error) throw error;
-
-      setSubjects(prev =>
-        prev.map(subject =>
-          subject.id === editingSubject.id ? data : subject,
-        ),
-      );
+      // Refresh subjects list
+      await fetchSubjects();
       setShowCreateForm(false);
       setEditingSubject(null);
       resetForm();
@@ -174,16 +131,17 @@ const SubjectManager: React.FC = () => {
   const handleDeleteSubject = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this subject? This will also delete all associated chapters and MCQs.",
+        "Are you sure you want to delete this subject? This will also delete all associated topics and flows.",
       )
     )
       return;
 
     try {
-      const { error } = await SupabaseService.deleteSubject(id);
-      if (error) throw error;
-
-      setSubjects(prev => prev.filter(subject => subject.id !== id));
+      // Delete subject from database
+      await DatabaseService.deleteSubject(id);
+      
+      // Refresh subjects list
+      await fetchSubjects();
       alert("Subject deleted successfully!");
     } catch (error) {
       console.error("Error deleting subject:", error);
@@ -259,7 +217,7 @@ const SubjectManager: React.FC = () => {
                 <div
                   className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
                   style={{
-                    background: `linear-gradient(135deg, ${subject.color[0]}, ${subject.color[1]})`,
+                    backgroundColor: subject.color,
                   }}
                 >
                   {subject.icon}
@@ -269,25 +227,32 @@ const SubjectManager: React.FC = () => {
                     {subject.name}
                   </h3>
                   <p className="text-dark-400 text-sm">
-                    {subject.chapters} chapters
+                    {subject.description || "No description"}
+                  </p>
+                  <p className="text-dark-500 text-xs mt-1">
+                    Created by: {subject.created_by === user?.id ? "You" : "Other User"}
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => handleEditSubject(subject)}
-                  className="text-dark-400 hover:text-white transition-colors"
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDeleteSubject(subject.id)}
-                  className="text-red-400 hover:text-red-300 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                {subject.created_by === user?.id && (
+                  <>
+                    <button
+                      onClick={() => handleEditSubject(subject)}
+                      className="text-dark-400 hover:text-white transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSubject(subject.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -406,12 +371,12 @@ const SubjectManager: React.FC = () => {
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, color }))}
                       className={`w-12 h-12 rounded-lg transition-transform ${
-                        JSON.stringify(formData.color) === JSON.stringify(color)
+                        formData.color === color
                           ? "scale-110 ring-2 ring-white"
                           : "hover:scale-105"
                       }`}
                       style={{
-                        background: `linear-gradient(135deg, ${color[0]}, ${color[1]})`,
+                        backgroundColor: color,
                       }}
                     />
                   ))}
@@ -452,7 +417,7 @@ const SubjectManager: React.FC = () => {
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
                       style={{
-                        background: `linear-gradient(135deg, ${formData.color[0]}, ${formData.color[1]})`,
+                        backgroundColor: formData.color,
                       }}
                     >
                       {formData.icon}
