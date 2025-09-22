@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS public.users (
     name TEXT NOT NULL,
     level TEXT CHECK (level IN ('Beginner', 'Intermediate', 'Advanced')) DEFAULT 'Beginner',
     total_xp INTEGER DEFAULT 0,
-    hearts INTEGER DEFAULT 5;
-    coins INTEGER DEFAULT 200;
+    hearts INTEGER DEFAULT 5,
+    coins INTEGER DEFAULT 200,
     streak INTEGER DEFAULT 0,
     rank TEXT DEFAULT 'Novice',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
