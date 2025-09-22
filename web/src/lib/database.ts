@@ -13,6 +13,7 @@ export type TopicUpdate = Database['public']['Tables']['topics']['Update'];
 // Extended Topic interface for hierarchical display
 export interface TopicWithChildren extends Topic {
   children: TopicWithChildren[];
+  isExpanded?: boolean; // UI-only property for expand/collapse state
 }
 
 // Database service class
@@ -28,6 +29,20 @@ export class DatabaseService {
     
     if (error) {
       console.error('Error fetching subjects:', error);
+      throw error;
+    }
+    
+    return data || [];
+  }
+
+  static async getAllSubjects(): Promise<Subject[]> {
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    
+    if (error) {
+      console.error('Error fetching all subjects:', error);
       throw error;
     }
     

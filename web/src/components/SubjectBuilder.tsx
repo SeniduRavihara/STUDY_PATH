@@ -15,6 +15,7 @@ import { useSidebar } from "../contexts/SidebarContext";
 import FlowBuilder from "./FlowBuilder";
 import { DatabaseService } from "../lib/database";
 import type { TopicWithChildren, Subject, SubjectInsert } from "../lib/database";
+import { useAuth } from "../contexts/AuthContext";
 
 interface FlowNode {
   id: string;
@@ -31,15 +32,18 @@ interface TopicHierarchyItemProps {
   onUpdate: (topics: TopicWithChildren[]) => void;
   allTopics: TopicWithChildren[];
   subjectId: string;
+  user: any; // Add user prop
 }
 
-const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate, allTopics, subjectId }) => {
+const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate, allTopics, subjectId, user }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
+  const [isAddingChildLoading, setIsAddingChildLoading] = useState(false);
   const [editName, setEditName] = useState(topic.name);
   const [editDescription, setEditDescription] = useState(topic.description);
   const [newChildName, setNewChildName] = useState("");
   const [newChildDescription, setNewChildDescription] = useState("");
+  const [isExpanded, setIsExpanded] = useState(topic.isExpanded || false);
 
   const updateTopic = async (topicId: string, updates: Partial<TopicWithChildren>) => {
     try {
@@ -54,6 +58,12 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
   };
 
   const addChildTopic = async (parentId: string) => {
+    if (!user) {
+      alert("You must be logged in to create topics.");
+      return;
+    }
+
+    setIsAddingChildLoading(true);
     try {
       await DatabaseService.createTopic({
         subject_id: subjectId,
@@ -62,6 +72,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
         description: newChildDescription,
         level: topic.level + 1,
         sort_order: topic.children.length + 1,
+        created_by: user.id,
       });
       
       // Reload topics from database
@@ -74,6 +85,8 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
     } catch (error) {
       console.error('Error creating topic:', error);
       alert('Error creating topic. Please try again.');
+    } finally {
+      setIsAddingChildLoading(false);
     }
   };
 
@@ -93,7 +106,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
   };
 
   const toggleExpanded = () => {
-    updateTopic(topic.id, { isExpanded: !topic.isExpanded });
+    setIsExpanded(!isExpanded);
   };
 
   const saveEdit = () => {
@@ -130,7 +143,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
                 onClick={toggleExpanded}
                 className="text-dark-400 hover:text-white transition-colors"
               >
-                {topic.isExpanded ? '▼' : '▶'}
+                {isExpanded ? '▼' : '▶'}
               </button>
             )}
             
@@ -248,10 +261,13 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => addChildTopic(topic.id)}
-                  disabled={!newChildName.trim()}
-                  className="px-3 py-1 bg-primary-500 text-white rounded text-sm hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!newChildName.trim() || isAddingChildLoading}
+                  className="px-3 py-1 bg-primary-500 text-white rounded text-sm hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  Add Subtopic
+                  {isAddingChildLoading && (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  )}
+                  <span>{isAddingChildLoading ? 'Adding...' : 'Add Subtopic'}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -270,7 +286,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
       </div>
 
       {/* Children */}
-      {topic.isExpanded && topic.children.length > 0 && (
+      {isExpanded && topic.children.length > 0 && (
         <div className="mt-2 space-y-2">
           {topic.children.map((child) => (
             <TopicHierarchyItem
@@ -279,6 +295,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
               onUpdate={onUpdate}
               allTopics={allTopics}
               subjectId={subjectId}
+              user={user}
             />
           ))}
         </div>
@@ -291,6 +308,7 @@ const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
   const { sidebarCollapsed } = useSidebar();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [currentStep, setCurrentStep] = useState(1);
   const [viewMode, setViewMode] = useState<"tabs" | "stepper">("tabs");
@@ -545,6 +563,11 @@ const SubjectBuilder: React.FC = () => {
   const addNewTopic = async () => {
     if (!subject || !newTopicName.trim()) return;
     
+    if (!user) {
+      alert("You must be logged in to create topics.");
+      return;
+    }
+    
     try {
       await DatabaseService.createTopic({
         subject_id: subject.id,
@@ -552,6 +575,7 @@ const SubjectBuilder: React.FC = () => {
         description: newTopicDescription,
         level: 0,
         sort_order: topics.length + 1,
+        created_by: user.id,
       });
       
       // Reload topics from database
@@ -806,6 +830,7 @@ const SubjectBuilder: React.FC = () => {
                     onUpdate={setTopics}
                     allTopics={topics}
                     subjectId={subject?.id || ""}
+                    user={user}
                   />
                 ))}
               </div>

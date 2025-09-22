@@ -1,4 +1,4 @@
-import { Edit, Plus, Trash2, X } from "lucide-react";
+import { Edit, Plus, Trash2, X, Eye, CheckCircle, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DatabaseService } from "../lib/database";
@@ -60,9 +60,9 @@ const SubjectManager: React.FC = () => {
   const fetchSubjects = async () => {
     try {
       setLoading(true);
-      // Fetch real subjects from database
-      const realSubjects = await DatabaseService.getSubjects();
-      setSubjects(realSubjects);
+      // Fetch ALL subjects from database (including unpublished ones for admin)
+      const allSubjects = await DatabaseService.getAllSubjects();
+      setSubjects(allSubjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);
     } finally {
@@ -154,29 +154,43 @@ const SubjectManager: React.FC = () => {
     navigate(`/admin/subject-builder/${subject.id}`);
   };
 
+  const handleReviewSubject = (subject: Subject) => {
+    // Redirect to SubjectBuilder in review mode
+    navigate(`/admin/subject-builder/${subject.id}?mode=review`);
+  };
+
+  const handlePublishSubject = async (subjectId: string) => {
+    try {
+      await DatabaseService.updateSubject(subjectId, { is_active: true });
+      await fetchSubjects();
+      alert("Subject published successfully!");
+    } catch (error) {
+      console.error("Error publishing subject:", error);
+      alert("Error publishing subject. Please try again.");
+    }
+  };
+
+  const handleUnpublishSubject = async (subjectId: string) => {
+    try {
+      await DatabaseService.updateSubject(subjectId, { is_active: false });
+      await fetchSubjects();
+      alert("Subject unpublished successfully!");
+    } catch (error) {
+      console.error("Error unpublishing subject:", error);
+      alert("Error unpublishing subject. Please try again.");
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
       description: "",
       icon: "📚",
-      color: ["#00d4ff", "#0099cc"],
-      difficulty: "Beginner",
+      color: "#00d4ff",
     });
     setEditingSubject(null);
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Beginner":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      case "Intermediate":
-        return "bg-yellow-500/10 text-yellow-500 border-yellow-500/20";
-      case "Advanced":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      default:
-        return "bg-gray-500/10 text-gray-500 border-gray-500/20";
-    }
-  };
 
   if (loading) {
     return (
@@ -235,6 +249,16 @@ const SubjectManager: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
+                {/* Review button - available for all subjects */}
+                <button
+                  onClick={() => handleReviewSubject(subject)}
+                  className="text-blue-400 hover:text-blue-300 transition-colors"
+                  title="Review"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+                
+                {/* Owner-only buttons */}
                 {subject.created_by === user?.id && (
                   <>
                     <button
@@ -244,6 +268,26 @@ const SubjectManager: React.FC = () => {
                     >
                       <Edit className="w-4 h-4" />
                     </button>
+                    
+                    {/* Publish/Unpublish buttons */}
+                    {subject.is_active ? (
+                      <button
+                        onClick={() => handleUnpublishSubject(subject.id)}
+                        className="text-orange-400 hover:text-orange-300 transition-colors"
+                        title="Unpublish"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handlePublishSubject(subject.id)}
+                        className="text-green-400 hover:text-green-300 transition-colors"
+                        title="Publish"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    )}
+                    
                     <button
                       onClick={() => handleDeleteSubject(subject.id)}
                       className="text-red-400 hover:text-red-300 transition-colors"
@@ -263,11 +307,17 @@ const SubjectManager: React.FC = () => {
             )}
 
             <div className="flex items-center justify-between">
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(subject.difficulty)}`}
-              >
-                {subject.difficulty}
-              </span>
+              <div className="flex items-center space-x-2">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                    subject.is_active 
+                      ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                      : "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                  }`}
+                >
+                  {subject.is_active ? "Published" : "Draft"}
+                </span>
+              </div>
               <span className="text-dark-400 text-sm">
                 {new Date(subject.created_at).toLocaleDateString()}
               </span>
