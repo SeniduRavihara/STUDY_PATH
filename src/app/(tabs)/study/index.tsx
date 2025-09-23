@@ -12,9 +12,9 @@ import {
 } from "react-native";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
-  MockSubject,
-  MockSubscriptionService,
-} from "../../../lib/mockSubscriptionService";
+  Subject,
+  SubscriptionService,
+} from "../../../superbase/services/subscriptionService";
 
 // Define types for better type safety
 type LocalSubject = {
@@ -35,7 +35,7 @@ export default function StudyScreen() {
   const parsedSubject = subject ? JSON.parse(subject as string) : null;
   const { user } = useAuth();
 
-  const [subscribedSubjects, setSubscribedSubjects] = useState<MockSubject[]>(
+  const [subscribedSubjects, setSubscribedSubjects] = useState<Subject[]>(
     [],
   );
   const [loading, setLoading] = useState(true);
@@ -44,8 +44,13 @@ export default function StudyScreen() {
 
   // Load user's subscribed subjects
   const loadSubscribedSubjects = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const subjects = MockSubscriptionService.getSubscribedSubjects();
+      const subjects = await SubscriptionService.getUserSubscriptions(user.id);
       setSubscribedSubjects(subjects);
     } catch (error) {
       console.error("Error loading subscribed subjects:", error);
@@ -64,7 +69,7 @@ export default function StudyScreen() {
   // Load subjects on component mount
   useEffect(() => {
     loadSubscribedSubjects();
-  }, []);
+  }, [user?.id]);
 
   // Handle subscribing to new subjects
   const handleSubscribeToSubjects = () => {
@@ -72,7 +77,7 @@ export default function StudyScreen() {
   };
 
   // Handle navigation to flow with loading state
-  const handleNavigateToFlow = async (subject: MockSubject) => {
+  const handleNavigateToFlow = async (subject: Subject) => {
     setNavigatingToFlow(subject.id);
     // Small delay to show loading state
     setTimeout(() => {
@@ -175,7 +180,7 @@ export default function StudyScreen() {
                 )}
                 <View className="flex-row items-center">
                   <LinearGradient
-                    colors={subject.color}
+                    colors={subject.color || ['#3B82F6', '#3B82F6']}
                     className="p-4 rounded-2xl mr-4"
                   >
                     <Ionicons
@@ -212,7 +217,7 @@ export default function StudyScreen() {
 
                     <View className="bg-slate-700 rounded-full h-2">
                       <LinearGradient
-                        colors={subject.color}
+                        colors={subject.color || ['#3B82F6', '#3B82F6']}
                         className="rounded-full h-2"
                         style={{
                           width: `${(subject.completed / subject.chapters) * 100}%`,

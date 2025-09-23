@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Circle } from "react-native-svg";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -555,14 +555,47 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
           minHeight: totalContentHeight,
           paddingBottom: 100,
         }}
+        style={{
+          backgroundColor: '#0f172a', // slate-900 background
+        }}
       >
         <View
           className="relative"
           style={{
             minHeight: totalContentHeight,
             width: screenWidth,
+            backgroundColor: '#0f172a',
           }}
         >
+          {/* Dotted Grid Background */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#0f172a',
+            }}
+          >
+            {/* Create dotted grid with larger spacing for better performance */}
+            {Array.from({ length: Math.ceil(totalContentHeight / 40) }, (_, row) =>
+              Array.from({ length: Math.ceil(screenWidth / 40) }, (_, col) => (
+                <View
+                  key={`dot-${row}-${col}`}
+                  style={{
+                    position: 'absolute',
+                    left: col * 40,
+                    top: row * 40,
+                    width: 2,
+                    height: 2,
+                    backgroundColor: '#374151',
+                    borderRadius: 1,
+                  }}
+                />
+              ))
+            )}
+          </View>
           {/* Vertical Flow Paths SVG */}
           <Svg
             height={totalContentHeight}

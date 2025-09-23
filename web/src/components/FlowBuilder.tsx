@@ -189,6 +189,30 @@ const FLOW_CONFIG = {
   connectionOffset: 25, // Vertical offset for L-shaped connections
 };
 
+// 3-Column Grid Flow Pattern (Center acts as transition hub) - Mobile Logic
+const POSITION_PATTERN = [
+  "center", // Row 1: Start center
+  "right", // Row 2: Move right
+  "center", // Row 3: Back to center
+  "left", // Row 4: Move left
+  "center", // Row 5: Back to center
+  "right", // Row 6: Move right
+  "center", // Row 7: Back to center
+  "left", // Row 8: Move left
+  "center", // Row 9: Back to center
+  "right", // Row 10: Move right
+  "center", // Row 11: Back to center
+  "left", // Row 12: Move left
+];
+
+// Get smart position for node based on mobile's organic pattern
+const getSmartPosition = (index: number): "left" | "center" | "right" => {
+  return POSITION_PATTERN[index % POSITION_PATTERN.length] as
+    | "left"
+    | "center"
+    | "right";
+};
+
 // Calculate node position using simple switch case based on node position
 const calculateNodePosition = (sortOrder: number, containerWidth: number) => {
   // Validate and provide default sort_order
@@ -197,43 +221,23 @@ const calculateNodePosition = (sortOrder: number, containerWidth: number) => {
   // Calculate Y position (vertical) - fixed spacing
   const y = FLOW_CONFIG.startY + (validSortOrder - 1) * FLOW_CONFIG.nodeSpacing;
   
-  // Calculate X position (horizontal) using simple switch case
-  let x: number;
+  // Get position from mobile's organic pattern
+  const positionKey = getSmartPosition(validSortOrder - 1);
   
-  switch (validSortOrder) {
-    case 1: // 1st node → Center
+  // Map position to actual X coordinate
+    let x: number;
+    switch (positionKey) {
+      case "left":
+        x = containerWidth * FLOW_CONFIG.leftColumnX;
+        break;
+      case "center":
+        x = containerWidth * FLOW_CONFIG.centerColumnX;
+        break;
+      case "right":
+        x = containerWidth * FLOW_CONFIG.rightColumnX;
+        break;
+    default:
       x = containerWidth * FLOW_CONFIG.centerColumnX;
-      break;
-    case 2: // 2nd node → Right
-      x = containerWidth * FLOW_CONFIG.rightColumnX;
-      break;
-    case 3: // 3rd node → Center
-      x = containerWidth * FLOW_CONFIG.centerColumnX;
-      break;
-    case 4: // 4th node → Left
-      x = containerWidth * FLOW_CONFIG.leftColumnX;
-      break;
-    case 5: // 5th node → Center
-      x = containerWidth * FLOW_CONFIG.centerColumnX;
-      break;
-    case 6: // 6th node → Right
-      x = containerWidth * FLOW_CONFIG.rightColumnX;
-      break;
-    case 7: // 7th node → Center
-      x = containerWidth * FLOW_CONFIG.centerColumnX;
-      break;
-    case 8: // 8th node → Left
-      x = containerWidth * FLOW_CONFIG.leftColumnX;
-      break;
-    default: // For nodes beyond 8, repeat the pattern
-      const patternIndex = ((validSortOrder - 1) % 4) + 1;
-      switch (patternIndex) {
-        case 1: x = containerWidth * FLOW_CONFIG.centerColumnX; break;
-        case 2: x = containerWidth * FLOW_CONFIG.rightColumnX; break;
-        case 3: x = containerWidth * FLOW_CONFIG.centerColumnX; break;
-        case 4: x = containerWidth * FLOW_CONFIG.leftColumnX; break;
-        default: x = containerWidth * FLOW_CONFIG.centerColumnX;
-      }
   }
   
   console.log(`POSITION DEBUG: sortOrder=${sortOrder}, validSortOrder=${validSortOrder}, x=${x}, y=${y}`);
@@ -287,27 +291,31 @@ const getConnectionPoints = (
   currentNode: FlowNode,
   nextNode: FlowNode,
 ): { start: { x: number; y: number }; end: { x: number; y: number } } => {
-  const currentPosIndex = ((currentNode.sort_order || 1) - 1) % 4;
-  const nextPosIndex = ((nextNode.sort_order || 1) - 1) % 4;
+  const currentPos = getSmartPosition((currentNode.sort_order || 1) - 1);
+  const nextPos = getSmartPosition((nextNode.sort_order || 1) - 1);
 
   let startPoint: { x: number; y: number };
   let endPoint: { x: number; y: number };
 
-  // Determine connection direction based on position pattern: Center → Right → Center → Left
-  if (currentPosIndex === 0 && nextPosIndex === 1) { // Center to Right
+  // Mobile-inspired connection logic
+  if (currentPos === "center" && nextPos === "right") {
+    // Center to Right: Start from RIGHT side, end at TOP
     startPoint = getNodeAnchorPoint(currentNode, "right");
     endPoint = getNodeAnchorPoint(nextNode, "top");
-  } else if (currentPosIndex === 1 && nextPosIndex === 2) { // Right to Center
-    startPoint = getNodeAnchorPoint(currentNode, "bottom");
-    endPoint = getNodeAnchorPoint(nextNode, "left");
-  } else if (currentPosIndex === 2 && nextPosIndex === 3) { // Center to Left
-    startPoint = getNodeAnchorPoint(currentNode, "left");
-    endPoint = getNodeAnchorPoint(nextNode, "top");
-  } else if (currentPosIndex === 3 && nextPosIndex === 0) { // Left to Center
+  } else if (currentPos === "right" && nextPos === "center") {
+    // Right to Center: Start from BOTTOM, end at RIGHT side
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "right");
+  } else if (currentPos === "center" && nextPos === "left") {
+    // Center to Left: Start from LEFT side, end at TOP
+    startPoint = getNodeAnchorPoint(currentNode, "left");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  } else if (currentPos === "left" && nextPos === "center") {
+    // Left to Center: Start from BOTTOM, end at LEFT side
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "left");
   } else {
-    // Default vertical connection
+    // Fallback for other combinations
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "top");
   }
@@ -324,32 +332,58 @@ const createVerticalFlowPath = (
   const start = points.start;
   const end = points.end;
 
-  const currentPosIndex = ((startNode.sort_order || 1) - 1) % 4;
-  const nextPosIndex = ((endNode.sort_order || 1) - 1) % 4;
+  const currentPos = getSmartPosition((startNode.sort_order || 1) - 1);
+  const nextPos = getSmartPosition((endNode.sort_order || 1) - 1);
 
   let path: string;
   const cornerRadius = 8; // Small radius to smooth the sharp turns
 
-  // Create smooth L-shaped connections based on position pattern: Center → Right → Center → Left
-  if (currentPosIndex === 0 && nextPosIndex === 1) { // Center to Right
+  // Mobile-inspired L-shaped patterns with smooth corners
+  if (currentPos === "center" && nextPos === "right") {
+    // Center to Right: go RIGHT first, then DOWN with smooth corner
     const cornerX = end.x - cornerRadius;
     const cornerY = start.y + cornerRadius;
     path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
-  } else if (currentPosIndex === 1 && nextPosIndex === 2) { // Right to Center
+  } else if (currentPos === "right" && nextPos === "center") {
+    // Right to Center: go DOWN first, then LEFT with smooth corner
     const cornerX = start.x - cornerRadius;
     const cornerY = end.y - cornerRadius;
     path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
-  } else if (currentPosIndex === 2 && nextPosIndex === 3) { // Center to Left
+  } else if (currentPos === "center" && nextPos === "left") {
+    // Center to Left: go LEFT first, then DOWN with smooth corner
     const cornerX = end.x + cornerRadius;
     const cornerY = start.y + cornerRadius;
     path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
-  } else if (currentPosIndex === 3 && nextPosIndex === 0) { // Left to Center
+  } else if (currentPos === "left" && nextPos === "center") {
+    // Left to Center: go DOWN first, then RIGHT with smooth corner
     const cornerX = start.x + cornerRadius;
     const cornerY = end.y - cornerRadius;
     path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
-  } else {
-    // Default vertical connection
+  } else if (currentPos === "center" && nextPos === "center") {
+    // Center to Center: straight line down
     path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  } else {
+    // Fallback: determine based on relative positions
+    if (start.x === end.x) {
+      // Same X position - straight line down
+      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    } else if (start.y === end.y) {
+      // Same Y position - straight line across
+      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    } else {
+      // Different X and Y - create L-shape with smooth corner
+      if (end.x > start.x) {
+        // Target is to the RIGHT of current - go RIGHT first, then DOWN with smooth corner
+        const cornerX = end.x - cornerRadius;
+        const cornerY = start.y + cornerRadius;
+        path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+      } else {
+        // Target is to the LEFT of current - go DOWN first, then LEFT with smooth corner
+        const cornerX = start.x - cornerRadius;
+        const cornerY = end.y - cornerRadius;
+        path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+      }
+    }
   }
 
   return path;
@@ -793,13 +827,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
               }
             </span>
           </button>
-          <button
-            onClick={() => setShowNodeCreator(true)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add Node</span>
-          </button>
+        <button
+          onClick={() => setShowNodeCreator(true)}
+          className="btn-primary flex items-center space-x-2"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Add Node</span>
+        </button>
         </div>
       </div>
 

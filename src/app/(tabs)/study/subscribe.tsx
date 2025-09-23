@@ -10,24 +10,48 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useAuth } from "../../../contexts/AuthContext";
 import {
-  MockSubject,
-  MockSubscriptionService,
-} from "../../../lib/mockSubscriptionService";
+  Subject,
+  SubscriptionService,
+} from "../../../superbase/services/subscriptionService";
 
 export default function SubscribeScreen() {
   const router = useRouter();
-  const [allSubjects, setAllSubjects] = useState<MockSubject[]>([]);
+  const { user } = useAuth();
+  const [allSubjects, setAllSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Helper function to get valid icon name
+  const getValidIcon = (iconName: string | null): keyof typeof Ionicons.glyphMap => {
+    if (!iconName) return "book";
+    
+    const validIcons = [
+      "book", "library", "school", "calculator", "flask", "bulb", "globe", 
+      "code-slash", "phone-portrait", "logo-python", "brain", "git-branch"
+    ];
+    
+    if (validIcons.includes(iconName)) {
+      return iconName as keyof typeof Ionicons.glyphMap;
+    }
+    
+    return "book";
+  };
+
   // Load all subjects
   const loadAllSubjects = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const subjects = MockSubscriptionService.getAllSubjects();
+      const subjects = await SubscriptionService.getAvailableSubjects(user.id);
       setAllSubjects(subjects);
     } catch (error) {
       console.error("Error loading subjects:", error);
+      Alert.alert("Error", "Failed to load subjects. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -43,20 +67,23 @@ export default function SubscribeScreen() {
   // Load subjects on component mount
   useEffect(() => {
     loadAllSubjects();
-  }, []);
+  }, [user?.id]);
 
   // Handle subscription
-  const handleSubscribe = async (subject: MockSubject) => {
+  const handleSubscribe = async (subject: Subject) => {
+    if (!user?.id) return;
+    
     try {
-      const result = await MockSubscriptionService.subscribeToSubject(
+      const success = await SubscriptionService.subscribeToSubject(
+        user.id,
         subject.id,
       );
-      if (result.success) {
-        Alert.alert("Success", result.message);
+      if (success) {
+        Alert.alert("Success", `Successfully subscribed to ${subject.name}`);
         // Refresh the list
         await loadAllSubjects();
       } else {
-        Alert.alert("Error", result.message);
+        Alert.alert("Error", "Failed to subscribe to subject");
       }
     } catch (error) {
       Alert.alert("Error", "Failed to subscribe to subject");
@@ -64,17 +91,20 @@ export default function SubscribeScreen() {
   };
 
   // Handle unsubscription
-  const handleUnsubscribe = async (subject: MockSubject) => {
+  const handleUnsubscribe = async (subject: Subject) => {
+    if (!user?.id) return;
+    
     try {
-      const result = await MockSubscriptionService.unsubscribeFromSubject(
+      const success = await SubscriptionService.unsubscribeFromSubject(
+        user.id,
         subject.id,
       );
-      if (result.success) {
-        Alert.alert("Success", result.message);
+      if (success) {
+        Alert.alert("Success", `Successfully unsubscribed from ${subject.name}`);
         // Refresh the list
         await loadAllSubjects();
       } else {
-        Alert.alert("Error", result.message);
+        Alert.alert("Error", "Failed to unsubscribe from subject");
       }
     } catch (error) {
       Alert.alert("Error", "Failed to unsubscribe from subject");
@@ -126,11 +156,11 @@ export default function SubscribeScreen() {
               >
                 <View className="flex-row items-center">
                   <LinearGradient
-                    colors={subject.color}
+                    colors={subject.color || ['#3B82F6', '#3B82F6']}
                     className="p-4 rounded-2xl mr-4"
                   >
                     <Ionicons
-                      name={subject.icon as any}
+                      name={getValidIcon(subject.icon)}
                       size={28}
                       color="white"
                     />

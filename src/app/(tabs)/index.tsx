@@ -153,7 +153,7 @@ const HomeScreen: React.FC = () => {
             disabled={navigatingToFlow === subscribedSubjects[0].id}
           >
             <LinearGradient
-              colors={subscribedSubjects[0].color as [string, string]}
+              colors={subscribedSubjects[0].color || ['#3B82F6', '#3B82F6']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               className="p-6"
@@ -244,7 +244,7 @@ const HomeScreen: React.FC = () => {
                   disabled={navigatingToFlow === subject.id}
                 >
                   <LinearGradient
-                    colors={subject.color as [string, string]}
+                    colors={subject.color || ['#3B82F6', '#3B82F6']}
                     className="p-5 rounded-2xl"
                   >
                     {navigatingToFlow === subject.id && (

@@ -27,12 +27,34 @@ export default function SubscribeScreen() {
   const [searchTerm, setSearchTerm] = useState("");
   const [subscribing, setSubscribing] = useState<string | null>(null);
 
+  // Helper function to get valid icon name
+  const getValidIcon = (iconName: string | null): keyof typeof Ionicons.glyphMap => {
+    if (!iconName) return "book";
+    
+    const validIcons = [
+      "book", "library", "school", "calculator", "flask", "bulb", "globe", 
+      "code-slash", "phone-portrait", "logo-python", "brain", "git-branch"
+    ];
+    
+    if (validIcons.includes(iconName)) {
+      return iconName as keyof typeof Ionicons.glyphMap;
+    }
+    
+    return "book";
+  };
+
   // Load available subjects
   const loadAvailableSubjects = async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log("No user ID available");
+      setLoading(false);
+      return;
+    }
 
     try {
+      console.log("Loading available subjects for user:", user.id);
       const subjects = await SubscriptionService.getAvailableSubjects(user.id);
+      console.log("Available subjects:", subjects);
       setAvailableSubjects(subjects);
     } catch (error) {
       console.error("Error loading available subjects:", error);
@@ -169,11 +191,11 @@ export default function SubscribeScreen() {
               >
                 <View className="flex-row items-center">
                   <LinearGradient
-                    colors={subject.color}
+                    colors={subject.color || ['#3B82F6', '#3B82F6']}
                     className="p-4 rounded-2xl mr-4"
                   >
                     <Ionicons
-                      name={subject.icon as any}
+                      name={getValidIcon(subject.icon)}
                       size={28}
                       color="white"
                     />

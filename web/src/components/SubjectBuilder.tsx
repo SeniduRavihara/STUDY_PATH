@@ -335,7 +335,7 @@ const SubjectBuilder: React.FC = () => {
       try {
         setIsLoading(true);
         
-        if (subjectId) {
+    if (subjectId) {
           // Check if subjectId is a valid UUID format
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (!uuidRegex.test(subjectId)) {
@@ -368,7 +368,7 @@ const SubjectBuilder: React.FC = () => {
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
-        setIsLoading(false);
+    setIsLoading(false);
       }
     };
 
