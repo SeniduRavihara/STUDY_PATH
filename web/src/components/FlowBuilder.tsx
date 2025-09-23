@@ -401,7 +401,45 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [currentTopicId, setCurrentTopicId] = useState("");
   const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Load existing flow when topic is selected
+  useEffect(() => {
+    const loadExistingFlow = async () => {
+      if (!currentTopicId) {
+        // Clear everything when no topic is selected
+        onNodesChange([]);
+        setFlowId(null);
+        return;
+      }
+      
+      setIsLoading(true);
+      try {
+        // Get flows for this topic
+        const flows = await DatabaseService.getFlowsByTopic(currentTopicId);
+        
+        if (flows.length > 0) {
+          // Load the first flow (you can modify this logic to load a specific flow)
+          const flow = flows[0];
+          await loadFlow(flow.id, false); // Don't show alert when auto-loading
+        } else {
+          // No flow exists for this topic, start fresh
+          onNodesChange([]);
+          setFlowId(null);
+        }
+      } catch (error) {
+        console.error("Error loading existing flow:", error);
+        // On error, start fresh
+        onNodesChange([]);
+        setFlowId(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingFlow();
+  }, [currentTopicId]);
 
   // Get all leaf topics (topics without children) for flow assignment
   const getLeafTopics = (topics: Topic[]): Topic[] => {
@@ -615,7 +653,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   };
 
   // Load flow from database
-  const loadFlow = async (flowId: string) => {
+  const loadFlow = async (flowId: string, showAlert: boolean = true) => {
     try {
       const flowWithNodes = await DatabaseService.loadFlowWithNodes(flowId);
       if (flowWithNodes) {
@@ -638,11 +676,16 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
         onNodesChange(convertedNodes);
         setFlowId(flowId);
-        alert("Flow loaded successfully!");
+        
+        if (showAlert) {
+          alert("Flow loaded successfully!");
+        }
       }
     } catch (error) {
       console.error("Error loading flow:", error);
-      alert("Error loading flow. Please try again.");
+      if (showAlert) {
+        alert("Error loading flow. Please try again.");
+      }
     }
   };
 
@@ -718,9 +761,17 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
           </p>
         </div>
         <div className="flex items-center space-x-3">
+          {isLoading && (
+            <div className="flex items-center space-x-2 text-blue-400">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+              <span className="text-sm">
+                {currentTopicId ? `Loading flow for ${getCurrentTopic()?.name || 'topic'}...` : 'Loading...'}
+              </span>
+            </div>
+          )}
           <button
             onClick={saveFlow}
-            disabled={isSaving || !currentTopicId || nodes.length === 0}
+            disabled={isSaving || !currentTopicId || nodes.length === 0 || isLoading}
             className="btn-secondary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             title={
               !currentTopicId 
@@ -846,6 +897,20 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             backgroundSize: "20px 20px"
           }}
         >
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-dark-800 bg-opacity-80 flex items-center justify-center z-50">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+                <div className="text-white text-lg font-medium">
+                  {currentTopicId ? `Loading flow for ${getCurrentTopic()?.name || 'topic'}...` : 'Loading...'}
+                </div>
+                <div className="text-dark-300 text-sm">
+                  Please wait while we fetch your flow
+                </div>
+              </div>
+            </div>
+          )}
           <div
             className="relative mx-auto"
             style={{
