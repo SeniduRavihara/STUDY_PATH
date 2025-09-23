@@ -14,14 +14,15 @@ import {
   Trophy,
   Menu,
 } from "lucide-react";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { DatabaseService } from "../lib/database";
 
 interface FlowNode {
   id: string;
   type: "quiz" | "study" | "video" | "assignment" | "assessment" | "start" | "end";
   title: string;
   description: string;
-  position: { x: number; y: number };
+  sort_order: number; // Use sort_order instead of position
   config: any;
   connections: string[];
   status: "locked" | "available" | "completed" | "current";
@@ -53,6 +54,7 @@ interface FlowBuilderProps {
   onTopicsChange: (topics: Topic[]) => void;
   subjectId: string;
   onSubjectChange?: (subjectId: string) => void;
+  currentFlowId?: string; // Add current flow ID
 }
 
 interface TopicHierarchySelectorProps {
@@ -187,59 +189,70 @@ const FLOW_CONFIG = {
   connectionOffset: 25, // Vertical offset for L-shaped connections
 };
 
-// 3-Column Grid Flow Pattern (Center acts as transition hub)
-const POSITION_PATTERN = [
-  "center", // Row 1: Start center
-  "right", // Row 2: Move right
-  "center", // Row 3: Back to center
-  "left", // Row 4: Move left
-  "center", // Row 5: Back to center
-  "right", // Row 6: Move right
-  "center", // Row 7: Back to center
-  "left", // Row 8: Move left
-  "center", // Row 9: Back to center
-  "right", // Row 10: Move right
-  "center", // Row 11: Back to center
-  "left", // Row 12: Move left
-];
-
-// Get smart position for node based on organic pattern
-const getSmartPosition = (index: number): "left" | "center" | "right" => {
-  return POSITION_PATTERN[index % POSITION_PATTERN.length] as
-    | "left"
-    | "center"
-    | "right";
+// Calculate node position using simple switch case based on node position
+const calculateNodePosition = (sortOrder: number, containerWidth: number) => {
+  // Validate and provide default sort_order
+  const validSortOrder = isNaN(sortOrder) || sortOrder === undefined || sortOrder === null ? 1 : sortOrder;
+  
+  // Calculate Y position (vertical) - fixed spacing
+  const y = FLOW_CONFIG.startY + (validSortOrder - 1) * FLOW_CONFIG.nodeSpacing;
+  
+  // Calculate X position (horizontal) using simple switch case
+  let x: number;
+  
+  switch (validSortOrder) {
+    case 1: // 1st node → Center
+      x = containerWidth * FLOW_CONFIG.centerColumnX;
+      break;
+    case 2: // 2nd node → Right
+      x = containerWidth * FLOW_CONFIG.rightColumnX;
+      break;
+    case 3: // 3rd node → Center
+      x = containerWidth * FLOW_CONFIG.centerColumnX;
+      break;
+    case 4: // 4th node → Left
+      x = containerWidth * FLOW_CONFIG.leftColumnX;
+      break;
+    case 5: // 5th node → Center
+      x = containerWidth * FLOW_CONFIG.centerColumnX;
+      break;
+    case 6: // 6th node → Right
+      x = containerWidth * FLOW_CONFIG.rightColumnX;
+      break;
+    case 7: // 7th node → Center
+      x = containerWidth * FLOW_CONFIG.centerColumnX;
+      break;
+    case 8: // 8th node → Left
+      x = containerWidth * FLOW_CONFIG.leftColumnX;
+      break;
+    default: // For nodes beyond 8, repeat the pattern
+      const patternIndex = ((validSortOrder - 1) % 4) + 1;
+      switch (patternIndex) {
+        case 1: x = containerWidth * FLOW_CONFIG.centerColumnX; break;
+        case 2: x = containerWidth * FLOW_CONFIG.rightColumnX; break;
+        case 3: x = containerWidth * FLOW_CONFIG.centerColumnX; break;
+        case 4: x = containerWidth * FLOW_CONFIG.leftColumnX; break;
+        default: x = containerWidth * FLOW_CONFIG.centerColumnX;
+      }
+  }
+  
+  console.log(`POSITION DEBUG: sortOrder=${sortOrder}, validSortOrder=${validSortOrder}, x=${x}, y=${y}`);
+  
+  return { x, y };
 };
 
-// Generate vertical flow positions for nodes using 3-column system
-const generateVerticalFlowPositions = (
+// Generate flow positions using sort_order + presentation logic
+const generateFlowPositions = (
   nodes: FlowNode[],
   containerWidth: number = 800, // Use fixed width for consistent positioning
 ): FlowNode[] => {
-  return nodes.map((node, index) => {
-    // Get position from organic pattern
-    const positionKey = getSmartPosition(index);
-
-    // Map position to actual X coordinate using fixed width
-    let x: number;
-    switch (positionKey) {
-      case "left":
-        x = containerWidth * FLOW_CONFIG.leftColumnX;
-        break;
-      case "center":
-        x = containerWidth * FLOW_CONFIG.centerColumnX;
-        break;
-      case "right":
-        x = containerWidth * FLOW_CONFIG.rightColumnX;
-        break;
-    }
-
-    // Calculate Y position with proper spacing
-    const y = FLOW_CONFIG.startY + index * FLOW_CONFIG.nodeSpacing;
+  return nodes.map((node) => {
+    // Calculate position using sort_order
+    const position = calculateNodePosition(node.sort_order, containerWidth);
 
     return {
       ...node,
-      position: { x, y },
+      position: position,
     };
   });
 };
@@ -273,27 +286,28 @@ const getNodeAnchorPoint = (
 const getConnectionPoints = (
   currentNode: FlowNode,
   nextNode: FlowNode,
-  currentIndex: number,
 ): { start: { x: number; y: number }; end: { x: number; y: number } } => {
-  const currentPos = getSmartPosition(currentIndex);
-  const nextPos = getSmartPosition(currentIndex + 1);
+  const currentPosIndex = ((currentNode.sort_order || 1) - 1) % 4;
+  const nextPosIndex = ((nextNode.sort_order || 1) - 1) % 4;
 
   let startPoint: { x: number; y: number };
   let endPoint: { x: number; y: number };
 
-  if (currentPos === "center" && nextPos === "right") {
+  // Determine connection direction based on position pattern: Center → Right → Center → Left
+  if (currentPosIndex === 0 && nextPosIndex === 1) { // Center to Right
     startPoint = getNodeAnchorPoint(currentNode, "right");
     endPoint = getNodeAnchorPoint(nextNode, "top");
-  } else if (currentPos === "right" && nextPos === "center") {
-    startPoint = getNodeAnchorPoint(currentNode, "bottom");
-    endPoint = getNodeAnchorPoint(nextNode, "right");
-  } else if (currentPos === "center" && nextPos === "left") {
-    startPoint = getNodeAnchorPoint(currentNode, "left");
-    endPoint = getNodeAnchorPoint(nextNode, "top");
-  } else if (currentPos === "left" && nextPos === "center") {
+  } else if (currentPosIndex === 1 && nextPosIndex === 2) { // Right to Center
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "left");
+  } else if (currentPosIndex === 2 && nextPosIndex === 3) { // Center to Left
+    startPoint = getNodeAnchorPoint(currentNode, "left");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  } else if (currentPosIndex === 3 && nextPosIndex === 0) { // Left to Center
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "right");
   } else {
+    // Default vertical connection
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "top");
   }
@@ -305,52 +319,37 @@ const getConnectionPoints = (
 const createVerticalFlowPath = (
   startNode: FlowNode,
   endNode: FlowNode,
-  nodeIndex: number,
 ): string => {
-  const points = getConnectionPoints(startNode, endNode, nodeIndex);
+  const points = getConnectionPoints(startNode, endNode);
   const start = points.start;
   const end = points.end;
 
-  const currentPos = getSmartPosition(nodeIndex);
-  const nextPos = getSmartPosition(nodeIndex + 1);
+  const currentPosIndex = ((startNode.sort_order || 1) - 1) % 4;
+  const nextPosIndex = ((endNode.sort_order || 1) - 1) % 4;
 
   let path: string;
   const cornerRadius = 8; // Small radius to smooth the sharp turns
 
-  if (currentPos === "center" && nextPos === "right") {
+  // Create smooth L-shaped connections based on position pattern: Center → Right → Center → Left
+  if (currentPosIndex === 0 && nextPosIndex === 1) { // Center to Right
     const cornerX = end.x - cornerRadius;
     const cornerY = start.y + cornerRadius;
     path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
-  } else if (currentPos === "right" && nextPos === "center") {
+  } else if (currentPosIndex === 1 && nextPosIndex === 2) { // Right to Center
     const cornerX = start.x - cornerRadius;
     const cornerY = end.y - cornerRadius;
     path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
-  } else if (currentPos === "center" && nextPos === "left") {
+  } else if (currentPosIndex === 2 && nextPosIndex === 3) { // Center to Left
     const cornerX = end.x + cornerRadius;
     const cornerY = start.y + cornerRadius;
     path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
-  } else if (currentPos === "left" && nextPos === "center") {
+  } else if (currentPosIndex === 3 && nextPosIndex === 0) { // Left to Center
     const cornerX = start.x + cornerRadius;
     const cornerY = end.y - cornerRadius;
     path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
-  } else if (currentPos === "center" && nextPos === "center") {
-    path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   } else {
-    if (start.x === end.x) {
-      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-    } else if (start.y === end.y) {
-      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
-    } else {
-      if (end.x > start.x) {
-        const cornerX = end.x - cornerRadius;
-        const cornerY = start.y + cornerRadius;
-        path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
-      } else {
-        const cornerX = start.x - cornerRadius;
-        const cornerY = end.y - cornerRadius;
-        path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
-      }
-    }
+    // Default vertical connection
+    path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   }
 
   return path;
@@ -362,7 +361,7 @@ const generateVerticalFlowPaths = (nodes: FlowNode[]): string[] => {
 
   const paths: string[] = [];
   for (let i = 0; i < nodes.length - 1; i++) {
-    const currentPath = createVerticalFlowPath(nodes[i], nodes[i + 1], i);
+    const currentPath = createVerticalFlowPath(nodes[i], nodes[i + 1]);
     paths.push(currentPath);
   }
   return paths;
@@ -392,6 +391,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   topics,
   onTopicsChange,
   onSubjectChange,
+  currentFlowId,
 }) => {
   // Debug: Log received props
   console.log("FlowBuilder received topics:", topics);
@@ -399,6 +399,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [showNodeCreator, setShowNodeCreator] = useState(false);
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState("");
+  const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
+  const [isSaving, setIsSaving] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Get all leaf topics (topics without children) for flow assignment
@@ -502,12 +504,18 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     const nodeType = nodeTypes.find(nt => nt.type === type);
     if (!nodeType) return;
 
+    // Get the highest sort_order from existing nodes and add 1
+    const maxSortOrder = nodes.length > 0 ? Math.max(...nodes.map(n => n.sort_order || 1)) : 0;
+    const newSortOrder = maxSortOrder + 1;
+
+    console.log(`ADDING NODE: maxSortOrder=${maxSortOrder}, newSortOrder=${newSortOrder}, nodes.length=${nodes.length}`);
+
     const newNode: FlowNode = {
       id: `node-${Date.now()}`,
       type: type as any,
       title: `New ${nodeType.name}`,
       description: `Description for ${nodeType.name} node`,
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
+      sort_order: newSortOrder, // Use unique sort_order
       config: {},
       connections: [],
       status: nodes.length === 0 ? "current" : "available", // First node is current, others are available
@@ -518,6 +526,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       estimatedTime: "5 min",
     };
 
+    console.log(`NEW NODE CREATED:`, newNode);
     onNodesChange([...nodes, newNode]);
     setShowNodeCreator(false);
   };
@@ -564,6 +573,79 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     }
   };
 
+  // Save flow to database
+  const saveFlow = async () => {
+    if (!currentTopicId || nodes.length === 0) {
+      alert("Please select a topic and add some nodes before saving.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const user = await DatabaseService.getCurrentUser();
+      if (!user) {
+        alert("Please log in to save flows.");
+        return;
+      }
+
+      let currentFlowId = flowId;
+
+      // Create flow if it doesn't exist
+      if (!currentFlowId) {
+        const flow = await DatabaseService.createFlow({
+          topicId: currentTopicId,
+          name: `${getCurrentTopic()?.name || 'Topic'} Flow`,
+          description: `Learning flow for ${getCurrentTopic()?.name || 'topic'}`,
+          createdBy: user.id
+        });
+        currentFlowId = flow.id;
+        setFlowId(currentFlowId);
+      }
+
+      // Save flow nodes
+      await DatabaseService.saveFlowNodes(currentFlowId, nodes);
+      
+      alert("Flow saved successfully!");
+    } catch (error) {
+      console.error("Error saving flow:", error);
+      alert("Error saving flow. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load flow from database
+  const loadFlow = async (flowId: string) => {
+    try {
+      const flowWithNodes = await DatabaseService.loadFlowWithNodes(flowId);
+      if (flowWithNodes) {
+        // Convert database nodes back to FlowNode format
+        const convertedNodes: FlowNode[] = flowWithNodes.nodes.map((node: any) => ({
+          id: node.id,
+          type: node.node_type,
+          title: node.title,
+          description: node.description,
+          sort_order: node.sort_order,
+          config: node.config,
+          connections: node.connections,
+          status: node.status,
+          difficulty: node.difficulty,
+          xp: node.xp_reward,
+          icon: getNodeIcon(node.node_type).name,
+          color: getNodeColor(node.node_type),
+          estimatedTime: `${node.estimated_time} min`
+        }));
+
+        onNodesChange(convertedNodes);
+        setFlowId(flowId);
+        alert("Flow loaded successfully!");
+      }
+    } catch (error) {
+      console.error("Error loading flow:", error);
+      alert("Error loading flow. Please try again.");
+    }
+  };
+
   const getCurrentTopic = () => {
     if (!currentTopicId) return null;
     
@@ -583,8 +665,23 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   const currentTopic = getCurrentTopic();
 
-  // Generate positioned nodes and paths using fixed width for consistent centering
-  const flowNodes = generateVerticalFlowPositions(nodes, 800); // Fixed width for consistent positioning
+  // Sort nodes by sort_order first, then generate positioned nodes and paths
+  const sortedNodes = [...nodes].sort((a, b) => {
+    const aOrder = a.sort_order || 1;
+    const bOrder = b.sort_order || 1;
+    return aOrder - bOrder;
+  });
+  
+  // Fix nodes that don't have sort_order by assigning them based on their position in the array
+  const fixedNodes = sortedNodes.map((node, index) => ({
+    ...node,
+    sort_order: node.sort_order || (index + 1)
+  }));
+  
+  console.log("FIXED NODES:", fixedNodes);
+  
+  const flowNodes = generateFlowPositions(fixedNodes, 800); // Fixed width for consistent positioning
+  
   const verticalPaths = generateVerticalFlowPaths(flowNodes);
   
   // Calculate total content height
@@ -620,13 +717,39 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             )}
           </p>
         </div>
-        <button
-          onClick={() => setShowNodeCreator(true)}
-          className="btn-primary flex items-center space-x-2"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Node</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={saveFlow}
+            disabled={isSaving || !currentTopicId || nodes.length === 0}
+            className="btn-secondary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={
+              !currentTopicId 
+                ? "Please select a topic first" 
+                : nodes.length === 0 
+                  ? "Please add some nodes first" 
+                  : "Save flow to database"
+            }
+          >
+            <Settings className="w-5 h-5" />
+            <span>
+              {isSaving 
+                ? "Saving..." 
+                : !currentTopicId 
+                  ? "Select Topic First" 
+                  : nodes.length === 0 
+                    ? "Add Nodes First" 
+                    : "Save Flow"
+              }
+            </span>
+          </button>
+          <button
+            onClick={() => setShowNodeCreator(true)}
+            className="btn-primary flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Node</span>
+          </button>
+        </div>
       </div>
 
       {/* Flow Container - Responsive to sidebar state */}

@@ -22,9 +22,15 @@ interface FlowNode {
   type: "quiz" | "study" | "video" | "assignment" | "assessment" | "start" | "end";
   title: string;
   description: string;
-  position: { x: number; y: number };
+  sort_order: number; // Use sort_order instead of position
   config: any;
   connections: string[];
+  status: "locked" | "available" | "completed" | "current";
+  difficulty: "easy" | "medium" | "hard";
+  xp: number;
+  icon: string;
+  color: [string, string];
+  estimatedTime?: string;
 }
 
 interface TopicHierarchyItemProps {
@@ -313,114 +319,7 @@ const SubjectBuilder: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [viewMode, setViewMode] = useState<"tabs" | "stepper">("tabs");
   const [subject, setSubject] = useState<Subject | null>(null);
-  const [flowNodes, setFlowNodes] = useState<FlowNode[]>([
-    // Mock nodes for testing with new interface
-    {
-      id: "start-1",
-      type: "start",
-      title: "Welcome to JavaScript",
-      description: "Introduction to JavaScript programming",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: ["study-1"],
-      status: "completed",
-      difficulty: "easy",
-      xp: 0,
-      icon: "play",
-      color: ["#10b981", "#059669"],
-      estimatedTime: "2 min",
-    },
-    {
-      id: "study-1",
-      type: "study",
-      title: "Variables and Data Types",
-      description: "Learn about JavaScript variables and different data types",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: ["quiz-1"],
-      status: "completed",
-      difficulty: "medium",
-      xp: 25,
-      icon: "book-open",
-      color: ["#3b82f6", "#1d4ed8"],
-      estimatedTime: "8 min",
-    },
-    {
-      id: "quiz-1",
-      type: "quiz",
-      title: "Variables Quiz",
-      description: "Test your knowledge of JavaScript variables",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: ["video-1"],
-      status: "current",
-      difficulty: "medium",
-      xp: 30,
-      icon: "help-circle",
-      color: ["#f59e0b", "#d97706"],
-      estimatedTime: "5 min",
-    },
-    {
-      id: "video-1",
-      type: "video",
-      title: "Functions Explained",
-      description: "Watch this video to understand JavaScript functions",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: ["assignment-1"],
-      status: "available",
-      difficulty: "easy",
-      xp: 20,
-      icon: "video",
-      color: ["#8b5cf6", "#7c3aed"],
-      estimatedTime: "10 min",
-    },
-    {
-      id: "assignment-1",
-      type: "assignment",
-      title: "Build a Calculator",
-      description: "Create a simple calculator using JavaScript functions",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: ["assessment-1"],
-      status: "available",
-      difficulty: "hard",
-      xp: 40,
-      icon: "file-text",
-      color: ["#6366f1", "#4f46e5"],
-      estimatedTime: "15 min",
-    },
-    {
-      id: "assessment-1",
-      type: "assessment",
-      title: "Final Assessment",
-      description: "Comprehensive test of all JavaScript concepts",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: ["end-1"],
-      status: "locked",
-      difficulty: "hard",
-      xp: 50,
-      icon: "check-circle",
-      color: ["#ef4444", "#dc2626"],
-      estimatedTime: "20 min",
-    },
-    {
-      id: "end-1",
-      type: "end",
-      title: "Course Complete",
-      description: "Congratulations! You've completed the JavaScript course",
-      position: { x: 0, y: 0 }, // Will be calculated by grid system
-      config: {},
-      connections: [],
-      status: "locked",
-      difficulty: "easy",
-      xp: 0,
-      icon: "settings",
-      color: ["#6b7280", "#4b5563"],
-      estimatedTime: "1 min",
-    },
-  ]);
+  const [flowNodes, setFlowNodes] = useState<FlowNode[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [topics, setTopics] = useState<TopicWithChildren[]>([]);
@@ -852,6 +751,7 @@ const SubjectBuilder: React.FC = () => {
               // Handle topic change - you can update the subject name or other properties
               console.log("Topic changed to:", topicId);
             }}
+            currentFlowId={undefined} // Will be set when flow is created
           />
         );
 
