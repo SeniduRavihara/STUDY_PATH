@@ -424,6 +424,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   sidebarCollapsed = false,
   topics,
   onTopicsChange,
+  subjectId,
   onSubjectChange,
   currentFlowId,
 }) => {
@@ -436,7 +437,73 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [quizPacks, setQuizPacks] = useState<any[]>([]);
+  const [loadingQuizPacks, setLoadingQuizPacks] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Load quiz packs hierarchically when topic is selected
+  useEffect(() => {
+    const loadQuizPacksHierarchically = async () => {
+      if (!currentTopicId) {
+        setQuizPacks([]);
+        return;
+      }
+      
+      setLoadingQuizPacks(true);
+      try {
+        // Get all quiz packs for the subject
+        const allPacks = await DatabaseService.getQuizPacksBySubject(subjectId);
+        
+        // Find the current topic and its hierarchy
+        const currentTopic = findTopicById(topics, currentTopicId);
+        if (!currentTopic) {
+          setQuizPacks([]);
+          return;
+        }
+        
+        // Get all relevant topic IDs (current topic, its children, and its parents)
+        const relevantTopicIds = new Set<string>();
+        
+        // Add current topic
+        relevantTopicIds.add(currentTopicId);
+        
+        // Add all subtopics (children) of current topic
+        const addChildren = (topic: any) => {
+          topic.children?.forEach((child: any) => {
+            relevantTopicIds.add(child.id);
+            addChildren(child);
+          });
+        };
+        addChildren(currentTopic);
+        
+        // Add parent topics
+        let parent = currentTopic;
+        while (parent.parent_id) {
+          const parentTopic = findTopicById(topics, parent.parent_id);
+          if (parentTopic) {
+            relevantTopicIds.add(parentTopic.id);
+            parent = parentTopic;
+          } else {
+            break;
+          }
+        }
+        
+        // Filter quiz packs to only include those for relevant topics
+        const relevantPacks = allPacks.filter(pack => 
+          relevantTopicIds.has(pack.topic_id) || pack.topic_id === "" // Include subject-wide packs
+        );
+        
+        setQuizPacks(relevantPacks);
+      } catch (error) {
+        console.error('Error loading quiz packs:', error);
+        setQuizPacks([]);
+      } finally {
+        setLoadingQuizPacks(false);
+      }
+    };
+    
+    loadQuizPacksHierarchically();
+  }, [currentTopicId, subjectId, topics]);
 
   // Load existing flow when topic is selected
   useEffect(() => {
@@ -570,6 +637,17 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const getNodeColor = (type: string) => {
     const nodeType = nodeTypes.find(nt => nt.type === type);
     return nodeType ? nodeType.color : ["#6b7280", "#4b5563"];
+  };
+
+  const findTopicById = (topics: Topic[], topicId: string): Topic | null => {
+    for (const topic of topics) {
+      if (topic.id === topicId) return topic;
+      if (topic.children.length > 0) {
+        const found = findTopicById(topic.children, topicId);
+        if (found) return found;
+      }
+    }
+    return null;
   };
 
   const addNode = (type: string) => {
@@ -1241,6 +1319,46 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                 className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none"
               />
             </div>
+
+            {/* Quiz Pack Selection - Only show for quiz nodes */}
+            {selectedNode.type === 'quiz' && (
+              <div>
+                <label className="block text-white font-medium mb-2">
+                  Quiz Pack
+                </label>
+                <select
+                  value={selectedNode.config?.quiz_pack_id || ''}
+                  onChange={(e) => {
+                    const newConfig = {
+                      ...selectedNode.config,
+                      quiz_pack_id: e.target.value || undefined
+                    };
+                    updateNode(selectedNode.id, { config: newConfig });
+                  }}
+                  className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  disabled={loadingQuizPacks}
+                >
+                  <option value="">
+                    {loadingQuizPacks ? 'Loading quiz packs...' : 'Select a quiz pack (optional)'}
+                  </option>
+                  {quizPacks.map((pack) => {
+                    const topicName = pack.topic_id ? 
+                      (findTopicById(topics, pack.topic_id)?.name || 'Unknown Topic') : 
+                      'Entire Subject';
+                    return (
+                      <option key={pack.id} value={pack.id}>
+                        {pack.title} ({pack.mcq_count} questions) - {topicName}
+                      </option>
+                    );
+                  })}
+                </select>
+                {quizPacks.length === 0 && !loadingQuizPacks && (
+                  <p className="text-dark-400 text-sm mt-2">
+                    No quiz packs available for this topic. Create quiz packs in the Quiz Packs tab.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">

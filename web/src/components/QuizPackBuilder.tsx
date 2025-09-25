@@ -67,6 +67,10 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
   const [selectedTopicForPack, setSelectedTopicForPack] = useState<TopicWithChildren | null>(null);
+  const [showTopicSelector, setShowTopicSelector] = useState(false);
+  const [selectedTopicId, setSelectedTopicId] = useState<string>("");
+  const [selectedTopicName, setSelectedTopicName] = useState<string>("");
+  const [isCreating, setIsCreating] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -100,11 +104,14 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   };
 
   const handleCreatePack = async () => {
+    console.log("handleCreatePack called with:", { formData, selectedTopicId, selectedTopicName });
+    
     if (!user?.id) {
       alert("You must be logged in to create quiz packs.");
       return;
     }
 
+    setIsCreating(true);
     try {
       console.log("Creating quiz pack with data:", {
         title: formData.title,
@@ -134,6 +141,8 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
       console.error("Error creating quiz pack:", error);
       console.error("Full error details:", JSON.stringify(error, null, 2));
       alert(`Error creating quiz pack: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -181,6 +190,23 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
       selectedMcqs: [],
     });
     setSelectedTopicForPack(null);
+    setSelectedTopicId("");
+    setSelectedTopicName("");
+  };
+
+  const handleTopicSelect = (topicId: string, topicName: string) => {
+    setSelectedTopicId(topicId);
+    setSelectedTopicName(topicName);
+    setFormData({ ...formData, topic_id: topicId });
+    setShowTopicSelector(false);
+    
+    // Find the topic object if it's a specific topic
+    if (topicId) {
+      const topic = findTopicById(topics, topicId);
+      setSelectedTopicForPack(topic);
+    } else {
+      setSelectedTopicForPack(null); // Entire subject
+    }
   };
 
 
@@ -248,6 +274,111 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
       case "hard": return "text-red-400 bg-red-500/20";
       default: return "text-gray-400 bg-gray-500/20";
     }
+  };
+
+  // Hierarchical Topic Selector Component
+  const HierarchicalTopicSelector: React.FC<{
+    topics: TopicWithChildren[];
+    onSelect: (topicId: string, topicName: string) => void;
+    onClose: () => void;
+  }> = ({ topics, onSelect, onClose }) => {
+    const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
+
+    const toggleExpanded = (topicId: string) => {
+      const newExpanded = new Set(expandedTopics);
+      if (newExpanded.has(topicId)) {
+        newExpanded.delete(topicId);
+      } else {
+        newExpanded.add(topicId);
+      }
+      setExpandedTopics(newExpanded);
+    };
+
+    const renderTopicItem = (topic: TopicWithChildren, level: number = 0) => {
+      const isExpanded = expandedTopics.has(topic.id);
+      const hasChildren = topic.children.length > 0;
+      const indent = level * 20;
+
+      return (
+        <div key={topic.id}>
+          <div
+            className="flex items-center py-2 px-3 hover:bg-dark-700 rounded-lg cursor-pointer transition-colors"
+            style={{ paddingLeft: `${indent + 12}px` }}
+            onClick={() => onSelect(topic.id, topic.name)}
+          >
+            {hasChildren ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleExpanded(topic.id);
+                }}
+                className="mr-2 text-dark-400 hover:text-white transition-colors"
+              >
+                {isExpanded ? "▼" : "▶"}
+              </button>
+            ) : (
+              <div className="w-6 mr-2" />
+            )}
+            <div className="flex-1">
+              <div className="text-white font-medium">{topic.name}</div>
+              {topic.description && (
+                <div className="text-dark-400 text-sm">{topic.description}</div>
+              )}
+            </div>
+          </div>
+          {hasChildren && isExpanded && (
+            <div>
+              {topic.children.map(child => renderTopicItem(child, level + 1))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-dark-900 rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-semibold text-white">
+                Select Topic for Quiz Pack
+              </h3>
+              <p className="text-dark-400 text-sm mt-1">
+                Choose any topic, subtopic, or the entire subject
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-dark-400 hover:text-white transition-colors"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {/* Entire Subject Option */}
+            <div
+              className="flex items-center py-3 px-4 bg-primary-500/10 border border-primary-500/20 rounded-lg cursor-pointer hover:bg-primary-500/20 transition-colors"
+              onClick={() => onSelect("", subject.name)}
+            >
+              <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center mr-3">
+                <BookOpen className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <div className="text-white font-medium">Entire Subject</div>
+                <div className="text-primary-400 text-sm">{subject.name}</div>
+              </div>
+            </div>
+
+            {/* Topic Hierarchy */}
+            <div className="border-t border-dark-700 pt-4">
+              <h4 className="text-white font-medium mb-3">Specific Topics</h4>
+              {topics.map(topic => renderTopicItem(topic))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -487,22 +618,16 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-white font-medium mb-2">Topic *</label>
-                  <select
-                    value={formData.topic_id}
-                    onChange={(e) => {
-                      setFormData({ ...formData, topic_id: e.target.value });
-                      const topic = findTopicById(topics, e.target.value);
-                      setSelectedTopicForPack(topic);
-                    }}
-                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  <button
+                    type="button"
+                    onClick={() => setShowTopicSelector(true)}
+                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-left flex items-center justify-between"
                   >
-                    <option value="">Select a topic</option>
-                    {topics.map((topic) => (
-                      <option key={topic.id} value={topic.id}>
-                        {topic.name}
-                      </option>
-                    ))}
-                  </select>
+                    <span className={selectedTopicName ? "text-white" : "text-dark-400"}>
+                      {selectedTopicName || "Select a topic"}
+                    </span>
+                    <span className="text-dark-400">▼</span>
+                  </button>
                 </div>
 
                 <div>
@@ -533,16 +658,34 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                 </button>
                 <button
                   onClick={editingPack ? handleUpdatePack : handleCreatePack}
-                  disabled={!formData.title || !formData.topic_id}
+                  disabled={!formData.title || (selectedTopicId === "" && selectedTopicName === "") || isCreating}
                   className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>{editingPack ? "Update Pack" : "Create Pack"}</span>
+                  {isCreating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Creating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      <span>{editingPack ? "Update Pack" : "Create Pack"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Topic Selector Popup */}
+      {showTopicSelector && (
+        <HierarchicalTopicSelector
+          topics={topics}
+          onSelect={handleTopicSelect}
+          onClose={() => setShowTopicSelector(false)}
+        />
       )}
 
     </div>

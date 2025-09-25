@@ -475,6 +475,22 @@ export class DatabaseService {
     return data || [];
   }
 
+  static async getQuizPacksByTopic(topicId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('quiz_packs')
+      .select('*')
+      .eq('topic_id', topicId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching quiz packs by topic:', error);
+      throw error;
+    }
+    
+    return data || [];
+  }
+
   static async createQuizPack(packData: {
     title: string;
     description: string;
