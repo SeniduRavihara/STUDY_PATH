@@ -10,11 +10,31 @@ import {
   Upload,
   Eye,
   Save,
+  GripVertical,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { DatabaseService } from "../lib/database";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface MCQ {
   id: string;
@@ -59,6 +79,114 @@ interface Subject {
   color: [string, string];
 }
 
+// Sortable MCQ Item Component
+interface SortableMCQItemProps {
+  mcq: MCQ;
+  index: number;
+  onEdit: (mcq: MCQ) => void;
+  onDelete: (mcqId: string) => void;
+  getDifficultyColor: (difficulty: string) => string;
+}
+
+const SortableMCQItem: React.FC<SortableMCQItemProps> = ({
+  mcq,
+  index,
+  onEdit,
+  onDelete,
+  getDifficultyColor,
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: mcq.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`bg-dark-800 rounded-xl p-6 hover:bg-dark-700 transition-colors ${
+        isDragging ? 'shadow-2xl' : ''
+      }`}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex items-start space-x-3 flex-1">
+          {/* Drag Handle */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-dark-600 rounded transition-colors"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-5 h-5 text-dark-400 hover:text-white" />
+          </div>
+          
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-3">
+              <span className="text-primary-500 font-medium">#{index + 1}</span>
+              <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(mcq.difficulty)}`}>
+                {mcq.difficulty}
+              </span>
+            </div>
+            <h4 className="text-white font-medium mb-3">{mcq.question}</h4>
+            <div className="space-y-2 mb-4">
+              {mcq.options.map((option, optionIndex) => (
+                <div key={optionIndex} className="flex items-center space-x-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                    optionIndex === mcq.correct_answer 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-dark-600 text-dark-400'
+                  }`}>
+                    {String.fromCharCode(65 + optionIndex)}
+                  </div>
+                  <span className={`text-sm ${
+                    optionIndex === mcq.correct_answer ? 'text-green-400' : 'text-dark-300'
+                  }`}>
+                    {option}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {mcq.explanation && (
+              <div className="bg-dark-700 rounded-lg p-3">
+                <p className="text-dark-300 text-sm">
+                  <span className="font-medium text-white">Explanation:</span> {mcq.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2 ml-4">
+          <button
+            onClick={() => onEdit(mcq)}
+            className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
+            title="Edit MCQ"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onDelete(mcq.id)}
+            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
+            title="Delete MCQ"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const QuizPackDetail: React.FC = () => {
   const navigate = useNavigate();
   const { quizPackId } = useParams();
@@ -74,6 +202,14 @@ const QuizPackDetail: React.FC = () => {
   const [showMCQForm, setShowMCQForm] = useState(false);
   const [editingMCQ, setEditingMCQ] = useState<MCQ | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // MCQ form state
   const [mcqFormData, setMcqFormData] = useState({
@@ -259,6 +395,53 @@ const QuizPackDetail: React.FC = () => {
     }
   };
 
+  // Handle drag end event
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !quizPack) {
+      return;
+    }
+
+    const oldIndex = mcqs.findIndex(mcq => mcq.id === active.id);
+    const newIndex = mcqs.findIndex(mcq => mcq.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // Reorder MCQs in local state
+    const reorderedMcqs = arrayMove(mcqs, oldIndex, newIndex);
+    setMcqs(reorderedMcqs);
+
+    // Update the mcq_ids array in the quiz pack
+    const newMcqIds = reorderedMcqs.map(mcq => mcq.id);
+    
+    try {
+      // Update the quiz pack with new order
+      const updatedPack = await DatabaseService.updateQuizPack(quizPack.id, {
+        mcq_ids: newMcqIds,
+      });
+      
+      setQuizPack(updatedPack);
+      console.log("MCQ order updated successfully");
+    } catch (error) {
+      console.error("Error updating MCQ order:", error);
+      // Revert the local state if database update fails
+      setMcqs(mcqs);
+      alert("Error updating MCQ order. Please try again.");
+    }
+  };
+
+  // Get MCQs in the correct order based on mcq_ids array
+  const getOrderedMcqs = () => {
+    if (!quizPack || !mcqs.length) return [];
+    
+    return quizPack.mcq_ids.map(id => 
+      mcqs.find(mcq => mcq.id === id)
+    ).filter(Boolean) as MCQ[];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center">
@@ -353,7 +536,7 @@ const QuizPackDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* MCQs List */}
+          {/* MCQs List with Drag and Drop */}
           <div className="space-y-4">
             {mcqs.length === 0 ? (
               <div className="text-center py-12">
@@ -372,62 +555,27 @@ const QuizPackDetail: React.FC = () => {
                 </button>
               </div>
             ) : (
-              mcqs.map((mcq, index) => (
-                <div key={mcq.id} className="bg-dark-800 rounded-xl p-6 hover:bg-dark-700 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <span className="text-primary-500 font-medium">#{index + 1}</span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(mcq.difficulty)}`}>
-                          {mcq.difficulty}
-                        </span>
-                      </div>
-                      <h4 className="text-white font-medium mb-3">{mcq.question}</h4>
-                      <div className="space-y-2 mb-4">
-                        {mcq.options.map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex items-center space-x-3">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                              optionIndex === mcq.correct_answer 
-                                ? 'bg-green-500 text-white' 
-                                : 'bg-dark-600 text-dark-400'
-                            }`}>
-                              {String.fromCharCode(65 + optionIndex)}
-                            </div>
-                            <span className={`text-sm ${
-                              optionIndex === mcq.correct_answer ? 'text-green-400' : 'text-dark-300'
-                            }`}>
-                              {option}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {mcq.explanation && (
-                        <div className="bg-dark-700 rounded-lg p-3">
-                          <p className="text-dark-300 text-sm">
-                            <span className="font-medium text-white">Explanation:</span> {mcq.explanation}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <button
-                        onClick={() => startEditingMCQ(mcq)}
-                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded-lg transition-colors"
-                        title="Edit MCQ"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMCQ(mcq.id)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-                        title="Delete MCQ"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={getOrderedMcqs().map(mcq => mcq.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {getOrderedMcqs().map((mcq, index) => (
+                    <SortableMCQItem
+                      key={mcq.id}
+                      mcq={mcq}
+                      index={index}
+                      onEdit={startEditingMCQ}
+                      onDelete={handleDeleteMCQ}
+                      getDifficultyColor={getDifficultyColor}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </div>
