@@ -12,6 +12,7 @@ import FeedPostManager from "./components/FeedPostManager";
 import Login from "./components/Login";
 import MCQManager from "./components/MCQManager";
 import QuizPackManager from "./components/QuizPackManager";
+import QuizPackDetail from "./components/QuizPackDetail";
 import Settings from "./components/Settings";
 import StudyPackManager from "./components/StudyPackManager";
 import SubjectBuilder from "./components/SubjectBuilder";
@@ -69,6 +70,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/mcqs" element={<MCQManager />} />
           <Route path="/feed-posts" element={<FeedPostManager />} />
           <Route path="/quiz-packs" element={<QuizPackManager />} />
+          <Route path="/quiz-pack/:quizPackId" element={<QuizPackDetail />} />
           <Route path="/study-packs" element={<StudyPackManager />} />
           <Route path="/subject-builder/:subjectId" element={<SubjectBuilder />} />
           <Route path="/database" element={<DatabaseOverview />} />

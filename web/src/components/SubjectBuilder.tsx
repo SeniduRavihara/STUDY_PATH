@@ -10,9 +10,10 @@ import {
   Settings,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSidebar } from "../contexts/SidebarContext";
 import FlowBuilder from "./FlowBuilder";
+import QuizPackBuilder from "./QuizPackBuilder";
 import { DatabaseService } from "../lib/database";
 import type { TopicWithChildren, Subject, SubjectInsert } from "../lib/database";
 import { useAuth } from "../contexts/AuthContext";
@@ -313,9 +314,10 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
 const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { sidebarCollapsed } = useSidebar();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
   const [currentStep, setCurrentStep] = useState(1);
   const [viewMode, setViewMode] = useState<"tabs" | "stepper">("tabs");
   const [subject, setSubject] = useState<Subject | null>(null);
@@ -328,6 +330,18 @@ const SubjectBuilder: React.FC = () => {
   const [newTopicName, setNewTopicName] = useState("");
   const [newTopicDescription, setNewTopicDescription] = useState("");
 
+
+  // Sync activeTab with URL parameter
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+      const tab = tabs.find(t => t.id === tabFromUrl);
+      if (tab) {
+        setCurrentStep(tab.stepId);
+      }
+    }
+  }, [searchParams]);
 
   // Load subject and topics data from database
   useEffect(() => {
@@ -378,19 +392,21 @@ const SubjectBuilder: React.FC = () => {
   const steps = [
     { id: 1, name: "Subject Basics", icon: BookOpen, tabId: "overview" },
     { id: 2, name: "Topic Structure", icon: FileText, tabId: "topics" },
-    { id: 3, name: "Flow Structure", icon: FileText, tabId: "flow" },
-    { id: 4, name: "Content Creation", icon: Play, tabId: "content" },
-    { id: 5, name: "Testing & Preview", icon: Eye, tabId: "preview" },
-    { id: 6, name: "Publish", icon: CheckCircle, tabId: "settings" },
+    { id: 3, name: "Quiz Packs", icon: CheckCircle, tabId: "quiz-packs" },
+    { id: 4, name: "Flow Structure", icon: FileText, tabId: "flow" },
+    { id: 5, name: "Content Creation", icon: Play, tabId: "content" },
+    { id: 6, name: "Testing & Preview", icon: Eye, tabId: "preview" },
+    { id: 7, name: "Publish", icon: CheckCircle, tabId: "settings" },
   ];
 
   const tabs = [
     { id: "overview", name: "Overview", icon: BookOpen, stepId: 1 },
     { id: "topics", name: "Topics", icon: FileText, stepId: 2 },
-    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 3 },
-    { id: "content", name: "Content Library", icon: Play, stepId: 4 },
-    { id: "settings", name: "Settings", icon: Settings, stepId: 6 },
-    { id: "preview", name: "Preview", icon: Eye, stepId: 5 },
+    { id: "quiz-packs", name: "Quiz Packs", icon: CheckCircle, stepId: 3 },
+    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 4 },
+    { id: "content", name: "Content Library", icon: Play, stepId: 5 },
+    { id: "settings", name: "Settings", icon: Settings, stepId: 7 },
+    { id: "preview", name: "Preview", icon: Eye, stepId: 6 },
   ];
 
   // Synchronize tab and step navigation
@@ -400,6 +416,11 @@ const SubjectBuilder: React.FC = () => {
     if (tab) {
       setCurrentStep(tab.stepId);
     }
+    
+    // Update URL with tab parameter
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("tab", tabId);
+    setSearchParams(newSearchParams);
   };
 
   const handleStepChange = (stepId: number) => {
@@ -407,6 +428,10 @@ const SubjectBuilder: React.FC = () => {
     const step = steps.find(s => s.id === stepId);
     if (step) {
       setActiveTab(step.tabId);
+      // Update URL with tab parameter
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("tab", step.tabId);
+      setSearchParams(newSearchParams);
     }
   };
 
@@ -735,6 +760,16 @@ const SubjectBuilder: React.FC = () => {
               </div>
             </div>
           </div>
+        );
+
+      case "quiz-packs":
+        return (
+          <QuizPackBuilder
+            subject={subject}
+            topics={topics}
+            onTopicsChange={setTopics}
+            sidebarCollapsed={sidebarCollapsed}
+          />
         );
 
       case "flow":
