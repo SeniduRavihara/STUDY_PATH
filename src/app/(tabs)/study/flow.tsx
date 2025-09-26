@@ -141,7 +141,8 @@ export default function FlowStudyScreen() {
           icon: getNodeIcon(node.node_type),
           color: getNodeColor(node.node_type),
           description: node.description,
-          estimatedTime: `${node.estimated_time} min`
+          estimatedTime: `${node.estimated_time} min`,
+          config: node.config // Preserve the config including quiz_pack_id
         }));
 
         setLearningNodes(convertedNodes);
@@ -369,11 +370,17 @@ export default function FlowStudyScreen() {
         break;
 
       case "quiz":
+        // Find the original node data to get quiz pack info
+        const originalNode = learningNodes.find(n => n.id === selectedNode.id);
+        const quizPackId = originalNode?.config?.quiz_pack_id;
+        
         router.push({
           pathname: "/study/take-quiz",
           params: {
             quizId: selectedNode.id,
             quizTitle: selectedNode.title,
+            quizPackId: quizPackId || "",
+            subject: JSON.stringify(parsedSubject),
           },
         });
         break;

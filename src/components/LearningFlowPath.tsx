@@ -26,6 +26,10 @@ export interface LearningNode {
   color: [string, string];
   description?: string;
   estimatedTime?: string;
+  config?: {
+    quiz_pack_id?: string;
+    [key: string]: any;
+  };
 }
 
 interface LearningFlowPathProps {

@@ -3,8 +3,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import drizzleQuizService from "../../../lib/drizzleQuizService";
-import type { Question } from "../../../lib/schema";
+import { supabase } from "../../../superbase/supabase";
+import { useAuth } from "../../../contexts/AuthContext";
 
 type QuizResult = {
   score: number;
@@ -16,102 +16,72 @@ type QuizResult = {
 
 export default function TakeQuizScreen() {
   const router = useRouter();
-  const { subject, topic, quiz } = useLocalSearchParams();
-  const parsedSubject = JSON.parse(subject as string);
-  // const parsedTopic = JSON.parse(topic as string); // Not used currently
-  const parsedQuiz = JSON.parse(quiz as string);
+  const { quizId, quizTitle, quizPackId, subject } = useLocalSearchParams();
+  const parsedSubject = subject ? JSON.parse(subject as string) : null;
+  const { user } = useAuth();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
-  const [timeLeft, setTimeLeft] = useState(parsedQuiz.timeLimit * 60); // Convert to seconds 
+  const [timeLeft, setTimeLeft] = useState(30 * 60); // 30 minutes default
   const [isQuizComplete, setIsQuizComplete] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Load questions from database
   useEffect(() => {
     loadQuizQuestions();
-  }, [loadQuizQuestions]);
+  }, [quizPackId]);
 
   const loadQuizQuestions = useCallback(async () => {
+    if (!quizPackId || !user?.id) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const quizWithQuestions = await drizzleQuizService.getQuizWithQuestions(
-        parsedQuiz.id,
-      );
-      setQuestions(quizWithQuestions.questions);
+      
+      // Load quiz pack details
+      const { data: quizPackData, error: quizPackError } = await supabase
+        .from("quiz_packs")
+        .select("*")
+        .eq("id", quizPackId)
+        .single();
+      
+      if (quizPackError) {
+        console.error("Error loading quiz pack:", quizPackError);
+        Alert.alert("Error", "Failed to load quiz pack");
+        return;
+      }
+      
+      // Load MCQs for this quiz pack
+      if (quizPackData.mcq_ids && quizPackData.mcq_ids.length > 0) {
+        const { data: mcqs, error: mcqsError } = await supabase
+          .from("mcqs")
+          .select("*")
+          .in("id", quizPackData.mcq_ids)
+          .order("created_at");
+        
+        if (mcqsError) {
+          console.error("Error loading MCQs:", mcqsError);
+          Alert.alert("Error", "Failed to load quiz questions");
+          return;
+        }
+        
+        setQuestions(mcqs || []);
+      } else {
+        setQuestions([]);
+      }
     } catch (error) {
       console.error("Error loading quiz questions:", error);
-      // Fallback to sample questions if database fails
-      setQuestions([
-        {
-          id: 1,
-          quizId: parsedQuiz.id,
-          question: "What is the derivative of x²?",
-          optionA: "x",
-          optionB: "2x",
-          optionC: "x²",
-          optionD: "2x²",
-          correctAnswer: "B",
-          explanation: "The derivative of x² is 2x using the power rule.",
-          questionOrder: 1,
-        },
-        {
-          id: 2,
-          quizId: parsedQuiz.id,
-          question: "Which of the following is a quadratic equation?",
-          optionA: "x + 2 = 0",
-          optionB: "x² + 3x + 1 = 0",
-          optionC: "x³ + x = 0",
-          optionD: "2x + 1 = 0",
-          correctAnswer: "B",
-          explanation: "A quadratic equation has the form ax² + bx + c = 0.",
-          questionOrder: 2,
-        },
-        {
-          id: 3,
-          quizId: parsedQuiz.id,
-          question: "What is the slope of a horizontal line?",
-          optionA: "0",
-          optionB: "1",
-          optionC: "undefined",
-          optionD: "-1",
-          correctAnswer: "A",
-          explanation: "A horizontal line has a slope of 0.",
-          questionOrder: 3,
-        },
-        {
-          id: 4,
-          quizId: parsedQuiz.id,
-          question: "Solve for x: 2x + 5 = 13",
-          optionA: "x = 4",
-          optionB: "x = 8",
-          optionC: "x = 6",
-          optionD: "x = 9",
-          correctAnswer: "A",
-          explanation: "2x + 5 = 13 → 2x = 8 → x = 4",
-          questionOrder: 4,
-        },
-        {
-          id: 5,
-          quizId: parsedQuiz.id,
-          question: "What is the area of a circle with radius 3?",
-          optionA: "6π",
-          optionB: "9π",
-          optionC: "12π",
-          optionD: "18π",
-          correctAnswer: "B",
-          explanation: "Area = πr² = π(3)² = 9π",
-          questionOrder: 5,
-        },
-      ]);
+      Alert.alert("Error", "Failed to load quiz questions");
     } finally {
       setLoading(false);
     }
-  }, [parsedQuiz.id]);
+  }, [quizPackId, user?.id]);
 
   // Timer effect
   useEffect(() => {
@@ -158,22 +128,18 @@ export default function TakeQuizScreen() {
 
   const completeQuiz = useCallback(async () => {
     try {
-      // Save quiz attempt to database
       const results = calculateResults();
-      await drizzleQuizService.saveQuizAttempt({
-        quizId: parsedQuiz.id,
-        userId: "user123", // Replace with actual user ID from auth context
+      
+      // Save quiz attempt to database (you can create a quiz_attempts table later)
+      console.log("Quiz completed:", {
+        quizId: quizId,
+        quizPackId: quizPackId,
+        userId: user?.id,
         score: results.score,
-        timeTaken: parsedQuiz.timeLimit * 60 - timeLeft,
-        answers: JSON.stringify(answers),
+        timeTaken: 30 * 60 - timeLeft,
+        answers: answers,
+        questions: questions.length
       });
-
-      // Update user progress
-      await drizzleQuizService.calculateAndUpdateProgress(
-        "user123", // Replace with actual user ID from auth context
-        parsedSubject.name,
-        results.score,
-      );
 
       setIsQuizComplete(true);
       setShowResults(true);
@@ -183,14 +149,14 @@ export default function TakeQuizScreen() {
       setIsQuizComplete(true);
       setShowResults(true);
     }
-  }, [answers, parsedQuiz.id, parsedSubject.name, questions, timeLeft]);
+  }, [answers, quizId, quizPackId, user?.id, questions, timeLeft]);
 
   const calculateResults = (): QuizResult => {
     let correctAnswers = 0;
     answers.forEach((answerIndex, questionIndex) => {
       const question = questions[questionIndex];
-      const selectedOption = ["A", "B", "C", "D"][answerIndex];
-      if (selectedOption === question.correctAnswer) {
+      // correct_answer is an index (0-based), not a letter
+      if (answerIndex === question.correct_answer) {
         correctAnswers++;
       }
     });
@@ -198,7 +164,7 @@ export default function TakeQuizScreen() {
     return {
       score: Math.round((correctAnswers / questions.length) * 100),
       totalQuestions: questions.length,
-      timeTaken: parsedQuiz.timeLimit * 60 - timeLeft,
+      timeTaken: 30 * 60 - timeLeft,
       correctAnswers,
       wrongAnswers: questions.length - correctAnswers,
     };
@@ -340,7 +306,7 @@ export default function TakeQuizScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-slate-900">
-        <LinearGradient colors={parsedSubject.color} className="flex-1">
+        <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} className="flex-1">
           <View className="flex-1 justify-center items-center px-6">
             <Text className="text-white text-2xl font-bold mb-4">
               Loading Quiz...
@@ -357,7 +323,7 @@ export default function TakeQuizScreen() {
   if (questions.length === 0) {
     return (
       <View className="flex-1 bg-slate-900">
-        <LinearGradient colors={parsedSubject.color} className="flex-1">
+        <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} className="flex-1">
           <View className="flex-1 justify-center items-center px-6">
             <Text className="text-white text-2xl font-bold mb-4">
               No Questions Available
@@ -405,7 +371,7 @@ export default function TakeQuizScreen() {
   return (
     <View className="flex-1 bg-slate-900">
       {/* Header */}
-      <LinearGradient colors={parsedSubject.color} className="px-6 pt-14 pb-6">
+      <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} className="px-6 pt-14 pb-6">
         <View className="flex-row items-center justify-between mb-4">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -418,7 +384,7 @@ export default function TakeQuizScreen() {
               Question {currentQuestionIndex + 1} of {questions.length}
             </Text>
             <Text className="text-white opacity-80 text-sm">
-              {parsedQuiz.title}
+              {quizTitle || "Quiz"}
             </Text>
           </View>
           <View className="bg-white bg-opacity-20 px-3 py-2 rounded-full">
@@ -447,12 +413,7 @@ export default function TakeQuizScreen() {
 
         {/* Answer Options */}
         <View className="mb-8">
-          {[
-            currentQuestion.optionA,
-            currentQuestion.optionB,
-            currentQuestion.optionC,
-            currentQuestion.optionD,
-          ].map((option, index) => (
+          {currentQuestion.options?.map((option, index) => (
             <TouchableOpacity
               key={index}
               className={`p-4 rounded-2xl border-2 mb-4 ${
@@ -474,7 +435,9 @@ export default function TakeQuizScreen() {
                     <Ionicons name="checkmark" size={16} color="white" />
                   )}
                 </View>
-                <Text className="text-white text-base flex-1">{option}</Text>
+                <Text className="text-white text-base flex-1">
+                  {option}
+                </Text>
               </View>
             </TouchableOpacity>
           ))}

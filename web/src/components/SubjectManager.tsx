@@ -139,7 +139,7 @@ const SubjectManager: React.FC = () => {
     try {
       // Delete subject from database
       await DatabaseService.deleteSubject(id);
-      
+
       // Refresh subjects list
       await fetchSubjects();
       alert("Subject deleted successfully!");
@@ -261,13 +261,13 @@ const SubjectManager: React.FC = () => {
                 {/* Owner-only buttons */}
                 {subject.created_by === user?.id && (
                   <>
-                    <button
-                      onClick={() => handleEditSubject(subject)}
-                      className="text-dark-400 hover:text-white transition-colors"
-                      title="Edit"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
+                <button
+                  onClick={() => handleEditSubject(subject)}
+                  className="text-dark-400 hover:text-white transition-colors"
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
                     
                     {/* Publish/Unpublish buttons */}
                     {subject.is_active ? (
@@ -288,13 +288,13 @@ const SubjectManager: React.FC = () => {
                       </button>
                     )}
                     
-                    <button
-                      onClick={() => handleDeleteSubject(subject.id)}
-                      className="text-red-400 hover:text-red-300 transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                <button
+                  onClick={() => handleDeleteSubject(subject.id)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
                   </>
                 )}
               </div>
@@ -308,7 +308,7 @@ const SubjectManager: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <span
+              <span
                   className={`px-2 py-1 rounded-full text-xs font-medium border ${
                     subject.is_active 
                       ? "bg-green-500/10 text-green-500 border-green-500/20" 
@@ -316,7 +316,7 @@ const SubjectManager: React.FC = () => {
                   }`}
                 >
                   {subject.is_active ? "Published" : "Draft"}
-                </span>
+              </span>
               </div>
               <span className="text-dark-400 text-sm">
                 {new Date(subject.created_at).toLocaleDateString()}
