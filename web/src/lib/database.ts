@@ -389,6 +389,76 @@ export class DatabaseService {
     };
   }
 
+  // Optimized: Load only flow structure (no MCQs, no quiz packs)
+  static async loadFlowStructure(flowId: string): Promise<any> {
+    // Get flow first
+    const { data: flow, error: flowError } = await supabase
+      .from('flows')
+      .select('*')
+      .eq('id', flowId)
+      .single();
+    
+    if (flowError) {
+      console.error('Error fetching flow:', flowError);
+      throw flowError;
+    }
+    
+    if (!flow) return null;
+    
+    // Get flow nodes separately
+    const { data: nodes, error: nodesError } = await supabase
+      .from('flow_nodes')
+      .select('*')
+      .eq('flow_id', flowId)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+    
+    if (nodesError) {
+      console.error('Error fetching flow nodes:', nodesError);
+      throw nodesError;
+    }
+    
+    return {
+      ...flow,
+      flow_nodes: nodes || []
+    };
+  }
+
+  // Load MCQs only when quiz node is clicked
+  static async loadMCQsForQuizNode(quizPackId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('mcqs')
+      .select('*')
+      .eq('quiz_pack_id', quizPackId)
+      .eq('is_active', true)
+      .order('created_at');
+    
+    if (error) {
+      console.error('Error fetching MCQs for quiz node:', error);
+      throw error;
+    }
+    
+    return data || [];
+  }
+
+  // Load quiz packs only when editing quiz node
+  static async loadQuizPacksForTopic(topicId: string, subjectId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('quiz_packs')
+      .select('*')
+      .or(`topic_id.eq.${topicId},topic_id.is.null`)
+      .eq('subject_id', subjectId)
+      .eq('is_active', true)
+      .order('created_at');
+    
+    if (error) {
+      console.error('Error fetching quiz packs for topic:', error);
+      throw error;
+    }
+    
+    return data || [];
+  }
+
   // ===== MCQs =====
   
   static async getMCQsBySubject(subjectId: string): Promise<any[]> {

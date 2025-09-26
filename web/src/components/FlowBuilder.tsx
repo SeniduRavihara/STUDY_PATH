@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { DatabaseService } from "../lib/database";
+import TopicHierarchySelector from "./TopicHierarchySelector";
+import NodeCreatorModal from "./NodeCreatorModal";
+import NodePropertiesPanel from "./NodePropertiesPanel";
 
 interface FlowNode {
   id: string;
@@ -57,126 +60,6 @@ interface FlowBuilderProps {
   currentFlowId?: string; // Add current flow ID
 }
 
-interface TopicHierarchySelectorProps {
-  topic: Topic;
-  currentTopicId: string;
-  onTopicSelect: (topicId: string) => void;
-  allTopics: Topic[];
-}
-
-const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({ 
-  topic, 
-  currentTopicId, 
-  onTopicSelect, 
-  allTopics 
-}) => {
-  const [isExpanded, setIsExpanded] = useState(topic.level === 0); // Auto-expand top level
-
-  const getIndentStyle = () => {
-    return {
-      marginLeft: `${topic.level * 20}px`,
-      borderLeft: topic.level > 0 ? `2px solid #374151` : 'none',
-      paddingLeft: topic.level > 0 ? '12px' : '0'
-    };
-  };
-
-  const isSelected = currentTopicId === topic.id;
-  const hasChildren = topic.children.length > 0;
-  const isLeafTopic = !hasChildren; // Only leaf topics (no children) can be selected
-
-  return (
-    <div style={getIndentStyle()} className="relative">
-      {/* Topic Card */}
-      <div className={`rounded-lg p-3 transition-colors ${
-        isLeafTopic ? 'cursor-pointer' : 'cursor-default'
-      } ${
-        isSelected 
-          ? "bg-primary-500 text-white" 
-          : topic.hasFlow
-          ? "bg-green-500/20 border border-green-500/30 text-white hover:bg-green-500/30"
-          : isLeafTopic
-          ? "bg-dark-800 hover:bg-dark-700 text-white"
-          : "bg-dark-700 text-dark-400" // Non-selectable topics are dimmed
-      }`} onClick={() => isLeafTopic && onTopicSelect(topic.id)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 flex-1">
-            {/* Expand/Collapse Button */}
-            {hasChildren && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(!isExpanded);
-                }}
-                className="text-dark-400 hover:text-white transition-colors"
-              >
-                {isExpanded ? '▼' : '▶'}
-              </button>
-            )}
-            
-            {/* Topic Icon */}
-            <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs ${
-              topic.hasFlow ? 'bg-green-500/20 text-green-400' : 
-              isLeafTopic ? 'bg-blue-500/20 text-blue-400' : 'bg-dark-600 text-dark-400'
-            }`}>
-              {topic.hasFlow ? '✓' : isLeafTopic ? '●' : '○'}
-            </div>
-
-            {/* Topic Content */}
-            <div className="flex-1">
-              <div className="flex items-center space-x-2">
-                <h4 className="font-semibold">{topic.name}</h4>
-                {topic.hasFlow && (
-                  <span className="text-green-400 text-xs">✓ Has Flow</span>
-                )}
-                {isLeafTopic && !topic.hasFlow && (
-                  <span className="text-blue-400 text-xs">● Selectable</span>
-                )}
-                {!isLeafTopic && (
-                  <span className="text-dark-500 text-xs">○ Not Selectable</span>
-                )}
-              </div>
-              <p className={`text-sm ${
-                isSelected ? "text-white/80" : "text-dark-400"
-              }`}>
-                {topic.description}
-              </p>
-              <div className="flex items-center space-x-2 mt-1">
-                <span className="text-xs text-dark-500">Level {topic.level}</span>
-                {hasChildren && (
-                  <span className="text-xs text-dark-500">
-                    {topic.children.length} children
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Selection Indicator */}
-          {isSelected && (
-            <div className="text-white text-sm font-bold">
-              SELECTED
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Children */}
-      {isExpanded && hasChildren && (
-        <div className="mt-2 space-y-2">
-          {topic.children.map((child) => (
-            <TopicHierarchySelector
-              key={child.id}
-              topic={child}
-              currentTopicId={currentTopicId}
-              onTopicSelect={onTopicSelect}
-              allTopics={allTopics}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 // 3-Column Grid System Configuration (matching mobile app)
 const FLOW_CONFIG = {
@@ -266,8 +149,8 @@ const getNodeAnchorPoint = (
   node: FlowNode,
   direction: "top" | "bottom" | "left" | "right" | "center",
 ): { x: number; y: number } => {
-  const centerX = node.position.x;
-  const centerY = node.position.y;
+  const centerX = node.position?.x || 0;
+  const centerY = node.position?.y || 0;
   const halfSize = FLOW_CONFIG.nodeSize / 2;
 
   switch (direction) {
@@ -401,21 +284,6 @@ const generateVerticalFlowPaths = (nodes: FlowNode[]): string[] => {
   return paths;
 };
 
-// Sri Lankan AL Physics Topics
-const AL_PHYSICS_TOPICS = [
-  { id: "mechanics", name: "Mechanics", description: "Motion, forces, and energy" },
-  { id: "waves", name: "Waves", description: "Wave properties and behavior" },
-  { id: "electricity", name: "Electricity", description: "Electric fields and circuits" },
-  { id: "magnetism", name: "Magnetism", description: "Magnetic fields and electromagnetic induction" },
-  { id: "thermodynamics", name: "Thermodynamics", description: "Heat, temperature, and energy transfer" },
-  { id: "optics", name: "Optics", description: "Light, reflection, and refraction" },
-  { id: "atomic", name: "Atomic Physics", description: "Atomic structure and quantum mechanics" },
-  { id: "nuclear", name: "Nuclear Physics", description: "Nuclear reactions and radioactivity" },
-  { id: "particles", name: "Particle Physics", description: "Fundamental particles and interactions" },
-  { id: "astrophysics", name: "Astrophysics", description: "Stars, galaxies, and cosmology" },
-  { id: "electronics", name: "Electronics", description: "Electronic devices and circuits" },
-  { id: "practical", name: "Practical Physics", description: "Laboratory work and experiments" },
-];
 
 const FlowBuilder: React.FC<FlowBuilderProps> = ({
   nodes,
@@ -478,8 +346,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         
         // Add parent topics
         let parent = currentTopic;
-        while (parent.parent_id) {
-          const parentTopic = findTopicById(topics, parent.parent_id);
+        while (parent.parentId) {
+          const parentTopic = findTopicById(topics, parent.parentId);
           if (parentTopic) {
             relevantTopicIds.add(parentTopic.id);
             parent = parentTopic;
@@ -672,7 +540,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       difficulty: nodeType.difficulty,
       xp: nodeType.xp,
       icon: nodeType.icon.name,
-      color: nodeType.color,
+      color: nodeType.color as [string, string],
       estimatedTime: "5 min",
     };
 
@@ -753,7 +621,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       }
 
       // Save flow nodes
-      await DatabaseService.saveFlowNodes(currentFlowId, nodes);
+      await DatabaseService.saveFlowNodes(currentFlowId || "", nodes);
       
       alert("Flow saved successfully!");
     } catch (error) {
@@ -841,7 +709,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   
   // Calculate total content height
   const totalContentHeight = flowNodes.length > 0 
-    ? flowNodes[flowNodes.length - 1].position.y + FLOW_CONFIG.nodeSpacing + 300
+    ? (flowNodes[flowNodes.length - 1].position?.y || 0) + FLOW_CONFIG.nodeSpacing + 300
     : 600;
 
   // Calculate course progress
@@ -915,12 +783,10 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         </div>
       </div>
 
-      {/* Flow Container - Responsive to sidebar state */}
-      <div className={`bg-dark-800 rounded-2xl overflow-hidden transition-all duration-300 ${
-        sidebarCollapsed 
-          ? 'max-w-7xl mx-auto w-full' 
-          : 'max-w-6xl mx-auto w-full'
-      }`}>
+      {/* Main Content - Side by Side Layout */}
+      <div className="flex gap-6">
+        {/* Flow Container - Left Side */}
+        <div className="flex-1 bg-dark-800 rounded-2xl overflow-hidden">
         {/* Header Section (matching mobile app) */}
         <div 
           className="px-6 pt-6 pb-6"
@@ -1052,7 +918,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             </svg>
 
             {/* Learning Nodes */}
-            {flowNodes.map((node, index) => {
+            {flowNodes.map((node) => {
               const Icon = getNodeIcon(node.type);
               const nodeColor = getNodeColor(node.type);
               
@@ -1110,8 +976,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                     selectedNode?.id === node.id ? "ring-2 ring-primary-500" : ""
                   }`}
                   style={{
-                    left: node.position.x - nodeSize / 2,
-                    top: node.position.y - nodeSize / 2,
+                    left: (node.position?.x || 0) - nodeSize / 2,
+                    top: (node.position?.y || 0) - nodeSize / 2,
                   }}
                   onClick={() => setSelectedNode(node)}
                 >
@@ -1229,56 +1095,47 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             </div>
           </div>
         </div>
+        </div>
+
+        {/* Node Properties Panel - Right Side */}
+        {selectedNode ? (
+          <NodePropertiesPanel
+            selectedNode={selectedNode}
+            updateNode={updateNode}
+            deleteNode={deleteNode}
+            quizPacks={quizPacks}
+            loadingQuizPacks={loadingQuizPacks}
+            topics={topics}
+            findTopicById={findTopicById}
+            getNodeColor={getNodeColor}
+          />
+        ) : (
+          <div className="w-80 bg-dark-800 rounded-2xl p-6 flex-shrink-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-dark-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Settings className="w-8 h-8 text-dark-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Node Properties
+              </h3>
+              <p className="text-dark-400 text-sm">
+                Click on a node to edit its properties
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Node Creator Modal */}
-      {showNodeCreator && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-dark-900 rounded-2xl p-6 w-full max-w-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">
-                Add New Node
-              </h3>
-              <button
-                onClick={() => setShowNodeCreator(false)}
-                className="text-dark-400 hover:text-white transition-colors"
-              >
-                ×
-              </button>
-            </div>
+      <NodeCreatorModal
+        showNodeCreator={showNodeCreator}
+        setShowNodeCreator={setShowNodeCreator}
+        addNode={addNode}
+        nodeTypes={nodeTypes}
+      />
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {nodeTypes.map((nodeType) => {
-                const Icon = nodeType.icon;
-                return (
-                  <button
-                    key={nodeType.type}
-                    onClick={() => addNode(nodeType.type)}
-                    className="p-4 bg-dark-800 rounded-xl hover:bg-dark-700 transition-colors text-left"
-                  >
-                    <div className={`w-12 h-12 ${nodeType.color} rounded-xl flex items-center justify-center mb-3`}>
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h4 className="text-white font-medium">{nodeType.name}</h4>
-                    <p className="text-dark-400 text-sm mt-1">
-                      {nodeType.type === "start" && "Starting point of the flow"}
-                      {nodeType.type === "study" && "Learning content and lessons"}
-                      {nodeType.type === "quiz" && "Interactive questions and assessments"}
-                      {nodeType.type === "video" && "Video content and tutorials"}
-                      {nodeType.type === "assignment" && "Practical exercises and projects"}
-                      {nodeType.type === "assessment" && "Formal evaluations and tests"}
-                      {nodeType.type === "end" && "Ending point of the flow"}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Node Properties Panel */}
-      {selectedNode && (
+      {/* Old Node Properties Panel - Removed */}
+      {false && selectedNode && (
         <div className="bg-dark-800 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-white">
