@@ -1,0 +1,661 @@
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Svg, { Path, Circle } from "react-native-svg";
+
+const { width: screenWidth } = Dimensions.get("window");
+
+// Types for learning nodes
+export interface LearningNode {
+  id: string;
+  title: string;
+  type: "lesson" | "quiz" | "project" | "milestone";
+  status: "locked" | "available" | "completed" | "current";
+  difficulty: "easy" | "medium" | "hard";
+  xp: number;
+  position: { x: number; y: number };
+  icon: keyof typeof Ionicons.glyphMap;
+  color: [string, string];
+  description?: string;
+  estimatedTime?: string;
+  config?: {
+    quiz_pack_id?: string;
+    [key: string]: any;
+  };
+}
+
+interface LearningFlowPathProps {
+  nodes: LearningNode[];
+  onNodePress: (node: LearningNode) => void;
+  userStats: {
+    hearts: number;
+    coins: number;
+    streak: number;
+    totalXp: number;
+  };
+  courseTitle: string;
+  courseProgress: number;
+  onTitlePress?: () => void;
+}
+
+// 3-Column Grid System Configuration
+const FLOW_CONFIG = {
+  nodeSpacing: 140, // Vertical spacing between nodes (reduced for better density)
+  leftColumnX: 0.2, // 20% from left edge (left column)
+  centerColumnX: 0.5, // 50% from left edge (center column)
+  rightColumnX: 0.8, // 80% from left edge (right column)
+  startY: 100, // Start 100px from top
+  nodeSize: 110, // Node diameter for positioning (slightly smaller)
+  connectionOffset: 25, // Vertical offset for L-shaped connections
+};
+
+// 3-Column Grid Flow Pattern (Center acts as transition hub)
+const POSITION_PATTERN = [
+  "center", // Row 1: Start center
+  "right", // Row 2: Move right
+  "center", // Row 3: Back to center
+  "left", // Row 4: Move left
+  "center", // Row 5: Back to center
+  "right", // Row 6: Move right
+  "center", // Row 7: Back to center (FIXED!)
+  "left", // Row 8: Move left
+  "center", // Row 9: Back to center
+  "right", // Row 10: Move right
+  "center", // Row 11: Back to center
+  "left", // Row 12: Move left
+];
+
+// Get smart position for node based on Mimo's organic pattern
+const getSmartPosition = (index: number): "left" | "center" | "right" => {
+  return POSITION_PATTERN[index % POSITION_PATTERN.length] as
+    | "left"
+    | "center"
+    | "right";
+};
+
+// Generate vertical flow positions for nodes using 3-column system
+const generateVerticalFlowPositions = (
+  nodes: LearningNode[],
+): LearningNode[] => {
+  const { width: screenWidth } = Dimensions.get("window");
+
+  return nodes.map((node, index) => {
+    // Get position from organic pattern
+    const positionKey = getSmartPosition(index);
+
+    // Map position to actual X coordinate
+    let x: number;
+    switch (positionKey) {
+      case "left":
+        x = screenWidth * FLOW_CONFIG.leftColumnX;
+        break;
+      case "center":
+        x = screenWidth * FLOW_CONFIG.centerColumnX;
+        break;
+      case "right":
+        x = screenWidth * FLOW_CONFIG.rightColumnX;
+        break;
+    }
+
+    // Calculate Y position with proper spacing
+    const y = FLOW_CONFIG.startY + index * FLOW_CONFIG.nodeSpacing;
+
+    return {
+      ...node,
+      position: { x, y },
+    };
+  });
+};
+
+// Get node anchor point based on position and direction
+const getNodeAnchorPoint = (
+  node: LearningNode,
+  direction: "top" | "bottom" | "left" | "right" | "center",
+): { x: number; y: number } => {
+  const centerX = node.position.x;
+  const centerY = node.position.y;
+  const halfSize = FLOW_CONFIG.nodeSize / 2;
+
+  switch (direction) {
+    case "top":
+      return { x: centerX, y: centerY - halfSize };
+    case "bottom":
+      return { x: centerX, y: centerY + halfSize };
+    case "left":
+      return { x: centerX - halfSize, y: centerY };
+    case "right":
+      return { x: centerX + halfSize, y: centerY };
+    case "center":
+      return { x: centerX, y: centerY };
+    default:
+      return { x: centerX, y: centerY };
+  }
+};
+
+// Get connection points based on node positions and flow direction
+const getConnectionPoints = (
+  currentNode: LearningNode,
+  nextNode: LearningNode,
+  currentIndex: number,
+): { start: { x: number; y: number }; end: { x: number; y: number } } => {
+  const currentPos = getSmartPosition(currentIndex);
+  const nextPos = getSmartPosition(currentIndex + 1);
+
+  let startPoint: { x: number; y: number };
+  let endPoint: { x: number; y: number };
+
+  // FIXED LOGIC: Based on your exact requirements
+  if (currentPos === "center" && nextPos === "right") {
+    // 1st node (center) → 2nd node (right): Start from RIGHT side, end at TOP
+    startPoint = getNodeAnchorPoint(currentNode, "right");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  } else if (currentPos === "right" && nextPos === "center") {
+    // 2nd node (right) → 3rd node (center): Start from BOTTOM, end at RIGHT side
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "right");
+  } else if (currentPos === "center" && nextPos === "left") {
+    // 3rd node (center) → 4th node (left): Start from LEFT side, end at TOP
+    startPoint = getNodeAnchorPoint(currentNode, "left");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  } else if (currentPos === "left" && nextPos === "center") {
+    // 4th node (left) → 5th node (center): Start from BOTTOM, end at LEFT side
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "left");
+  } else {
+    // Fallback for other combinations
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  }
+
+  return { start: startPoint, end: endPoint };
+};
+
+// Create proper L-shaped path with correct orientation based on connection type
+const createVerticalFlowPath = (
+  startNode: LearningNode,
+  endNode: LearningNode,
+  nodeIndex: number,
+): string => {
+  const points = getConnectionPoints(startNode, endNode, nodeIndex);
+  const start = points.start;
+  const end = points.end;
+
+  // SPECIFIC L-SHAPE PATTERNS: Based on exact connection types
+  const currentPos = getSmartPosition(nodeIndex);
+  const nextPos = getSmartPosition(nodeIndex + 1);
+
+  let path: string;
+
+  // Create L-shape patterns with smooth corners (small radius)
+  const cornerRadius = 8; // Small radius to smooth the sharp turns
+
+  if (currentPos === "center" && nextPos === "right") {
+    // 1st → 2nd: Center to Right - go RIGHT first, then DOWN with smooth corner
+    const cornerX = end.x - cornerRadius;
+    const cornerY = start.y + cornerRadius;
+    path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+  } else if (currentPos === "right" && nextPos === "center") {
+    // 2nd → 3rd: Right to Center - go DOWN first, then LEFT with smooth corner
+    const cornerX = start.x - cornerRadius;
+    const cornerY = end.y - cornerRadius;
+    path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+  } else if (currentPos === "center" && nextPos === "left") {
+    // 3rd → 4th: Center to Left - go LEFT first, then DOWN with smooth corner
+    const cornerX = end.x + cornerRadius;
+    const cornerY = start.y + cornerRadius;
+    path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+  } else if (currentPos === "left" && nextPos === "center") {
+    // 4th → 5th: Left to Center - go DOWN first, then RIGHT with smooth corner
+    const cornerX = start.x + cornerRadius;
+    const cornerY = end.y - cornerRadius;
+    path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+  } else if (currentPos === "center" && nextPos === "center") {
+    // Center to Center - straight line down
+    path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  } else {
+    // Fallback: determine based on relative positions
+    if (start.x === end.x) {
+      // Same X position - straight line down
+      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    } else if (start.y === end.y) {
+      // Same Y position - straight line across
+      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    } else {
+      // Different X and Y - create L-shape with smooth corner
+      if (end.x > start.x) {
+        // Target is to the RIGHT of current - go RIGHT first, then DOWN with smooth corner
+        const cornerX = end.x - cornerRadius;
+        const cornerY = start.y + cornerRadius;
+        path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+      } else {
+        // Target is to the LEFT of current - go DOWN first, then LEFT with smooth corner
+        const cornerX = start.x - cornerRadius;
+        const cornerY = end.y - cornerRadius;
+        path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+      }
+    }
+  }
+
+  return path;
+};
+
+// Generate all vertical flow paths between consecutive nodes
+const generateVerticalFlowPaths = (nodes: LearningNode[]): string[] => {
+  if (nodes.length < 2) return [];
+
+  const paths: string[] = [];
+
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const currentPath = createVerticalFlowPath(nodes[i], nodes[i + 1], i);
+    paths.push(currentPath);
+  }
+
+  return paths;
+};
+
+// Node component with animations
+const LearningNodeComponent: React.FC<{
+  node: LearningNode;
+  onPress: () => void;
+  index: number;
+}> = ({ node, onPress, index }) => {
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [pulseAnim] = useState(new Animated.Value(1));
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  // Pulse animation for current node
+  React.useEffect(() => {
+    if (node.status === "current") {
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [node.status, pulseAnim]);
+
+  const getNodeSize = () => {
+    const baseSize = FLOW_CONFIG.nodeSize; // Use the configured node size (160px)
+    switch (node.status) {
+      case "current":
+        return baseSize; // Full size for current node
+      case "completed":
+        return baseSize * 0.9; // 90% of base size
+      case "available":
+        return baseSize * 0.85; // 85% of base size
+      case "locked":
+        return baseSize * 0.8; // 80% of base size
+      default:
+        return baseSize * 0.85; // 85% of base size
+    }
+  };
+
+  const getNodeIcon = () => {
+    switch (node.status) {
+      case "completed":
+        return "checkmark-circle";
+      case "locked":
+        return "lock-closed";
+      case "current":
+        return "play-circle";
+      default:
+        return node.icon;
+    }
+  };
+
+  const getNodeColor = () => {
+    switch (node.status) {
+      case "completed":
+        return ["#10b981", "#059669"];
+      case "current":
+        return ["#8b5cf6", "#7c3aed"];
+      case "locked":
+        return ["#6b7280", "#4b5563"];
+      default:
+        return node.color;
+    }
+  };
+
+  const nodeSize = getNodeSize();
+  const isDisabled = node.status === "locked";
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        left: node.position.x - nodeSize / 2,
+        top: node.position.y - nodeSize / 2,
+        transform: [
+          { scale: scaleAnim },
+          { scale: node.status === "current" ? pulseAnim : 1 },
+        ],
+      }}
+    >
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={isDisabled}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={getNodeColor()}
+          className="items-center justify-center shadow-lg"
+          style={{
+            width: nodeSize,
+            height: nodeSize,
+            borderRadius: 16, // Add border radius for rounded corners
+            shadowColor: getNodeColor()[0],
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}
+        >
+          <Ionicons
+            name={getNodeIcon() as any}
+            size={nodeSize * 0.4}
+            color="white"
+          />
+        </LinearGradient>
+
+        {/* Node label */}
+        <View
+          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2"
+          style={{ minWidth: 100 }}
+        >
+          <Text
+            className="text-center text-xs font-semibold"
+            style={{
+              color: node.status === "locked" ? "#6b7280" : "#ffffff",
+            }}
+            numberOfLines={2}
+          >
+            {node.title}
+          </Text>
+          {node.xp > 0 && (
+            <Text
+              className="text-center text-xs mt-1"
+              style={{
+                color: node.status === "locked" ? "#6b7280" : "#fbbf24",
+              }}
+            >
+              +{node.xp} XP
+            </Text>
+          )}
+        </View>
+
+        {/* Difficulty indicator */}
+        {node.status !== "locked" && (
+          <View
+            className="absolute -top-2 -right-2 bg-white rounded-full px-2 py-1"
+            style={{ minWidth: 20 }}
+          >
+            <Text
+              className="text-xs font-bold text-center"
+              style={{
+                color:
+                  node.difficulty === "easy"
+                    ? "#10b981"
+                    : node.difficulty === "medium"
+                      ? "#f59e0b"
+                      : "#ef4444",
+              }}
+            >
+              {node.difficulty === "easy"
+                ? "E"
+                : node.difficulty === "medium"
+                  ? "M"
+                  : "H"}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
+export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
+  nodes,
+  onNodePress,
+  userStats,
+  courseTitle,
+  courseProgress,
+  onTitlePress,
+}) => {
+  // Generate vertical flow positions and paths
+  const flowNodes = generateVerticalFlowPositions(nodes);
+  const verticalPaths = generateVerticalFlowPaths(flowNodes);
+
+  // Calculate total content height for scrolling (shows 4-5 nodes at once)
+  const totalContentHeight =
+    flowNodes.length > 0
+      ? flowNodes[flowNodes.length - 1].position.y +
+        FLOW_CONFIG.nodeSpacing +
+        300 // Extra padding for better scrolling
+      : Dimensions.get("window").height;
+
+  return (
+    <View className="flex-1 bg-slate-900">
+      {/* Header with gamification elements */}
+      <LinearGradient
+        colors={["#0f0f23", "#1a1a2e"]}
+        className="px-6 pt-14 pb-6"
+      >
+        {/* User Stats */}
+        <View className="flex-row justify-between items-center mb-4">
+          <View className="flex-row space-x-4">
+            {/* Hearts */}
+            <View className="bg-red-500 bg-opacity-20 px-4 py-2 rounded-full flex-row items-center">
+              <Ionicons name="heart" size={20} color="#ef4444" />
+              <Text className="text-white font-bold ml-2">
+                {userStats.hearts}
+              </Text>
+            </View>
+
+            {/* Coins */}
+            <View className="bg-yellow-500 bg-opacity-20 px-4 py-2 rounded-full flex-row items-center">
+              <Ionicons name="diamond" size={20} color="#fbbf24" />
+              <Text className="text-white font-bold ml-2">
+                {userStats.coins}
+              </Text>
+            </View>
+
+            {/* Streak */}
+            <View className="bg-orange-500 bg-opacity-20 px-4 py-2 rounded-full flex-row items-center">
+              <Ionicons name="flame" size={20} color="#f97316" />
+              <Text className="text-white font-bold ml-2">
+                {userStats.streak}
+              </Text>
+            </View>
+          </View>
+
+          {/* Menu */}
+          <TouchableOpacity className="bg-slate-800 p-3 rounded-full">
+            <Ionicons name="menu" size={24} color="#00d4ff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Course Title */}
+        <View className="bg-slate-800 bg-opacity-50 px-6 py-4 rounded-2xl mb-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1">
+              <TouchableOpacity
+                onPress={onTitlePress}
+                disabled={!onTitlePress}
+                activeOpacity={onTitlePress ? 0.7 : 1}
+              >
+                <Text className={`text-2xl font-bold ${
+                  onTitlePress ? "text-blue-400" : "text-white"
+                }`}>
+                  {courseTitle}
+                </Text>
+                <Text className="text-gray-400 text-sm mt-1">
+                  {Math.round(courseProgress)}% Complete
+                </Text>
+                {onTitlePress && (
+                  <Text className="text-blue-300 text-xs mt-1">
+                    Tap to change topic
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            <View className="items-end">
+              <Text className="text-white text-xl font-bold">
+                {userStats.totalXp}
+              </Text>
+              <Text className="text-gray-400 text-xs">Total XP</Text>
+            </View>
+          </View>
+
+          {/* Progress Bar */}
+          <View className="bg-slate-700 rounded-full h-3 mt-3">
+            <LinearGradient
+              colors={["#8b5cf6", "#7c3aed"]}
+              className="rounded-full h-3"
+              style={{ width: `${courseProgress}%` }}
+            />
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* Vertical Flow ScrollView */}
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          minHeight: totalContentHeight,
+          paddingBottom: 100,
+        }}
+        style={{
+          backgroundColor: '#0f172a', // slate-900 background
+        }}
+      >
+        <View
+          className="relative"
+          style={{
+            minHeight: totalContentHeight,
+            width: screenWidth,
+            backgroundColor: '#0f172a',
+          }}
+        >
+          {/* Dotted Grid Background */}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: '#0f172a',
+            }}
+          >
+            {/* Create dotted grid with larger spacing for better performance */}
+            {Array.from({ length: Math.ceil(totalContentHeight / 40) }, (_, row) =>
+              Array.from({ length: Math.ceil(screenWidth / 40) }, (_, col) => (
+                <View
+                  key={`dot-${row}-${col}`}
+                  style={{
+                    position: 'absolute',
+                    left: col * 40,
+                    top: row * 40,
+                    width: 2,
+                    height: 2,
+                    backgroundColor: '#374151',
+                    borderRadius: 1,
+                  }}
+                />
+              ))
+            )}
+          </View>
+          {/* Vertical Flow Paths SVG */}
+          <Svg
+            height={totalContentHeight}
+            width="100%"
+            style={{ position: "absolute", top: 0, left: 0 }}
+          >
+            {verticalPaths.map((path, index) => (
+              <Path
+                key={index}
+                d={path}
+                stroke="#666666"
+                strokeWidth="6"
+                fill="none"
+                opacity={0.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
+
+          {/* Learning Nodes */}
+          {flowNodes.map((node, index) => (
+            <LearningNodeComponent
+              key={node.id}
+              node={node}
+              onPress={() => onNodePress(node)}
+              index={index}
+            />
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Bottom Info Panel */}
+      <View className="absolute bottom-0 left-0 right-0 bg-slate-800 bg-opacity-95 backdrop-blur-sm p-4">
+        <View className="flex-row justify-between items-center">
+          <View>
+            <Text className="text-white font-semibold">
+              Next:{" "}
+              {flowNodes.find(n => n.status === "current")?.title ||
+                "Complete the course!"}
+            </Text>
+            <Text className="text-gray-400 text-sm">
+              {flowNodes.filter(n => n.status === "completed").length} of{" "}
+              {flowNodes.length} completed
+            </Text>
+          </View>
+          <View className="flex-row items-center">
+            <Ionicons name="trophy" size={20} color="#fbbf24" />
+            <Text className="text-yellow-400 font-bold ml-1">
+              {Math.round(courseProgress)}%
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+export default LearningFlowPath;

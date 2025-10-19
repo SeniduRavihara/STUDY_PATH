@@ -1,35 +1,119 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { Redirect, Tabs } from "expo-router";
+import React from "react";
+import TabsWrapper from "../../components/TabsWrapper";
+import { useAuth } from "../../contexts/AuthContext";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+export default function TabsLayout() {
+  const { user, loading } = useAuth();
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  console.log("TabsLayout: User:", user?.email, "Loading:", loading); // Debug log
 
+  // If no user, redirect to login
+  if (!loading && !user) {
+    console.log("TabsLayout: NO USER - Redirecting to login"); // Debug log
+    return <Redirect href="/auth/login" />;
+  }
+
+  // If still loading, don't render tabs yet
+  if (loading) {
+    return null;
+  }
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+    <TabsWrapper>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: {
+            backgroundColor: "#1a1a2e",
+            borderTopColor: "#16213e",
+            height: 70,
+            paddingBottom: 10,
+            paddingTop: 10,
+          },
+          tabBarActiveTintColor: "#00d4ff",
+          tabBarInactiveTintColor: "#6b7280",
         }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: "Home",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="study"
+          options={{
+            title: "Study",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? "book" : "book-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="feed"
+          options={{
+            title: "Feed",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? "newspaper" : "newspaper-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="rewards"
+          options={{
+            title: "Rewards",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? "trophy" : "trophy-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: "Profile",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? "person" : "person-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="debug"
+          options={{
+            title: "Debug",
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons
+                name={focused ? "bug" : "bug-outline"}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+      </Tabs>
+    </TabsWrapper>
   );
 }
