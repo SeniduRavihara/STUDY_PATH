@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   Modal,
+  StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -87,29 +88,29 @@ const CustomModal: React.FC<CustomModalProps> = ({
       onRequestClose={onClose}
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <View className="flex-1 bg-black/50 items-center justify-center p-6">
+        <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View className="bg-slate-800 rounded-3xl w-full max-w-sm overflow-hidden">
+            <View style={styles.modalContainer}>
               {/* Header */}
               <LinearGradient
                 colors={getTypeColor()}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                className="p-6"
+                style={styles.headerGradient}
               >
-                <View className="flex-row items-center">
-                  <View className="w-12 h-12 bg-white/20 rounded-2xl items-center justify-center mr-4">
+                <View style={styles.headerContent}>
+                  <View style={styles.iconContainer}>
                     <Ionicons
                       name={getTypeIcon() as any}
                       size={24}
                       color="white"
                     />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-white text-lg font-bold">
+                  <View style={styles.headerText}>
+                    <Text style={styles.headerTitle}>
                       {getTypeText()}
                     </Text>
-                    <Text className="text-white/80 text-sm">
+                    <Text style={styles.headerSubtitle}>
                       {estimatedTime && `Estimated time: ${estimatedTime}`}
                     </Text>
                   </View>
@@ -117,27 +118,27 @@ const CustomModal: React.FC<CustomModalProps> = ({
               </LinearGradient>
 
               {/* Content */}
-              <View className="p-6">
-                <Text className="text-white text-xl font-semibold mb-3">
+              <View style={styles.content}>
+                <Text style={styles.title}>
                   {title}
                 </Text>
-                <Text className="text-gray-300 text-base leading-6 mb-6">
+                <Text style={styles.description}>
                   {description}
                 </Text>
 
                 {/* Action Buttons */}
-                <View className="flex-row">
+                <View style={styles.buttonContainer}>
                   {showCancel && (
                     <>
                       <TouchableOpacity
                         onPress={onClose}
-                        className="flex-1 bg-slate-700 py-4 rounded-2xl items-center"
+                        style={styles.cancelButton}
                       >
-                        <Text className="text-white font-medium">
+                        <Text style={styles.cancelButtonText}>
                           {cancelText}
                         </Text>
                       </TouchableOpacity>
-                      <View className="w-3" />
+                      <View style={styles.buttonSpacer} />
                     </>
                   )}
                   <TouchableOpacity
@@ -145,15 +146,15 @@ const CustomModal: React.FC<CustomModalProps> = ({
                       onConfirm();
                       onClose();
                     }}
-                    className="flex-1"
+                    style={styles.confirmButton}
                   >
                     <LinearGradient
                       colors={getTypeColor()}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      className="py-4 rounded-2xl items-center"
+                      style={styles.confirmButtonGradient}
                     >
-                      <Text className="text-white font-semibold">
+                      <Text style={styles.confirmButtonText}>
                         {confirmText}
                       </Text>
                     </LinearGradient>
@@ -167,5 +168,94 @@ const CustomModal: React.FC<CustomModalProps> = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContainer: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 400,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    padding: 24,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  headerText: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+  },
+  content: {
+    padding: 24,
+  },
+  title: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  description: {
+    color: '#cbd5e1',
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 24,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#334155',
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontWeight: '500',
+  },
+  buttonSpacer: {
+    width: 12,
+  },
+  confirmButton: {
+    flex: 1,
+  },
+  confirmButtonGradient: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+});
 
 export default CustomModal;

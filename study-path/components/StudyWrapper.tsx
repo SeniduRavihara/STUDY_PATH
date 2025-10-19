@@ -1,10 +1,16 @@
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 interface StudyWrapperProps {
   children: React.ReactNode;
 }
 
 export default function StudyWrapper({ children }: StudyWrapperProps) {
-  return <View className="flex-1">{children}</View>;
+  return <View style={styles.container}>{children}</View>;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

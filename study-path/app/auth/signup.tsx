@@ -4,12 +4,87 @@ import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 96,
+  },
+  title: {
+    color: '#06b6d4',
+    fontSize: 48,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 48,
+  },
+  form: {
+    marginBottom: 32,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: 'white',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  primaryButton: {
+    backgroundColor: '#06b6d4',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  primaryButtonText: {
+    color: '#0f0f23',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    borderWidth: 2,
+    borderColor: '#06b6d4',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#06b6d4',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  footer: {
+    textAlign: 'center',
+    color: '#6b7280',
+    fontSize: 12,
+  },
+});
 
 export default function SignupScreen() {
   const [name, setName] = useState("");
@@ -54,23 +129,23 @@ export default function SignupScreen() {
   return (
     <LinearGradient
       colors={["#0f0f23", "#1a1a2e", "#16213e"]}
-      className="flex-1"
+      style={styles.container}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
+        style={styles.keyboardAvoidingView}
       >
-        <View className="flex-1 justify-center px-8 pb-24">
-          <Text className="text-cyan-400 text-5xl font-extrabold text-center mb-2">
+        <View style={styles.content}>
+          <Text style={styles.title}>
             {`StudyPath`}
           </Text>
-          <Text className="text-gray-400 text-base text-center mb-12">
+          <Text style={styles.subtitle}>
             {`Create Your Account`}
           </Text>
 
-          <View className="mb-8">
+          <View style={styles.form}>
             <TextInput
-              className="bg-white/10 rounded-xl px-4 py-4 text-base text-white mb-4 border border-white/20"
+              style={styles.input}
               placeholder="Full Name"
               placeholderTextColor="#6b7280"
               value={name}
@@ -80,7 +155,7 @@ export default function SignupScreen() {
             />
 
             <TextInput
-              className="bg-white/10 rounded-xl px-4 py-4 text-base text-white mb-4 border border-white/20"
+              style={styles.input}
               placeholder="Email"
               placeholderTextColor="#6b7280"
               value={email}
@@ -91,7 +166,7 @@ export default function SignupScreen() {
             />
 
             <TextInput
-              className="bg-white/10 rounded-xl px-4 py-4 text-base text-white mb-4 border border-white/20"
+              style={styles.input}
               placeholder="Password"
               placeholderTextColor="#6b7280"
               value={password}
@@ -101,26 +176,26 @@ export default function SignupScreen() {
             />
 
             <TouchableOpacity
-              className="rounded-xl py-4 items-center mb-3 bg-cyan-400 active:bg-cyan-300"
+              style={[styles.primaryButton, loading && styles.buttonDisabled]}
               onPress={handleSignUp}
               disabled={loading}
             >
-              <Text className="text-[#0f0f23] text-base font-bold">
+              <Text style={styles.primaryButtonText}>
                 {loading ? "Creating Account..." : "Create Account"}
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="rounded-xl py-4 items-center border-2 border-cyan-400"
+              style={styles.secondaryButton}
               onPress={goToLogin}
             >
-              <Text className="text-cyan-400 text-base font-bold">
+              <Text style={styles.secondaryButtonText}>
                 {`Already have an account? Sign In`}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <Text className="text-center text-gray-500 text-xs">
+          <Text style={styles.footer}>
             {`Join StudyPath and start your learning journey`}
           </Text>
         </View>

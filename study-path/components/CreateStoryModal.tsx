@@ -6,6 +6,7 @@ import {
   Image,
   Modal,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -65,24 +66,24 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
       animationType="slide"
       statusBarTranslucent
     >
-      <View className="flex-1 bg-black bg-opacity-50">
-        <View className="flex-1 justify-end">
-          <View className="bg-slate-900 rounded-t-3xl max-h-[80%]">
+      <View style={styles.overlay}>
+        <View style={styles.overlayContent}>
+          <View style={styles.modalContainer}>
             {/* Header */}
-            <View className="flex-row items-center justify-between p-6 border-b border-slate-700">
+            <View style={styles.header}>
               <TouchableOpacity onPress={handleClose}>
                 <Ionicons name="close" size={24} color="#9ca3af" />
               </TouchableOpacity>
-              <Text className="text-white text-lg font-bold">Create Story</Text>
+              <Text style={styles.headerTitle}>Create Story</Text>
               <TouchableOpacity onPress={handleSubmit}>
-                <Text className="text-blue-500 text-lg font-semibold">Share</Text>
+                <Text style={styles.headerButton}>Share</Text>
               </TouchableOpacity>
             </View>
 
-            <ScrollView className="flex-1 p-6">
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
               {/* Content Input */}
-              <View className="mb-6">
-                <Text className="text-white text-base font-semibold mb-3">
+              <View style={styles.inputSection}>
+                <Text style={styles.inputLabel}>
                   What's on your mind?
                 </Text>
                 <TextInput
@@ -91,37 +92,40 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                   placeholder="Share your study progress, achievements, or thoughts..."
                   placeholderTextColor="#6b7280"
                   multiline
-                  className="bg-slate-800 text-white p-4 rounded-2xl text-base min-h-32"
-                  style={{ textAlignVertical: 'top' }}
+                  style={styles.textInput}
+                  textAlignVertical="top"
                   maxLength={200}
                 />
-                <Text className="text-gray-500 text-sm mt-2 text-right">
+                <Text style={styles.charCount}>
                   {content.length}/200
                 </Text>
               </View>
 
               {/* Media Type Selection */}
-              <View className="mb-6">
-                <Text className="text-white text-base font-semibold mb-3">
+              <View style={styles.mediaTypeSection}>
+                <Text style={styles.mediaTypeLabel}>
                   Story Type
                 </Text>
-                <View className="flex-row">
+                <View style={styles.mediaTypeButtons}>
                   <TouchableOpacity
                     onPress={() => setMediaType('text')}
-                    className={`flex-1 p-4 rounded-2xl mr-2 ${
-                      mediaType === 'text' ? 'bg-blue-600' : 'bg-slate-800'
-                    }`}
+                    style={[
+                      styles.mediaTypeButton,
+                      styles.mediaTypeButtonLeft,
+                      mediaType === 'text' ? styles.mediaTypeButtonActive : styles.mediaTypeButtonInactive
+                    ]}
                   >
-                    <View className="items-center">
+                    <View style={styles.mediaTypeButtonContent}>
                       <Ionicons
                         name="text"
                         size={24}
                         color={mediaType === 'text' ? 'white' : '#9ca3af'}
                       />
                       <Text
-                        className={`mt-2 font-medium ${
-                          mediaType === 'text' ? 'text-white' : 'text-gray-400'
-                        }`}
+                        style={[
+                          styles.mediaTypeButtonText,
+                          mediaType === 'text' ? styles.mediaTypeButtonTextActive : styles.mediaTypeButtonTextInactive
+                        ]}
                       >
                         Text Story
                       </Text>
@@ -129,20 +133,23 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => setMediaType('image')}
-                    className={`flex-1 p-4 rounded-2xl ml-2 ${
-                      mediaType === 'image' ? 'bg-blue-600' : 'bg-slate-800'
-                    }`}
+                    style={[
+                      styles.mediaTypeButton,
+                      styles.mediaTypeButtonRight,
+                      mediaType === 'image' ? styles.mediaTypeButtonActive : styles.mediaTypeButtonInactive
+                    ]}
                   >
-                    <View className="items-center">
+                    <View style={styles.mediaTypeButtonContent}>
                       <Ionicons
                         name="image"
                         size={24}
                         color={mediaType === 'image' ? 'white' : '#9ca3af'}
                       />
                       <Text
-                        className={`mt-2 font-medium ${
-                          mediaType === 'image' ? 'text-white' : 'text-gray-400'
-                        }`}
+                        style={[
+                          styles.mediaTypeButtonText,
+                          mediaType === 'image' ? styles.mediaTypeButtonTextActive : styles.mediaTypeButtonTextInactive
+                        ]}
                       >
                         Image Story
                       </Text>
@@ -152,20 +159,20 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
               </View>
 
               {/* Gradient Selection */}
-              <View className="mb-6">
-                <Text className="text-white text-base font-semibold mb-3">
+              <View style={styles.gradientSection}>
+                <Text style={styles.gradientLabel}>
                   Background Color
                 </Text>
-                <View className="flex-row flex-wrap">
+                <View style={styles.gradientGrid}>
                   {gradientOptions.map((option, index) => (
                     <TouchableOpacity
                       key={index}
                       onPress={() => setSelectedGradient(option.colors)}
-                      className="w-16 h-16 rounded-2xl mr-3 mb-3 overflow-hidden"
+                      style={styles.gradientOption}
                     >
                       <LinearGradient
                         colors={option.colors}
-                        className="w-full h-full items-center justify-center"
+                        style={styles.gradientOptionGradient}
                       >
                         {selectedGradient[0] === option.colors[0] && (
                           <Ionicons name="checkmark" size={20} color="white" />
@@ -177,16 +184,16 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
               </View>
 
               {/* Preview */}
-              <View className="mb-6">
-                <Text className="text-white text-base font-semibold mb-3">
+              <View style={styles.previewSection}>
+                <Text style={styles.previewLabel}>
                   Preview
                 </Text>
-                <View className="h-48 rounded-2xl overflow-hidden">
+                <View style={styles.previewContainer}>
                   <LinearGradient
                     colors={selectedGradient}
-                    className="flex-1 items-center justify-center p-6"
+                    style={styles.previewGradient}
                   >
-                    <Text className="text-white text-lg font-semibold text-center">
+                    <Text style={styles.previewText}>
                       {content || 'Your story content will appear here...'}
                     </Text>
                   </LinearGradient>
@@ -199,3 +206,163 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  overlayContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#0f172a',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#334155',
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  headerButton: {
+    color: '#3b82f6',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 24,
+  },
+  inputSection: {
+    marginBottom: 24,
+  },
+  inputLabel: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  textInput: {
+    backgroundColor: '#1e293b',
+    color: 'white',
+    padding: 16,
+    borderRadius: 16,
+    fontSize: 16,
+    minHeight: 128,
+  },
+  charCount: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'right',
+  },
+  mediaTypeSection: {
+    marginBottom: 24,
+  },
+  mediaTypeLabel: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  mediaTypeButtons: {
+    flexDirection: 'row',
+  },
+  mediaTypeButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  mediaTypeButtonLeft: {
+    marginRight: 8,
+  },
+  mediaTypeButtonRight: {
+    marginLeft: 8,
+  },
+  mediaTypeButtonActive: {
+    backgroundColor: '#2563eb',
+  },
+  mediaTypeButtonInactive: {
+    backgroundColor: '#1e293b',
+  },
+  mediaTypeButtonContent: {
+    alignItems: 'center',
+  },
+  mediaTypeButtonText: {
+    marginTop: 8,
+    fontWeight: '500',
+  },
+  mediaTypeButtonTextActive: {
+    color: 'white',
+  },
+  mediaTypeButtonTextInactive: {
+    color: '#9ca3af',
+  },
+  gradientSection: {
+    marginBottom: 24,
+  },
+  gradientLabel: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  gradientGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  gradientOption: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    marginRight: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  gradientOptionGradient: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewSection: {
+    marginBottom: 24,
+  },
+  previewLabel: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  previewContainer: {
+    height: 192,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  previewGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  previewText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+});

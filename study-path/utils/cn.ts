@@ -1,6 +1,1 @@
-import { twMerge } from "tailwind-merge";
-import clsx, { type ClassValue } from "clsx";
-
-export const cn = (...inputs: ClassValue[]): string => {
-  return twMerge(clsx(inputs));
-};
+// This file is no longer needed - removed cn function as we're switching from Tailwind to StyleSheet

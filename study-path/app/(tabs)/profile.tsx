@@ -6,12 +6,186 @@ import {
   Alert,
   Image,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserService } from "@/superbase/services/userService";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  profileCard: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  name: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  email: {
+    color: '#9ca3af',
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  levelBadge: {
+    backgroundColor: '#06b6d4',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  levelText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginHorizontal: 24,
+    marginBottom: 24,
+  },
+  statCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  statNumber: {
+    color: '#06b6d4',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    color: '#9ca3af',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  section: {
+    marginHorizontal: 24,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+  },
+  achievementCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  achievementIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#06b6d4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  achievementContent: {
+    flex: 1,
+  },
+  achievementName: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  achievementDate: {
+    color: '#9ca3af',
+    fontSize: 12,
+  },
+  menuItem: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  menuItemContent: {
+    flex: 1,
+  },
+  menuItemTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  menuItemSubtitle: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  logoutButton: {
+    backgroundColor: '#dc2626',
+    marginHorizontal: 24,
+    marginBottom: 32,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 type UserStats = {
   name: string;
@@ -49,8 +223,8 @@ export default function ProfileScreen() {
   // If still loading, show loading state
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-900 justify-center items-center">
-        <Text className="text-white text-lg">Loading...</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -143,142 +317,124 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Profile Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-8"
+        style={styles.header}
       >
-        <View className="items-center">
-          <View className="relative">
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
             <Image
               source={{
                 uri: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
               }}
-              className="w-24 h-24 rounded-full"
+              style={styles.avatar}
             />
-            <TouchableOpacity className="absolute -bottom-2 -right-2 bg-blue-500 p-2 rounded-full">
-              <Ionicons name="camera" size={16} color="white" />
-            </TouchableOpacity>
           </View>
-          <Text className="text-white text-2xl font-bold mt-4">
+          <Text style={styles.name}>
             {userStats.name}
           </Text>
-          <Text className="text-gray-400 text-base">{userStats.email}</Text>
-          <View className="bg-blue-500 px-4 py-2 rounded-full mt-3">
-            <Text className="text-white font-semibold">{userStats.level}</Text>
+          <Text style={styles.email}>{userStats.email}</Text>
+          <View style={styles.levelBadge}>
+            <Text style={styles.levelText}>{userStats.level}</Text>
           </View>
         </View>
       </LinearGradient>
 
       {/* Stats Grid */}
-      <View className="px-6 mt-6">
-        <View className="flex-row flex-wrap justify-between">
-          <View className="w-[48%] bg-slate-800 p-4 rounded-2xl mb-4">
+      <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
             <Ionicons name="trophy" size={24} color="#f59e0b" />
-            <Text className="text-white text-2xl font-bold mt-2">
+            <Text style={styles.statNumber}>
               {userStats.points.toLocaleString()}
             </Text>
-            <Text className="text-gray-400 text-sm">Total Points</Text>
+            <Text style={styles.statLabel}>Total Points</Text>
           </View>
 
-          <View className="w-[48%] bg-slate-800 p-4 rounded-2xl mb-4">
+          <View style={styles.statCard}>
             <Ionicons name="flame" size={24} color="#ef4444" />
-            <Text className="text-white text-2xl font-bold mt-2">
+            <Text style={styles.statNumber}>
               {userStats.streak}
             </Text>
-            <Text className="text-gray-400 text-sm">Day Streak</Text>
+            <Text style={styles.statLabel}>Day Streak</Text>
           </View>
 
-          <View className="w-[48%] bg-slate-800 p-4 rounded-2xl mb-4">
+          <View style={styles.statCard}>
             <Ionicons name="book" size={24} color="#10b981" />
-            <Text className="text-white text-2xl font-bold mt-2">
+            <Text style={styles.statNumber}>
               {userStats.completedLessons}
             </Text>
-            <Text className="text-gray-400 text-sm">Lessons Done</Text>
+            <Text style={styles.statLabel}>Lessons Done</Text>
           </View>
 
-          <View className="w-[48%] bg-slate-800 p-4 rounded-2xl mb-4">
+          <View style={styles.statCard}>
             <Ionicons name="time" size={24} color="#8b5cf6" />
-            <Text className="text-white text-2xl font-bold mt-2">
+            <Text style={styles.statNumber}>
               {userStats.totalHours}h
             </Text>
-            <Text className="text-gray-400 text-sm">Study Time</Text>
+            <Text style={styles.statLabel}>Study Time</Text>
           </View>
-        </View>
       </View>
 
       {/* Recent Achievements */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-xl font-bold mb-4">
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
           Recent Achievements
         </Text>
         {recentAchievements.map((achievement, index) => (
-          <View key={index} className="bg-slate-800 p-4 rounded-2xl mb-3">
-            <View className="flex-row items-center">
-              <View className="bg-yellow-500 p-3 rounded-full mr-4">
-                <Ionicons name={achievement.icon} size={20} color="black" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-semibold">
-                  {achievement.name}
-                </Text>
-                <Text className="text-gray-400 text-sm">
-                  {achievement.date}
-                </Text>
-              </View>
+          <View key={index} style={styles.achievementCard}>
+            <View style={styles.achievementIcon}>
+              <Ionicons name={achievement.icon} size={20} color="white" />
+            </View>
+            <View style={styles.achievementContent}>
+              <Text style={styles.achievementName}>
+                {achievement.name}
+              </Text>
+              <Text style={styles.achievementDate}>
+                {achievement.date}
+              </Text>
             </View>
           </View>
         ))}
       </View>
 
       {/* Menu Items */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-xl font-bold mb-4">Settings</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Settings</Text>
         {menuItems.map((item, index) => (
           <TouchableOpacity
             key={index}
-            className="bg-slate-800 p-4 rounded-2xl mb-3"
+            style={styles.menuItem}
             onPress={() => handleMenuItemPress(item.title)}
           >
-            <View className="flex-row items-center">
+            <View style={styles.menuItemIcon}>
               <Ionicons
                 name={item.icon}
                 size={24}
                 color="#6b7280"
-                className="mr-4"
               />
-              <View className="flex-1">
-                <Text className="text-white font-semibold">{item.title}</Text>
-                <Text className="text-gray-400 text-sm">{item.subtitle}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#6b7280" />
             </View>
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuItemTitle}>{item.title}</Text>
+              <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Logout Button */}
-      <View className="px-6 mt-8 mb-8">
-        <TouchableOpacity
-          className="bg-red-600 p-4 rounded-2xl"
-          onPress={handleLogout}
-        >
-          <View className="flex-row items-center justify-center">
-            <Ionicons name="log-out-outline" size={24} color="white" />
-            <Text className="text-white font-semibold text-lg ml-2">
-              Logout
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* Floating Action Button */}
       <TouchableOpacity
-        className="absolute bottom-24 right-6 bg-gradient-to-r from-purple-500 to-pink-500 p-4 rounded-full shadow-lg"
-        onPress={() => Alert.alert("Premium", "Premium features coming soon!")}
+        style={styles.logoutButton}
+        onPress={handleLogout}
       >
-        <Ionicons name="sparkles" size={24} color="white" />
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name="log-out-outline" size={24} color="white" />
+          <Text style={styles.logoutButtonText}>
+            Logout
+          </Text>
+        </View>
       </TouchableOpacity>
     </ScrollView>
   );

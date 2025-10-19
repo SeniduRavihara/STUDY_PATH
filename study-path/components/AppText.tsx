@@ -1,5 +1,4 @@
-import { Text } from "react-native";
-import { cn } from "../utils/cn";
+import { StyleSheet, Text } from "react-native";
 
 type AppTextProps = {
   children: React.ReactNode;
@@ -7,7 +6,7 @@ type AppTextProps = {
   bold?: boolean;
   color?: "primary" | "secondary" | "tertiary";
   center?: boolean;
-  className?: string;
+  style?: any;
 };
 
 export function AppText({
@@ -16,24 +15,53 @@ export function AppText({
   bold = false,
   color = "primary",
   center = false,
-  className,
+  style,
 }: AppTextProps) {
   return (
     <Text
-      className={cn(
-        size === "small" && "text-sm mb-2",
-        size === "medium" && "text-base mb-3",
-        size === "large" && "text-lg mb-4",
-        size === "heading" && "text-xl mb-5",
-        bold && "font-bold",
-        color === "primary" && "text-black",
-        color === "secondary" && "text-gray-500",
-        color === "tertiary" && "text-gray-400",
-        center && "text-center",
-        className,
-      )}
+      style={[
+        styles[size],
+        bold && styles.bold,
+        styles[color],
+        center && styles.center,
+        style,
+      ]}
     >
       {children}
     </Text>
   );
 }
+
+const styles = StyleSheet.create({
+  small: {
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  medium: {
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  large: {
+    fontSize: 18,
+    marginBottom: 16,
+  },
+  heading: {
+    fontSize: 20,
+    marginBottom: 20,
+  },
+  bold: {
+    fontWeight: "bold",
+  },
+  primary: {
+    color: "black",
+  },
+  secondary: {
+    color: "#6b7280",
+  },
+  tertiary: {
+    color: "#9ca3af",
+  },
+  center: {
+    textAlign: "center",
+  },
+});

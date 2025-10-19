@@ -1,5 +1,5 @@
 import React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import AIButton from "./AIButton";
 
 interface TabsWrapperProps {
@@ -20,9 +20,15 @@ export default function TabsWrapper({ children }: TabsWrapperProps) {
   };
 
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
       {children}
       <AIButton onPress={handleAIPress} />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

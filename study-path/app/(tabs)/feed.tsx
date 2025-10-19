@@ -7,6 +7,7 @@ import {
   Modal,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -17,6 +18,133 @@ import { FeedPost, FeedService } from "../../lib/feedService";
 type SubjectColors = {
   [key: string]: [string, string];
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+    marginTop: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  emptyButton: {
+    backgroundColor: '#06b6d4',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  postCard: {
+    backgroundColor: '#1e293b',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  postAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#334155',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  postUserInfo: {
+    flex: 1,
+  },
+  postUsername: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  postTimestamp: {
+    color: '#9ca3af',
+    fontSize: 12,
+  },
+  postContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  postText: {
+    color: 'white',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  postImage: {
+    width: '100%',
+    height: 200,
+  },
+  postActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  actionText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginLeft: 8,
+  },
+});
 
 export default function FeedScreen() {
   const [posts, setPosts] = useState<FeedPost[]>([]);

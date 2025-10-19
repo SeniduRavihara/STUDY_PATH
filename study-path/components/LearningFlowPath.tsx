@@ -5,6 +5,7 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -372,17 +373,16 @@ const LearningNodeComponent: React.FC<{
       >
         <LinearGradient
           colors={getNodeColor()}
-          className="items-center justify-center shadow-lg"
-          style={{
+          style={[styles.nodeGradient, {
             width: nodeSize,
             height: nodeSize,
-            borderRadius: 16, // Add border radius for rounded corners
+            borderRadius: 16,
             shadowColor: getNodeColor()[0],
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,
             elevation: 8,
-          }}
+          }]}
         >
           <Ionicons
             name={getNodeIcon() as any}
@@ -392,12 +392,8 @@ const LearningNodeComponent: React.FC<{
         </LinearGradient>
 
         {/* Node label */}
-        <View
-          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2"
-          style={{ minWidth: 100 }}
-        >
-          <Text
-            className="text-center text-xs font-semibold"
+        <View style={[styles.nodeLabel, { minWidth: 100 }]}>
+          <Text style={styles.nodeLabelText}
             style={{
               color: node.status === "locked" ? "#6b7280" : "#ffffff",
             }}
@@ -406,12 +402,9 @@ const LearningNodeComponent: React.FC<{
             {node.title}
           </Text>
           {node.xp > 0 && (
-            <Text
-              className="text-center text-xs mt-1"
-              style={{
-                color: node.status === "locked" ? "#6b7280" : "#fbbf24",
-              }}
-            >
+            <Text style={[styles.nodeXpText, {
+              color: node.status === "locked" ? "#6b7280" : "#fbbf24",
+            }]}>
               +{node.xp} XP
             </Text>
           )}
@@ -419,21 +412,15 @@ const LearningNodeComponent: React.FC<{
 
         {/* Difficulty indicator */}
         {node.status !== "locked" && (
-          <View
-            className="absolute -top-2 -right-2 bg-white rounded-full px-2 py-1"
-            style={{ minWidth: 20 }}
-          >
-            <Text
-              className="text-xs font-bold text-center"
-              style={{
-                color:
-                  node.difficulty === "easy"
-                    ? "#10b981"
-                    : node.difficulty === "medium"
-                      ? "#f59e0b"
-                      : "#ef4444",
-              }}
-            >
+          <View style={[styles.difficultyIndicator, { minWidth: 20 }]}>
+            <Text style={[styles.difficultyText, {
+              color:
+                node.difficulty === "easy"
+                  ? "#10b981"
+                  : node.difficulty === "medium"
+                    ? "#f59e0b"
+                    : "#ef4444",
+            }]}>
               {node.difficulty === "easy"
                 ? "E"
                 : node.difficulty === "medium"
@@ -564,12 +551,10 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
         }}
       >
         <View
-          className="relative"
-          style={{
+          style={[styles.flowContainer, {
             minHeight: totalContentHeight,
             width: screenWidth,
-            backgroundColor: '#0f172a',
-          }}
+          }]}
         >
           {/* Dotted Grid Background */}
           <View
@@ -657,5 +642,50 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  nodeGradient: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  nodeLabel: {
+    position: 'absolute',
+    bottom: -32,
+    left: '50%',
+    transform: [{ translateX: -50 }],
+  },
+  nodeLabelText: {
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  nodeXpText: {
+    textAlign: 'center',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  difficultyIndicator: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  difficultyText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  flowContainer: {
+    position: 'relative',
+    backgroundColor: '#0f172a',
+  },
+});
 
 export default LearningFlowPath;

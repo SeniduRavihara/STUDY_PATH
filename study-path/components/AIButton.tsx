@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useRef } from "react";
-import { Animated, Dimensions, TouchableOpacity, View } from "react-native";
+import { Animated, Dimensions, StyleSheet, TouchableOpacity, View } from "react-native";
 
 interface AIButtonProps {
   onPress: () => void;
@@ -13,7 +13,7 @@ export default function AIButton({ onPress, size = 60 }: AIButtonProps) {
   const screenHeight = Dimensions.get("window").height;
 
   // Responsive positioning based on screen height
-  const bottomPosition = screenHeight > 800 ? "bottom-28" : "bottom-24";
+  const bottomPosition = screenHeight > 800 ? 112 : 96; // 28 * 4 = 112, 24 * 4 = 96
 
   useEffect(() => {
     const pulse = Animated.loop(
@@ -36,7 +36,7 @@ export default function AIButton({ onPress, size = 60 }: AIButtonProps) {
   }, [pulseAnim]);
 
   return (
-    <View className={`absolute ${bottomPosition} right-6 z-50`}>
+    <View style={[styles.container, { bottom: bottomPosition }]}>
       <Animated.View
         style={{
           transform: [{ scale: pulseAnim }],
@@ -45,42 +45,27 @@ export default function AIButton({ onPress, size = 60 }: AIButtonProps) {
         <TouchableOpacity
           onPress={onPress}
           activeOpacity={0.8}
-          style={{
-            width: size,
-            height: size,
-            borderRadius: size / 2, // Perfectly round
-            shadowColor: "#000",
-            shadowOffset: {
-              width: 0,
-              height: 6,
-            },
-            shadowOpacity: 0.4,
-            shadowRadius: 12,
-            elevation: 12,
-          }}
+          style={[styles.button, { width: size, height: size, borderRadius: size / 2 }]}
         >
           <LinearGradient
             colors={["#667eea", "#764ba2", "#f093fb"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            className="w-full h-full items-center justify-center"
-            style={{
-              borderRadius: size / 2, // Ensure gradient is perfectly round
-            }}
+            style={[styles.gradient, { borderRadius: size / 2 }]}
           >
             {/* AI Brain Icon */}
-            <View className="relative">
+            <View style={styles.iconContainer}>
               <Ionicons name="sparkles" size={size * 0.4} color="white" />
 
               {/* Animated dots */}
-              <View className="absolute -top-1 -right-1">
-                <View className="w-2 h-2 bg-yellow-300 rounded-full opacity-80" />
+              <View style={styles.dot1}>
+                <View style={styles.dot1Inner} />
               </View>
-              <View className="absolute -bottom-1 -left-1">
-                <View className="w-1.5 h-1.5 bg-blue-300 rounded-full opacity-80" />
+              <View style={styles.dot2}>
+                <View style={styles.dot2Inner} />
               </View>
-              <View className="absolute -top-0.5 -left-1">
-                <View className="w-1 h-1 bg-green-300 rounded-full opacity-80" />
+              <View style={styles.dot3}>
+                <View style={styles.dot3Inner} />
               </View>
             </View>
           </LinearGradient>
@@ -89,3 +74,66 @@ export default function AIButton({ onPress, size = 60 }: AIButtonProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    right: 24,
+    zIndex: 50,
+  },
+  button: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  gradient: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconContainer: {
+    position: "relative",
+  },
+  dot1: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+  },
+  dot1Inner: {
+    width: 8,
+    height: 8,
+    backgroundColor: "#fde047",
+    borderRadius: 4,
+    opacity: 0.8,
+  },
+  dot2: {
+    position: "absolute",
+    bottom: -4,
+    left: -4,
+  },
+  dot2Inner: {
+    width: 6,
+    height: 6,
+    backgroundColor: "#7dd3fc",
+    borderRadius: 3,
+    opacity: 0.8,
+  },
+  dot3: {
+    position: "absolute",
+    top: -2,
+    left: -4,
+  },
+  dot3Inner: {
+    width: 4,
+    height: 4,
+    backgroundColor: "#86efac",
+    borderRadius: 2,
+    opacity: 0.8,
+  },
+});

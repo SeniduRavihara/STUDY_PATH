@@ -8,6 +8,7 @@ import {
   Modal,
   PanGestureHandler,
   State,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -128,52 +129,56 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
           onHandlerStateChange={onHandlerStateChange}
         >
           <Animated.View
-            style={{
-              transform: [{ translateX }],
-            }}
-            className="flex-1"
+            style={[
+              styles.storyContainer,
+              {
+                transform: [{ translateX }],
+              },
+            ]}
           >
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => setIsPaused(!isPaused)}
-              className="flex-1"
+              style={styles.storyTouchable}
             >
               {currentStory.mediaType === 'image' && currentStory.mediaUrl ? (
                 <Image
                   source={{ uri: currentStory.mediaUrl }}
-                  className="flex-1"
+                  style={styles.storyImage}
                   resizeMode="cover"
                 />
               ) : (
                 <LinearGradient
                   colors={currentStory.gradient || ['#667eea', '#764ba2']}
-                  className="flex-1 items-center justify-center"
+                  style={styles.storyGradient}
                 >
-                  <Text className="text-white text-2xl font-bold text-center px-8">
+                  <Text style={styles.storyText}>
                     {currentStory.content}
                   </Text>
                 </LinearGradient>
               )}
 
               {/* Story Info Overlay */}
-              <View className="absolute top-16 left-4 right-4">
-                <View className="flex-row items-center">
-                  <View className="w-10 h-10 rounded-full bg-slate-800 items-center justify-center mr-3">
+              <View style={styles.infoOverlay}>
+                <View style={styles.infoRow}>
+                  <View style={styles.avatarContainer}>
                     {currentStory.userAvatar ? (
                       <Image
                         source={{ uri: currentStory.userAvatar }}
-                        className="w-10 h-10 rounded-full"
+                        style={styles.avatarImage}
                         resizeMode="cover"
                       />
                     ) : (
-                      <Ionicons name="person" size={20} color="#9ca3af" />
+                      <View style={styles.avatarPlaceholder}>
+                        <Ionicons name="person" size={20} color="#9ca3af" />
+                      </View>
                     )}
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold">
+                  <View style={styles.userInfo}>
+                    <Text style={styles.username}>
                       {currentStory.userName}
                     </Text>
-                    <Text className="text-white text-sm opacity-80">
+                    <Text style={styles.timestamp}>
                       {currentStory.timestamp.toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit'
@@ -186,19 +191,19 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               {/* Close Button */}
               <TouchableOpacity
                 onPress={onClose}
-                className="absolute top-16 right-4 w-10 h-10 rounded-full bg-black bg-opacity-50 items-center justify-center"
+                style={styles.closeButton}
               >
                 <Ionicons name="close" size={24} color="white" />
               </TouchableOpacity>
 
               {/* Navigation Areas */}
-              <View className="absolute inset-0 flex-row">
+              <View style={styles.navigationOverlay}>
                 <TouchableOpacity
-                  className="flex-1"
+                  style={styles.navigationArea}
                   onPress={handlePreviousStory}
                 />
                 <TouchableOpacity
-                  className="flex-1"
+                  style={styles.navigationArea}
                   onPress={handleNextStory}
                 />
               </View>
@@ -209,3 +214,97 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     </Modal>
   );
 };
+
+const styles = StyleSheet.create({
+  modal: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  storyContainer: {
+    flex: 1,
+  },
+  storyTouchable: {
+    flex: 1,
+  },
+  storyImage: {
+    flex: 1,
+  },
+  storyGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  infoOverlay: {
+    position: 'absolute',
+    top: 64,
+    left: 16,
+    right: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatarImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  avatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userInfo: {
+    flex: 1,
+  },
+  username: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  timestamp: {
+    color: 'white',
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 64,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navigationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+  },
+  navigationArea: {
+    flex: 1,
+  },
+});

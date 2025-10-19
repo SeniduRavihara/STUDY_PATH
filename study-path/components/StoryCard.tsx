@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Image, Text, TouchableOpacity, View, Dimensions } from "react-native";
+import { Image, Text, TouchableOpacity, View, Dimensions, StyleSheet } from "react-native";
 
 export interface Story {
   id: string;
@@ -48,66 +48,56 @@ const StoryCard: React.FC<StoryCardProps> = ({
     <TouchableOpacity
       onPress={() => onPress(story)}
       activeOpacity={0.9}
-      style={{ width: cardWidth, marginRight: 12 }}
+      style={[styles.container, { width: cardWidth }]}
     >
-      <View 
-        className="rounded-2xl overflow-hidden shadow-lg"
-        style={{ 
-          height: cardHeight,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
-      >
+      <View style={[styles.card, { height: cardHeight }]}>
         {isAddStory ? (
           // Add Story Card
           <LinearGradient
             colors={['#667eea', '#764ba2']}
-            className="flex-1 items-center justify-center"
+            style={styles.addStoryGradient}
           >
-            <View className="items-center">
-              <View className="w-12 h-12 bg-white rounded-full items-center justify-center mb-2">
+            <View style={styles.addStoryContent}>
+              <View style={styles.addIconContainer}>
                 <Ionicons name="add" size={28} color="#667eea" />
               </View>
-              <Text className="text-white font-semibold text-sm">Add Story</Text>
+              <Text style={styles.addStoryText}>Add Story</Text>
             </View>
           </LinearGradient>
         ) : (
           // Regular Story Card
-          <View className="flex-1 relative">
+          <View style={styles.storyContainer}>
             {/* Background Image/Video */}
             {story.mediaUrl && story.mediaType === 'image' ? (
               <Image
                 source={{ uri: story.mediaUrl }}
-                className="w-full h-full"
+                style={styles.mediaImage}
                 resizeMode="cover"
               />
             ) : (
               <LinearGradient
                 colors={story.gradient || ['#667eea', '#764ba2']}
-                className="w-full h-full"
+                style={styles.mediaGradient}
               />
             )}
 
             {/* Dark Overlay for better text readability */}
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.7)']}
-              className="absolute inset-0"
+              style={styles.overlay}
             />
 
             {/* Profile Picture Overlay */}
-            <View className="absolute top-3 left-3">
-              <View className="w-10 h-10 rounded-full overflow-hidden border-2 border-white">
+            <View style={styles.profileContainer}>
+              <View style={styles.profileImageContainer}>
                 {story.userAvatar ? (
                   <Image
                     source={{ uri: story.userAvatar }}
-                    className="w-full h-full"
+                    style={styles.profileImage}
                     resizeMode="cover"
                   />
                 ) : (
-                  <View className="w-full h-full bg-slate-700 items-center justify-center">
+                  <View style={styles.profilePlaceholder}>
                     <Ionicons name="person" size={20} color="#9ca3af" />
                   </View>
                 )}
@@ -116,28 +106,28 @@ const StoryCard: React.FC<StoryCardProps> = ({
 
             {/* Viewed Indicator */}
             {story.isViewed && (
-              <View className="absolute top-3 right-3 bg-black bg-opacity-50 rounded-full p-1">
+              <View style={styles.viewedIndicator}>
                 <Ionicons name="checkmark-done" size={16} color="#9ca3af" />
               </View>
             )}
 
             {/* Bottom Content */}
-            <View className="absolute bottom-0 left-0 right-0 p-3">
-              <Text className="text-white font-semibold text-base mb-1" numberOfLines={1}>
+            <View style={styles.bottomContent}>
+              <Text style={styles.username} numberOfLines={1}>
                 {story.userName}
               </Text>
-              <View className="flex-row items-center justify-between">
-                <Text className="text-white text-sm opacity-80" numberOfLines={1}>
+              <View style={styles.bottomRow}>
+                <Text style={styles.content} numberOfLines={1}>
                   {story.content}
                 </Text>
-                <View className="flex-row items-center ml-2">
-                  <Text className="text-white text-xs opacity-60 mr-2">
+                <View style={styles.timeContainer}>
+                  <Text style={styles.timestamp}>
                     {formatTimeAgo(story.timestamp)}
                   </Text>
                   {story.viewCount && story.viewCount > 0 && (
-                    <View className="flex-row items-center">
+                    <View style={styles.viewCountContainer}>
                       <Ionicons name="eye" size={12} color="rgba(255,255,255,0.6)" />
-                      <Text className="text-white text-xs opacity-60 ml-1">
+                      <Text style={styles.viewCount}>
                         {story.viewCount}
                       </Text>
                     </View>
@@ -148,8 +138,8 @@ const StoryCard: React.FC<StoryCardProps> = ({
 
             {/* Media Type Indicator */}
             {story.mediaType === 'video' && (
-              <View className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <View className="w-12 h-12 bg-black bg-opacity-50 rounded-full items-center justify-center">
+              <View style={styles.playIndicator}>
+                <View style={styles.playButton}>
                   <Ionicons name="play" size={24} color="white" />
                 </View>
               </View>
@@ -162,5 +152,152 @@ const StoryCard: React.FC<StoryCardProps> = ({
 };
 
 StoryCard.displayName = 'StoryCard';
+
+const styles = StyleSheet.create({
+  container: {
+    marginRight: 12,
+  },
+  card: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  addStoryGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addStoryContent: {
+    alignItems: 'center',
+  },
+  addIconContainer: {
+    width: 48,
+    height: 48,
+    backgroundColor: 'white',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  addStoryText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  storyContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  mediaImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mediaGradient: {
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  profileContainer: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+  },
+  profileImageContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  profilePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#374151',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewedIndicator: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  bottomContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+  },
+  username: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  content: {
+    color: 'white',
+    fontSize: 14,
+    opacity: 0.8,
+    flex: 1,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  timestamp: {
+    color: 'white',
+    fontSize: 12,
+    opacity: 0.6,
+    marginRight: 8,
+  },
+  viewCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewCount: {
+    color: 'white',
+    fontSize: 12,
+    opacity: 0.6,
+    marginLeft: 4,
+  },
+  playIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -24 }, { translateY: -24 }],
+  },
+  playButton: {
+    width: 48,
+    height: 48,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 export { StoryCard };

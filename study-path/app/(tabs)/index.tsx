@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View
@@ -17,6 +18,243 @@ import {
   Subject,
   SubscriptionService
 } from "../../superbase/services/subscriptionService";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  headerText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerSubtext: {
+    color: '#9ca3af',
+    fontSize: 16,
+  },
+  searchButton: {
+    backgroundColor: '#1e293b',
+    padding: 12,
+    borderRadius: 12,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  statCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  statNumber: {
+    color: '#06b6d4',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  statLabel: {
+    color: '#9ca3af',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  sectionTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  subjectsContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  subjectCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+  },
+  subjectCardDisabled: {
+    opacity: 0.6,
+  },
+  subjectHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  subjectTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  subjectProgress: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  progressBar: {
+    backgroundColor: '#334155',
+    height: 6,
+    borderRadius: 3,
+    marginBottom: 8,
+  },
+  progressFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  subjectFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  subjectStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subjectStatText: {
+    color: '#9ca3af',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  activityContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  activityCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  activityTitle: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  activityPoints: {
+    color: '#06b6d4',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  activitySubject: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  activityTime: {
+    color: '#6b7280',
+    fontSize: 12,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  loadingText: {
+    color: '#9ca3af',
+    marginTop: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  emptyButton: {
+    backgroundColor: '#06b6d4',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  emptyButtonText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  loadingCard: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingCardText: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '600',
+  },
+  subjectsContainer: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  subjectsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewAllButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+  viewAllButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
 
 type LocalSubject = {
   id: number;
@@ -101,7 +339,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-900"
+      style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -109,36 +347,30 @@ const HomeScreen: React.FC = () => {
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-8"
+        style={styles.header}
       >
-        <View className="flex-row justify-between items-center mb-6">
+        <View style={styles.headerRow}>
           <View>
-            <Text className="text-white text-2xl font-bold">Welcome back!</Text>
-            <Text className="text-gray-400 text-base">
+            <Text style={styles.headerText}>Welcome back!</Text>
+            <Text style={styles.headerSubtext}>
               Ready to learn today?
             </Text>
           </View>
-          <TouchableOpacity className="bg-slate-800 p-3 rounded-full">
+          <TouchableOpacity style={styles.searchButton}>
             <Ionicons name="notifications-outline" size={24} color="#00d4ff" />
           </TouchableOpacity>
         </View>
 
         {/* Stats Cards */}
-        <View className="flex-row justify-between">
-          <LinearGradient
-            colors={["#667eea", "#764ba2"]}
-            className="flex-1 p-4 rounded-2xl mr-2"
-          >
-            <Text className="text-white text-sm opacity-80">Study Streak</Text>
-            <Text className="text-white text-2xl font-bold">12 Days</Text>
-          </LinearGradient>
-          <LinearGradient
-            colors={["#f093fb", "#f5576c"]}
-            className="flex-1 p-4 rounded-2xl ml-2"
-          >
-            <Text className="text-white text-sm opacity-80">Total Points</Text>
-            <Text className="text-white text-2xl font-bold">2,847</Text>
-          </LinearGradient>
+        <View style={styles.statsContainer}>
+          <View style={[styles.statCard, { marginRight: 8 }]}>
+            <Text style={styles.statLabel}>Study Streak</Text>
+            <Text style={styles.statNumber}>12 Days</Text>
+          </View>
+          <View style={[styles.statCard, { marginLeft: 8 }]}>
+            <Text style={styles.statLabel}>Total Points</Text>
+            <Text style={styles.statNumber}>2,847</Text>
+          </View>
         </View>
       </LinearGradient>
 
@@ -204,35 +436,37 @@ const HomeScreen: React.FC = () => {
       )}
 
       {/* Subject Progress */}
-      <View className="px-6 mt-8">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-white text-xl font-bold">Your Subjects</Text>
+      <View style={styles.subjectsContainer}>
+        <View style={styles.subjectsHeader}>
+          <Text style={styles.sectionTitle}>Your Subjects</Text>
           <TouchableOpacity
             onPress={() => router.push("/study")}
-            className="bg-blue-600 px-3 py-1 rounded-full"
+            style={styles.viewAllButton}
           >
-            <Text className="text-white text-sm font-medium">View All</Text>
+            <Text style={styles.viewAllButtonText}>View All</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
-          <View className="items-center py-4">
-            <Text className="text-gray-400">Loading your subjects...</Text>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading your subjects...</Text>
           </View>
         ) : subscribedSubjects.length === 0 ? (
-          <View className="items-center py-8">
-            <Ionicons name="book-outline" size={48} color="#6b7280" />
-            <Text className="text-white text-lg font-semibold mt-3">
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons name="book-outline" size={32} color="#6b7280" />
+            </View>
+            <Text style={styles.emptyTitle}>
               No Subjects Yet
             </Text>
-            <Text className="text-gray-400 text-center mt-1">
+            <Text style={styles.emptyText}>
               Subscribe to subjects to start learning
             </Text>
             <TouchableOpacity
               onPress={() => router.push("/study")}
-              className="bg-blue-600 px-4 py-2 rounded-full mt-3"
+              style={styles.emptyButton}
             >
-              <Text className="text-white font-medium">Browse Subjects</Text>
+              <Text style={styles.emptyButtonText}>Browse Subjects</Text>
             </TouchableOpacity>
           </View>
         ) : (

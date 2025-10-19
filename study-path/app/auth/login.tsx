@@ -4,12 +4,87 @@ import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 96,
+  },
+  title: {
+    color: '#06b6d4',
+    fontSize: 48,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 48,
+  },
+  form: {
+    marginBottom: 32,
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: 'white',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  primaryButton: {
+    backgroundColor: '#06b6d4',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  primaryButtonText: {
+    color: '#0f0f23',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  secondaryButton: {
+    borderWidth: 2,
+    borderColor: '#06b6d4',
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: '#06b6d4',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  footer: {
+    textAlign: 'center',
+    color: '#6b7280',
+    fontSize: 12,
+  },
+});
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -44,69 +119,69 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={["#0f0f23", "#1a1a2e", "#16213e"]}
-      className="flex-1"
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <View className="flex-1 justify-center px-8 pb-24">
-          <Text className="text-cyan-400 text-5xl font-extrabold text-center mb-2">
-            {`StudyPath`}
-          </Text>
-          <Text className="text-gray-400 text-base text-center mb-12">
-            {`Welcome Back!`}
-          </Text>
+  <LinearGradient
+  colors={["#0f0f23", "#1a1a2e", "#16213e"]}
+  style={styles.container}
+  >
+  <KeyboardAvoidingView
+  behavior={Platform.OS === "ios" ? "padding" : "height"}
+  style={styles.keyboardAvoidingView}
+  >
+  <View style={styles.content}>
+  <Text style={styles.title}>
+  {`StudyPath`}
+  </Text>
+  <Text style={styles.subtitle}>
+  {`Welcome Back!`}
+  </Text>
 
-          <View className="mb-8">
-            <TextInput
-              className="bg-white/10 rounded-xl px-4 py-4 text-base text-white mb-4 border border-white/20"
-              placeholder="Email"
-              placeholderTextColor="#6b7280"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+  <View style={styles.form}>
+  <TextInput
+  style={styles.input}
+  placeholder="Email"
+  placeholderTextColor="#6b7280"
+  value={email}
+  onChangeText={setEmail}
+  keyboardType="email-address"
+  autoCapitalize="none"
+  autoCorrect={false}
+  />
 
-            <TextInput
-              className="bg-white/10 rounded-xl px-4 py-4 text-base text-white mb-4 border border-white/20"
-              placeholder="Password"
-              placeholderTextColor="#6b7280"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-            />
+  <TextInput
+  style={styles.input}
+  placeholder="Password"
+  placeholderTextColor="#6b7280"
+  value={password}
+  onChangeText={setPassword}
+  secureTextEntry
+  autoCapitalize="none"
+  />
 
-            <TouchableOpacity
-              className="rounded-xl py-4 items-center mb-3 bg-cyan-400 active:bg-cyan-300"
-              onPress={handleSignIn}
-              disabled={loading}
-            >
-              <Text className="text-[#0f0f23] text-base font-bold">
-                {loading ? "Signing In..." : "Sign In"}
-              </Text>
-            </TouchableOpacity>
+  <TouchableOpacity
+  style={[styles.primaryButton, loading && styles.buttonDisabled]}
+  onPress={handleSignIn}
+  disabled={loading}
+  >
+  <Text style={styles.primaryButtonText}>
+  {loading ? "Signing In..." : "Sign In"}
+  </Text>
+  </TouchableOpacity>
 
-            <TouchableOpacity
-              className="rounded-xl py-4 items-center border-2 border-cyan-400"
-              onPress={goToSignUp}
-            >
-              <Text className="text-cyan-400 text-base font-bold">
-                {`Don\u2019t have an account? Sign Up`}
-              </Text>
-            </TouchableOpacity>
-          </View>
+  <TouchableOpacity
+  style={styles.secondaryButton}
+  onPress={goToSignUp}
+  >
+  <Text style={styles.secondaryButtonText}>
+  {`Don\u2019t have an account? Sign Up`}
+  </Text>
+  </TouchableOpacity>
+  </View>
 
-          <Text className="text-center text-gray-500 text-xs">
-            {`Sign in to continue your learning journey`}
-          </Text>
-        </View>
-      </KeyboardAvoidingView>
-    </LinearGradient>
+  <Text style={styles.footer}>
+  {`Sign in to continue your learning journey`}
+  </Text>
+  </View>
+  </KeyboardAvoidingView>
+  </LinearGradient>
   );
 }

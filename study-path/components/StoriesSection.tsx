@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Story, StoryCard } from "./StoryCard";
 
 interface StoriesSectionProps {
@@ -36,16 +36,16 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
   };
 
   return (
-    <View className="bg-slate-900 py-3">
-      <View className="px-6 mb-3">
-        <Text className="text-white text-lg font-bold">Stories</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Stories</Text>
       </View>
-      
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingRight: 48 }}
-        className="flex-row"
+        contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
       >
         {allStories.map((story) => (
           <StoryCard
@@ -61,5 +61,28 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
 };
 
 StoriesSection.displayName = 'StoriesSection';
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#0f172a',
+    paddingVertical: 12,
+  },
+  header: {
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  title: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  scrollView: {
+    flexDirection: 'row',
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingRight: 48,
+  },
+});
 
 export { StoriesSection };
