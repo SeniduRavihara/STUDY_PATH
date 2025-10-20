@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
-import { Alert, View, ActivityIndicator, Text, TouchableOpacity, Modal, ScrollView } from "react-native";
+import { Alert, View, ActivityIndicator, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CustomModal from "../../../components/CustomModal";
 import LearningFlowPath, {
@@ -260,17 +260,18 @@ export default function FlowStudyScreen() {
               handleTopicChange(topic.id);
             }
           }}
-          className={`py-2 px-4 ${
-            isSelected ? "bg-blue-600/20" : ""
-          }`}
-          style={{ paddingLeft: indentLevel + 16 }}
+          style={[
+            styles.topicItem,
+            isSelected && styles.topicItemSelected,
+            { paddingLeft: indentLevel + 16 }
+          ]}
         >
-          <View className="flex-row items-center">
+          <View style={styles.topicItemContent}>
             {/* Expand/Collapse Button */}
             {hasChildren && (
               <TouchableOpacity
                 onPress={() => toggleTopicExpansion(topic.id)}
-                className="mr-2 w-4 h-4 flex items-center justify-center"
+                style={styles.expandButton}
               >
                 <Ionicons 
                   name={isExpanded ? "chevron-down" : "chevron-forward"} 
@@ -281,30 +282,31 @@ export default function FlowStudyScreen() {
             )}
             
             {/* Topic Content with dot leaders */}
-            <View className="flex-1 flex-row items-center">
-              <Text className={`text-sm ${
-                isSelected ? "text-blue-400 font-semibold" : "text-white"
-              }`}>
+            <View style={styles.topicContentRow}>
+              <Text style={[
+                styles.topicName,
+                isSelected && styles.topicNameSelected
+              ]}>
                 {topic.name}
               </Text>
               
               {/* Dot leaders */}
-              <View className="flex-1 mx-2">
-                <View className="h-px bg-gray-600" style={{ 
-                  backgroundImage: 'repeating-linear-gradient(to right, #6b7280 0px, #6b7280 2px, transparent 2px, transparent 4px)',
-                  backgroundSize: '4px 1px'
-                }} />
+              <View style={styles.dotLeaders}>
+                <View style={styles.dotLeadersLine} />
               </View>
               
               {/* Status indicator */}
-              <View className={`w-2 h-2 rounded-full ${
-                topic.hasFlow ? 'bg-green-500' : isLeafTopic ? 'bg-blue-500' : 'bg-gray-500'
-              }`} />
+              <View style={[
+                styles.statusIndicator,
+                topic.hasFlow ? styles.statusIndicatorGreen :
+                isLeafTopic ? styles.statusIndicatorBlue :
+                styles.statusIndicatorGray
+              ]} />
             </View>
 
             {/* Selection Indicator */}
             {isSelected && (
-              <Ionicons name="checkmark" size={16} color="#60a5fa" className="ml-2" />
+              <Ionicons name="checkmark" size={16} color="#60a5fa" style={styles.checkmark} />
             )}
           </View>
         </TouchableOpacity>
@@ -397,21 +399,21 @@ export default function FlowStudyScreen() {
 
   if (!parsedSubject) {
     return (
-      <View className="flex-1 bg-slate-900 items-center justify-center">
-        <Text className="text-white text-lg">No subject selected</Text>
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>No subject selected</Text>
       </View>
     );
   }
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-slate-900 items-center justify-center">
-        <View className="items-center">
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color="#00d4ff" />
-          <Text className="text-white text-lg mt-4 font-medium">
+          <Text style={styles.loadingTitle}>
             Loading Learning Path...
           </Text>
-          <Text className="text-gray-400 text-sm mt-2">
+          <Text style={styles.loadingSubtitle}>
             Preparing your personalized study flow
           </Text>
         </View>
@@ -458,41 +460,41 @@ export default function FlowStudyScreen() {
         animationType="fade"
         onRequestClose={() => setShowTopicSelector(false)}
       >
-        <View className="flex-1 bg-black/50 justify-center items-center p-4">
-          <View className="bg-slate-800 rounded-2xl p-6 w-full max-w-sm max-h-[80vh]">
-            <View className="flex-row justify-between items-center mb-6">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
               <View>
-                <Text className="text-white text-xl font-semibold">
+                <Text style={styles.modalTitle}>
                   Select Topic
                 </Text>
-                <Text className="text-gray-400 text-sm mt-1">
+                <Text style={styles.modalSubtitle}>
                   Choose a topic to load its learning flow
                 </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setShowTopicSelector(false)}
-                className="p-2"
+                style={styles.closeButton}
               >
                 <Ionicons name="close" size={24} color="#9ca3af" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} className="max-h-96">
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.topicsScrollView}>
               {topics.length > 0 ? (
-                <View className="py-2">
+                <View style={styles.topicsList}>
                   {/* Hierarchical Topics */}
                   {topics.map((topic) => renderTopicItem(topic, 0))}
                 </View>
               ) : (
-                <View className="p-4 rounded-xl bg-slate-700 mx-2">
-                  <Text className="text-white font-semibold text-lg">
+                <View style={styles.emptyState}>
+                  <Text style={styles.emptyStateTitle}>
                     No Topics Available
                   </Text>
-                  <Text className="text-gray-400 text-sm mt-1">
+                  <Text style={styles.emptyStateText}>
                     This subject doesn't have any topics yet.
-                      </Text>
-                    </View>
-                  )}
+                  </Text>
+                </View>
+              )}
             </ScrollView>
           </View>
         </View>
@@ -500,5 +502,150 @@ export default function FlowStudyScreen() {
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    color: '#ffffff',
+    fontSize: 18,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+  },
+  loadingTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    marginTop: 16,
+    fontWeight: '500',
+  },
+  loadingSubtitle: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalContainer: {
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 448,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  modalSubtitle: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  closeButton: {
+    padding: 8,
+  },
+  topicsScrollView: {
+    maxHeight: 384,
+  },
+  topicsList: {
+    paddingVertical: 8,
+  },
+  topicItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  topicItemSelected: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  topicItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  expandButton: {
+    marginRight: 8,
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topicContentRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  topicName: {
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  topicNameSelected: {
+    color: '#60a5fa',
+    fontWeight: '600',
+  },
+  dotLeaders: {
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  dotLeadersLine: {
+    height: 1,
+    backgroundColor: '#6b7280',
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusIndicatorGreen: {
+    backgroundColor: '#10b981',
+  },
+  statusIndicatorBlue: {
+    backgroundColor: '#3b82f6',
+  },
+  statusIndicatorGray: {
+    backgroundColor: '#6b7280',
+  },
+  checkmark: {
+    marginLeft: 8,
+  },
+  emptyState: {
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#334155',
+    marginHorizontal: 8,
+  },
+  emptyStateTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 18,
+  },
+  emptyStateText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginTop: 4,
+  },
+});
 
 // Grid system handles positioning automatically

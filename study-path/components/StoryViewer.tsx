@@ -101,23 +101,25 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
       animationType="fade"
       statusBarTranslucent
     >
-      <View className="flex-1 bg-black">
+      <View style={styles.container}>
         {/* Progress Bars */}
-        <View className="flex-row px-4 pt-12 pb-2">
+        <View style={styles.progressContainer}>
           {stories.map((_, index) => (
             <View
               key={index}
-              className="flex-1 h-1 bg-white bg-opacity-30 rounded-full mr-1"
+              style={styles.progressBarBg}
             >
               <View
-                className="h-1 bg-white rounded-full"
-                style={{
-                  width: index === currentIndex 
-                    ? `${progress}%` 
-                    : index < currentIndex 
-                      ? '100%' 
-                      : '0%'
-                }}
+                style={[
+                  styles.progressBar,
+                  {
+                    width: index === currentIndex 
+                      ? `${progress}%` 
+                      : index < currentIndex 
+                        ? '100%' 
+                        : '0%'
+                  }
+                ]}
               />
             </View>
           ))}
@@ -130,16 +132,16 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
         >
           <Animated.View
             style={[
-              styles.storyContainer,
+              styles.contentContainer,
               {
                 transform: [{ translateX }],
-              },
+              }
             ]}
           >
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => setIsPaused(!isPaused)}
-              style={styles.storyTouchable}
+              style={styles.touchableContent}
             >
               {currentStory.mediaType === 'image' && currentStory.mediaUrl ? (
                 <Image
@@ -150,7 +152,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               ) : (
                 <LinearGradient
                   colors={currentStory.gradient || ['#667eea', '#764ba2']}
-                  style={styles.storyGradient}
+                  style={styles.gradientContent}
                 >
                   <Text style={styles.storyText}>
                     {currentStory.content}
@@ -160,22 +162,20 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 
               {/* Story Info Overlay */}
               <View style={styles.infoOverlay}>
-                <View style={styles.infoRow}>
+                <View style={styles.userInfo}>
                   <View style={styles.avatarContainer}>
                     {currentStory.userAvatar ? (
                       <Image
                         source={{ uri: currentStory.userAvatar }}
-                        style={styles.avatarImage}
+                        style={styles.avatar}
                         resizeMode="cover"
                       />
                     ) : (
-                      <View style={styles.avatarPlaceholder}>
-                        <Ionicons name="person" size={20} color="#9ca3af" />
-                      </View>
+                      <Ionicons name="person" size={20} color="#9ca3af" />
                     )}
                   </View>
-                  <View style={styles.userInfo}>
-                    <Text style={styles.username}>
+                  <View style={styles.userTextContainer}>
+                    <Text style={styles.userName}>
                       {currentStory.userName}
                     </Text>
                     <Text style={styles.timestamp}>
@@ -197,7 +197,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
               </TouchableOpacity>
 
               {/* Navigation Areas */}
-              <View style={styles.navigationOverlay}>
+              <View style={styles.navigationContainer}>
                 <TouchableOpacity
                   style={styles.navigationArea}
                   onPress={handlePreviousStory}
@@ -216,93 +216,103 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
 };
 
 const styles = StyleSheet.create({
-  modal: {
+  container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: "black",
   },
-  storyContainer: {
+  progressContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 8,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 9999,
+    marginRight: 4,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: "white",
+    borderRadius: 9999,
+  },
+  contentContainer: {
     flex: 1,
   },
-  storyTouchable: {
+  touchableContent: {
     flex: 1,
   },
   storyImage: {
     flex: 1,
   },
-  storyGradient: {
+  gradientContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   storyText: {
-    color: 'white',
+    color: "white",
     fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     paddingHorizontal: 32,
   },
   infoOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 64,
     left: 16,
     right: 16,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   avatarContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#1e293b",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
-  avatarImage: {
+  avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
   },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  userInfo: {
+  userTextContainer: {
     flex: 1,
   },
-  username: {
-    color: 'white',
-    fontWeight: '600',
+  userName: {
+    color: "white",
+    fontWeight: "600",
   },
   timestamp: {
-    color: 'white',
+    color: "white",
     fontSize: 14,
     opacity: 0.8,
   },
   closeButton: {
-    position: 'absolute',
+    position: "absolute",
     top: 64,
     right: 16,
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  navigationOverlay: {
-    position: 'absolute',
+  navigationContainer: {
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   navigationArea: {
     flex: 1,

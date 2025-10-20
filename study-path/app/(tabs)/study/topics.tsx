@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Topic = {
   id: number;
@@ -83,103 +83,107 @@ export default function TopicsScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={parsedSubject.color} className="px-6 pt-14 pb-8">
-        <View className="flex-row items-center mb-4">
+      <LinearGradient colors={parsedSubject.color} style={styles.header}>
+        <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="bg-white bg-opacity-20 p-2 rounded-full mr-4"
+            style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white text-2xl font-bold">
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>
               {parsedSubject.name}
             </Text>
-            <Text className="text-white opacity-80">
+            <Text style={styles.headerSubtitle}>
               Choose your learning path
             </Text>
           </View>
         </View>
 
         {/* Progress Bar */}
-        <View className="bg-white bg-opacity-30 rounded-full h-3 mb-4">
+        <View style={styles.progressBarContainer}>
           <View
-            className="bg-white rounded-full h-3"
-            style={{
-              width: `${((parsedSubject.completed || 0) / (parsedSubject.chapters || 1)) * 100}%`,
-            }}
+            style={[
+              styles.progressBar,
+              {
+                width: `${((parsedSubject.completed || 0) / (parsedSubject.chapters || 1)) * 100}%`,
+              },
+            ]}
           />
         </View>
 
         {/* Stats */}
-        <View className="flex-row justify-between">
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>
               {parsedSubject.chapters || 0}
             </Text>
-            <Text className="text-white opacity-80 text-sm">Chapters</Text>
+            <Text style={styles.statLabel}>Chapters</Text>
           </View>
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>
               {parsedSubject.completed || 0}
             </Text>
-            <Text className="text-white opacity-80 text-sm">Completed</Text>
+            <Text style={styles.statLabel}>Completed</Text>
           </View>
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>
               {parsedSubject.xp || 0}
             </Text>
-            <Text className="text-white opacity-80 text-sm">XP</Text>
+            <Text style={styles.statLabel}>XP</Text>
           </View>
         </View>
       </LinearGradient>
 
       {/* Topics Selection */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-xl font-bold mb-6 text-center">
+      <View style={styles.topicsSection}>
+        <Text style={styles.sectionTitle}>
           How would you like to learn?
         </Text>
 
         {topics.map(topic => (
           <TouchableOpacity
             key={topic.id}
-            className="mb-6"
+            style={styles.topicCardWrapper}
             onPress={() => handleTopicPress(topic)}
           >
-            <LinearGradient colors={topic.color} className="p-6 rounded-3xl">
-              <View className="flex-row items-center">
-                <View className="bg-white bg-opacity-20 p-4 rounded-2xl mr-4">
+            <LinearGradient colors={topic.color} style={styles.topicCard}>
+              <View style={styles.topicContent}>
+                <View style={styles.topicIcon}>
                   <Ionicons name={topic.icon} size={32} color="white" />
                 </View>
 
-                <View className="flex-1">
-                  <Text className="text-white text-xl font-bold mb-2">
+                <View style={styles.topicInfo}>
+                  <Text style={styles.topicTitle}>
                     {topic.title}
                   </Text>
-                  <Text className="text-white opacity-90 text-sm mb-3">
+                  <Text style={styles.topicDescription}>
                     {topic.description}
                   </Text>
 
-                  <View className="flex-row justify-between items-center mb-3">
-                    <Text className="text-white opacity-80 text-sm">
+                  <View style={styles.topicMetaRow}>
+                    <Text style={styles.topicMeta}>
                       {topic.completed}/{topic.count} completed
                     </Text>
-                    <View className="bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                      <Text className="text-white text-xs font-semibold">
+                    <View style={styles.difficultyBadge}>
+                      <Text style={styles.difficultyText}>
                         {topic.difficulty}
                       </Text>
                     </View>
                   </View>
 
                   {/* Progress Bar */}
-                  <View className="bg-white bg-opacity-30 rounded-full h-2">
+                  <View style={styles.topicProgressBg}>
                     <View
-                      className="bg-white rounded-full h-2"
-                      style={{
-                        width: `${(topic.completed / topic.count) * 100}%`,
-                      }}
+                      style={[
+                        styles.topicProgress,
+                        {
+                          width: `${(topic.completed / topic.count) * 100}%`,
+                        },
+                      ]}
                     />
                   </View>
                 </View>
@@ -192,38 +196,220 @@ export default function TopicsScreen() {
       </View>
 
       {/* Quick Stats */}
-      <View className="px-6 mt-6">
+      <View style={styles.summarySection}>
         <LinearGradient
           colors={["#1a1a2e", "#16213e"]}
-          className="p-6 rounded-3xl"
+          style={styles.summaryCard}
         >
-          <Text className="text-white text-lg font-bold mb-4 text-center">
+          <Text style={styles.summaryTitle}>
             Learning Summary
           </Text>
-          <View className="flex-row justify-between">
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-blue-400">
+          <View style={styles.summaryStats}>
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryValueBlue}>
                 {topics[0].completed}
               </Text>
-              <Text className="text-gray-400 text-sm">Lessons</Text>
+              <Text style={styles.summaryLabel}>Lessons</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-green-400">
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryValueGreen}>
                 {topics[1].completed}
               </Text>
-              <Text className="text-gray-400 text-sm">Quizzes</Text>
+              <Text style={styles.summaryLabel}>Quizzes</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-yellow-400">
+            <View style={styles.summaryStat}>
+              <Text style={styles.summaryValueYellow}>
                 {parsedSubject.xp || 0}
               </Text>
-              <Text className="text-gray-400 text-sm">XP</Text>
+              <Text style={styles.summaryLabel}>XP</Text>
             </View>
           </View>
         </LinearGradient>
       </View>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    padding: 8,
+    borderRadius: 9999,
+    marginRight: 16,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  headerSubtitle: {
+    color: "white",
+    opacity: 0.8,
+  },
+  progressBarContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 9999,
+    height: 12,
+    marginBottom: 16,
+  },
+  progressBar: {
+    backgroundColor: "white",
+    borderRadius: 9999,
+    height: 12,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statValue: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  statLabel: {
+    color: "white",
+    opacity: 0.8,
+    fontSize: 12,
+  },
+  topicsSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  sectionTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  topicCardWrapper: {
+    marginBottom: 24,
+  },
+  topicCard: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  topicContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  topicIcon: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    padding: 16,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  topicInfo: {
+    flex: 1,
+  },
+  topicTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  topicDescription: {
+    color: "white",
+    opacity: 0.9,
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  topicMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  topicMeta: {
+    color: "white",
+    opacity: 0.8,
+    fontSize: 14,
+  },
+  difficultyBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  difficultyText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  topicProgressBg: {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 9999,
+    height: 8,
+  },
+  topicProgress: {
+    backgroundColor: "white",
+    borderRadius: 9999,
+    height: 8,
+  },
+  summarySection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  summaryCard: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  summaryTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  summaryStats: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  summaryStat: {
+    alignItems: "center",
+  },
+  summaryValueBlue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#60a5fa",
+  },
+  summaryValueGreen: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#4ade80",
+  },
+  summaryValueYellow: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fbbf24",
+  },
+  summaryLabel: {
+    color: "#9ca3af",
+    fontSize: 12,
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+});

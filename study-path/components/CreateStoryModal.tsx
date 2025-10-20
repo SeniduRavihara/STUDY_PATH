@@ -67,7 +67,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
       statusBarTranslucent
     >
       <View style={styles.overlay}>
-        <View style={styles.overlayContent}>
+        <View style={styles.containerWrapper}>
           <View style={styles.modalContainer}>
             {/* Header */}
             <View style={styles.header}>
@@ -76,14 +76,14 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
               </TouchableOpacity>
               <Text style={styles.headerTitle}>Create Story</Text>
               <TouchableOpacity onPress={handleSubmit}>
-                <Text style={styles.headerButton}>Share</Text>
+                <Text style={styles.shareButton}>Share</Text>
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
               {/* Content Input */}
-              <View style={styles.inputSection}>
-                <Text style={styles.inputLabel}>
+              <View style={styles.contentSection}>
+                <Text style={styles.sectionTitle}>
                   What's on your mind?
                 </Text>
                 <TextInput
@@ -93,7 +93,6 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                   placeholderTextColor="#6b7280"
                   multiline
                   style={styles.textInput}
-                  textAlignVertical="top"
                   maxLength={200}
                 />
                 <Text style={styles.charCount}>
@@ -103,19 +102,18 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 
               {/* Media Type Selection */}
               <View style={styles.mediaTypeSection}>
-                <Text style={styles.mediaTypeLabel}>
+                <Text style={styles.sectionTitle}>
                   Story Type
                 </Text>
-                <View style={styles.mediaTypeButtons}>
+                <View style={styles.mediaTypeRow}>
                   <TouchableOpacity
                     onPress={() => setMediaType('text')}
                     style={[
                       styles.mediaTypeButton,
-                      styles.mediaTypeButtonLeft,
-                      mediaType === 'text' ? styles.mediaTypeButtonActive : styles.mediaTypeButtonInactive
+                      mediaType === 'text' && styles.mediaTypeButtonActive,
                     ]}
                   >
-                    <View style={styles.mediaTypeButtonContent}>
+                    <View style={styles.mediaTypeContent}>
                       <Ionicons
                         name="text"
                         size={24}
@@ -123,8 +121,8 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                       />
                       <Text
                         style={[
-                          styles.mediaTypeButtonText,
-                          mediaType === 'text' ? styles.mediaTypeButtonTextActive : styles.mediaTypeButtonTextInactive
+                          styles.mediaTypeLabel,
+                          mediaType === 'text' ? styles.mediaTypeLabelActive : styles.mediaTypeLabelInactive,
                         ]}
                       >
                         Text Story
@@ -135,11 +133,10 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                     onPress={() => setMediaType('image')}
                     style={[
                       styles.mediaTypeButton,
-                      styles.mediaTypeButtonRight,
-                      mediaType === 'image' ? styles.mediaTypeButtonActive : styles.mediaTypeButtonInactive
+                      mediaType === 'image' && styles.mediaTypeButtonActive,
                     ]}
                   >
-                    <View style={styles.mediaTypeButtonContent}>
+                    <View style={styles.mediaTypeContent}>
                       <Ionicons
                         name="image"
                         size={24}
@@ -147,8 +144,8 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                       />
                       <Text
                         style={[
-                          styles.mediaTypeButtonText,
-                          mediaType === 'image' ? styles.mediaTypeButtonTextActive : styles.mediaTypeButtonTextInactive
+                          styles.mediaTypeLabel,
+                          mediaType === 'image' ? styles.mediaTypeLabelActive : styles.mediaTypeLabelInactive,
                         ]}
                       >
                         Image Story
@@ -160,7 +157,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 
               {/* Gradient Selection */}
               <View style={styles.gradientSection}>
-                <Text style={styles.gradientLabel}>
+                <Text style={styles.sectionTitle}>
                   Background Color
                 </Text>
                 <View style={styles.gradientGrid}>
@@ -172,7 +169,9 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                     >
                       <LinearGradient
                         colors={option.colors}
-                        style={styles.gradientOptionGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.gradientBox}
                       >
                         {selectedGradient[0] === option.colors[0] && (
                           <Ionicons name="checkmark" size={20} color="white" />
@@ -185,12 +184,14 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 
               {/* Preview */}
               <View style={styles.previewSection}>
-                <Text style={styles.previewLabel}>
+                <Text style={styles.sectionTitle}>
                   Preview
                 </Text>
                 <View style={styles.previewContainer}>
                   <LinearGradient
                     colors={selectedGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
                     style={styles.previewGradient}
                   >
                     <Text style={styles.previewText}>
@@ -210,9 +211,9 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  overlayContent: {
+  containerWrapper: {
     flex: 1,
     justifyContent: 'flex-end',
   },
@@ -226,16 +227,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
     borderBottomWidth: 1,
     borderBottomColor: '#334155',
   },
   headerTitle: {
-    color: 'white',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
   },
-  headerButton: {
+  shareButton: {
     color: '#3b82f6',
     fontSize: 18,
     fontWeight: '600',
@@ -243,83 +245,68 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    padding: 24,
-  },
-  inputSection: {
+  contentSection: {
     marginBottom: 24,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
-  inputLabel: {
-    color: 'white',
+  sectionTitle: {
+    color: '#ffffff',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
   },
   textInput: {
     backgroundColor: '#1e293b',
-    color: 'white',
-    padding: 16,
+    color: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     borderRadius: 16,
     fontSize: 16,
     minHeight: 128,
+    textAlignVertical: 'top',
   },
   charCount: {
-    color: '#9ca3af',
+    color: '#6b7280',
     fontSize: 14,
     marginTop: 8,
     textAlign: 'right',
   },
   mediaTypeSection: {
     marginBottom: 24,
+    paddingHorizontal: 24,
   },
-  mediaTypeLabel: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  mediaTypeButtons: {
+  mediaTypeRow: {
     flexDirection: 'row',
   },
   mediaTypeButton: {
     flex: 1,
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderRadius: 16,
-    alignItems: 'center',
-  },
-  mediaTypeButtonLeft: {
-    marginRight: 8,
-  },
-  mediaTypeButtonRight: {
-    marginLeft: 8,
+    backgroundColor: '#1e293b',
+    marginHorizontal: 8,
   },
   mediaTypeButtonActive: {
     backgroundColor: '#2563eb',
   },
-  mediaTypeButtonInactive: {
-    backgroundColor: '#1e293b',
-  },
-  mediaTypeButtonContent: {
+  mediaTypeContent: {
     alignItems: 'center',
   },
-  mediaTypeButtonText: {
+  mediaTypeLabel: {
     marginTop: 8,
     fontWeight: '500',
+    fontSize: 14,
   },
-  mediaTypeButtonTextActive: {
-    color: 'white',
+  mediaTypeLabelActive: {
+    color: '#ffffff',
   },
-  mediaTypeButtonTextInactive: {
+  mediaTypeLabelInactive: {
     color: '#9ca3af',
   },
   gradientSection: {
     marginBottom: 24,
-  },
-  gradientLabel: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
+    paddingHorizontal: 24,
   },
   gradientGrid: {
     flexDirection: 'row',
@@ -333,20 +320,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     overflow: 'hidden',
   },
-  gradientOptionGradient: {
+  gradientBox: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
   previewSection: {
-    marginBottom: 24,
-  },
-  previewLabel: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 48,
+    paddingHorizontal: 24,
   },
   previewContainer: {
     height: 192,
@@ -357,12 +339,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    paddingHorizontal: 24,
   },
   previewText: {
-    color: 'white',
+    color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
   },
 });
+
+export default CreateStoryModal;

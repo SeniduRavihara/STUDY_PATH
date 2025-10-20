@@ -40,7 +40,7 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
       <View style={styles.header}>
         <Text style={styles.title}>Stories</Text>
       </View>
-
+      
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -60,11 +60,9 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
   );
 };
 
-StoriesSection.displayName = 'StoriesSection';
-
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
     paddingVertical: 12,
   },
   header: {
@@ -72,17 +70,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    color: 'white',
+    color: "white",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   scrollView: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   scrollContent: {
     paddingHorizontal: 24,
     paddingRight: 48,
   },
 });
+
+StoriesSection.displayName = 'StoriesSection';
 
 export { StoriesSection };

@@ -19,243 +19,6 @@ import {
   SubscriptionService
 } from "../../superbase/services/subscriptionService";
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 56,
-    paddingBottom: 32,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  headerText: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  headerSubtext: {
-    color: '#9ca3af',
-    fontSize: 16,
-  },
-  searchButton: {
-    backgroundColor: '#1e293b',
-    padding: 12,
-    borderRadius: 12,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  statCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    minWidth: 100,
-  },
-  statNumber: {
-    color: '#06b6d4',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: '#9ca3af',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  sectionTitle: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  subjectsContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  subjectCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-  },
-  subjectCardDisabled: {
-    opacity: 0.6,
-  },
-  subjectHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  subjectTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  subjectProgress: {
-    color: '#9ca3af',
-    fontSize: 14,
-  },
-  progressBar: {
-    backgroundColor: '#334155',
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: 6,
-    borderRadius: 3,
-  },
-  subjectFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  subjectStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  subjectStatText: {
-    color: '#9ca3af',
-    fontSize: 12,
-    marginLeft: 4,
-  },
-  activityContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  activityCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-  },
-  activityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  activityTitle: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  activityPoints: {
-    color: '#06b6d4',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  activitySubject: {
-    color: '#9ca3af',
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  activityTime: {
-    color: '#6b7280',
-    fontSize: 12,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  loadingText: {
-    color: '#9ca3af',
-    marginTop: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 32,
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  emptyTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: '#9ca3af',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  emptyButton: {
-    backgroundColor: '#06b6d4',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  emptyButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  loadingCard: {
-    backgroundColor: '#1e293b',
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  loadingCardText: {
-    color: 'white',
-    marginLeft: 8,
-    fontWeight: '600',
-  },
-  subjectsContainer: {
-    paddingHorizontal: 24,
-    marginTop: 32,
-  },
-  subjectsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  viewAllButton: {
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  viewAllButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});
-
 type LocalSubject = {
   id: number;
   name: string;
@@ -351,26 +114,32 @@ const HomeScreen: React.FC = () => {
       >
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.headerText}>Welcome back!</Text>
-            <Text style={styles.headerSubtext}>
+            <Text style={styles.headerTitle}>Welcome back!</Text>
+            <Text style={styles.headerSubtitle}>
               Ready to learn today?
             </Text>
           </View>
-          <TouchableOpacity style={styles.searchButton}>
+          <TouchableOpacity style={styles.notificationButton}>
             <Ionicons name="notifications-outline" size={24} color="#00d4ff" />
           </TouchableOpacity>
         </View>
 
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { marginRight: 8 }]}>
+          <LinearGradient
+            colors={["#667eea", "#764ba2"]}
+            style={[styles.statCard, styles.statCardLeft]}
+          >
             <Text style={styles.statLabel}>Study Streak</Text>
-            <Text style={styles.statNumber}>12 Days</Text>
-          </View>
-          <View style={[styles.statCard, { marginLeft: 8 }]}>
+            <Text style={styles.statValue}>12 Days</Text>
+          </LinearGradient>
+          <LinearGradient
+            colors={["#f093fb", "#f5576c"]}
+            style={[styles.statCard, styles.statCardRight]}
+          >
             <Text style={styles.statLabel}>Total Points</Text>
-            <Text style={styles.statNumber}>2,847</Text>
-          </View>
+            <Text style={styles.statValue}>2,847</Text>
+          </LinearGradient>
         </View>
       </LinearGradient>
 
@@ -379,12 +148,12 @@ const HomeScreen: React.FC = () => {
 
       {/* Continue Learning */}
       {subscribedSubjects.length > 0 && (
-        <View className="px-6 mt-6">
-          <Text className="text-white text-xl font-bold mb-4">
+        <View style={styles.continueSection}>
+          <Text style={styles.sectionTitle}>
             Continue Learning
           </Text>
           <TouchableOpacity
-            className="bg-slate-800 rounded-3xl overflow-hidden"
+            style={styles.continueCard}
             onPress={() => handleNavigateToFlow(subscribedSubjects[0])}
             disabled={navigatingToFlow === subscribedSubjects[0].id}
           >
@@ -397,34 +166,36 @@ const HomeScreen: React.FC = () => {
               }
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              className="p-6"
+              style={styles.continueGradient}
             >
               {navigatingToFlow === subscribedSubjects[0].id && (
-                <View className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center z-10">
-                  <View className="bg-slate-800 p-4 rounded-2xl flex-row items-center">
+                <View style={styles.loadingOverlay}>
+                  <View style={styles.loadingCard}>
                     <ActivityIndicator size="small" color="#00d4ff" />
-                    <Text className="text-white ml-3 font-medium">
+                    <Text style={styles.loadingText}>
                       Loading...
                     </Text>
                   </View>
                 </View>
               )}
-              <View className="flex-row items-center">
-                <View className="flex-1">
-                  <Text className="text-white text-lg font-bold">
+              <View style={styles.continueContent}>
+                <View style={styles.continueInfo}>
+                  <Text style={styles.continueTitle}>
                     {subscribedSubjects[0].name}
                   </Text>
-                  <Text className="text-white opacity-80">
+                  <Text style={styles.continueSubtitle}>
                     {subscribedSubjects[0].user_progress?.completed_chapters ||
                       0}
                     /{subscribedSubjects[0].chapters} chapters completed
                   </Text>
-                  <View className="bg-white bg-opacity-20 rounded-full h-2 mt-3">
+                  <View style={styles.progressBarContainer}>
                     <View
-                      className="bg-white rounded-full h-2"
-                      style={{
-                        width: `${Math.round(((subscribedSubjects[0].user_progress?.completed_chapters || 0) / subscribedSubjects[0].chapters) * 100)}%`
-                      }}
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          width: `${Math.round(((subscribedSubjects[0].user_progress?.completed_chapters || 0) / subscribedSubjects[0].chapters) * 100)}%`
+                        }
+                      ]}
                     />
                   </View>
                 </View>
@@ -436,26 +207,24 @@ const HomeScreen: React.FC = () => {
       )}
 
       {/* Subject Progress */}
-      <View style={styles.subjectsContainer}>
+      <View style={styles.subjectsSection}>
         <View style={styles.subjectsHeader}>
           <Text style={styles.sectionTitle}>Your Subjects</Text>
           <TouchableOpacity
             onPress={() => router.push("/study")}
             style={styles.viewAllButton}
           >
-            <Text style={styles.viewAllButtonText}>View All</Text>
+            <Text style={styles.viewAllText}>View All</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
           <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading your subjects...</Text>
+            <Text style={styles.loadingSubjectsText}>Loading your subjects...</Text>
           </View>
         ) : subscribedSubjects.length === 0 ? (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="book-outline" size={32} color="#6b7280" />
-            </View>
+            <Ionicons name="book-outline" size={48} color="#6b7280" />
             <Text style={styles.emptyTitle}>
               No Subjects Yet
             </Text>
@@ -464,13 +233,13 @@ const HomeScreen: React.FC = () => {
             </Text>
             <TouchableOpacity
               onPress={() => router.push("/study")}
-              style={styles.emptyButton}
+              style={styles.browseButton}
             >
-              <Text style={styles.emptyButtonText}>Browse Subjects</Text>
+              <Text style={styles.browseButtonText}>Browse Subjects</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <View className="flex-row flex-wrap justify-between">
+          <View style={styles.subjectsGrid}>
             {subscribedSubjects.slice(0, 4).map((subject) => {
               const progress =
                 subject.chapters > 0
@@ -484,7 +253,7 @@ const HomeScreen: React.FC = () => {
               return (
                 <TouchableOpacity
                   key={subject.id}
-                  className="w-[48%] mb-4"
+                  style={styles.subjectCard}
                   onPress={() => handleNavigateToFlow(subject)}
                   disabled={navigatingToFlow === subject.id}
                 >
@@ -495,13 +264,13 @@ const HomeScreen: React.FC = () => {
                         "#3B82F6"
                       ]
                     }
-                    className="p-5 rounded-2xl"
+                    style={styles.subjectGradient}
                   >
                     {navigatingToFlow === subject.id && (
-                      <View className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center z-10">
-                        <View className="bg-slate-800 p-3 rounded-xl flex-row items-center">
+                      <View style={styles.subjectLoadingOverlay}>
+                        <View style={styles.subjectLoadingCard}>
                           <ActivityIndicator size="small" color="#00d4ff" />
-                          <Text className="text-white ml-2 text-sm font-medium">
+                          <Text style={styles.subjectLoadingText}>
                             Loading...
                           </Text>
                         </View>
@@ -511,18 +280,20 @@ const HomeScreen: React.FC = () => {
                       name={subject.icon as any}
                       size={32}
                       color="white"
-                      className="mb-3"
+                      style={styles.subjectIcon}
                     />
-                    <Text className="text-white font-bold text-base">
+                    <Text style={styles.subjectName}>
                       {subject.name}
                     </Text>
-                    <Text className="text-white opacity-70 text-sm">
+                    <Text style={styles.subjectProgress}>
                       {progress}% Complete
                     </Text>
-                    <View className="bg-white bg-opacity-30 rounded-full h-1.5 mt-2">
+                    <View style={styles.subjectProgressBar}>
                       <View
-                        className="bg-white rounded-full h-1.5"
-                        style={{ width: `${progress}%` }}
+                        style={[
+                          styles.subjectProgressFill,
+                          { width: `${progress}%` }
+                        ]}
                       />
                     </View>
                   </LinearGradient>
@@ -534,26 +305,26 @@ const HomeScreen: React.FC = () => {
       </View>
 
       {/* Recent Activity */}
-      <View className="px-6 mt-8 mb-8">
-        <Text className="text-white text-xl font-bold mb-4">
+      <View style={styles.activitySection}>
+        <Text style={styles.sectionTitle}>
           Recent Activity
         </Text>
         {recentActivity.map((activity) => (
-          <View key={activity.id} className="bg-slate-800 p-4 rounded-2xl mb-3">
-            <View className="flex-row justify-between items-center">
-              <View className="flex-1">
-                <Text className="text-white font-semibold">
+          <View key={activity.id} style={styles.activityCard}>
+            <View style={styles.activityContent}>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityLesson}>
                   {activity.lesson}
                 </Text>
-                <Text className="text-gray-400 text-sm">
+                <Text style={styles.activitySubject}>
                   {activity.subject}
                 </Text>
-                <Text className="text-gray-500 text-xs mt-1">
+                <Text style={styles.activityTime}>
                   {activity.time}
                 </Text>
               </View>
-              <View className="bg-yellow-500 px-3 py-1 rounded-full">
-                <Text className="text-black font-bold text-sm">
+              <View style={styles.activityPoints}>
+                <Text style={styles.activityPointsText}>
                   +{activity.points}
                 </Text>
               </View>
@@ -564,5 +335,290 @@ const HomeScreen: React.FC = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+  },
+  notificationButton: {
+    backgroundColor: '#1e293b',
+    padding: 12,
+    borderRadius: 9999,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 16,
+  },
+  statCardLeft: {
+    marginRight: 8,
+  },
+  statCardRight: {
+    marginLeft: 8,
+  },
+  statLabel: {
+    color: '#ffffff',
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  statValue: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  continueSection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  continueCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  continueGradient: {
+    padding: 24,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  loadingCard: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#ffffff',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+  continueContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  continueInfo: {
+    flex: 1,
+  },
+  continueTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  continueSubtitle: {
+    color: '#ffffff',
+    opacity: 0.8,
+  },
+  progressBarContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 9999,
+    height: 8,
+    marginTop: 12,
+  },
+  progressBarFill: {
+    backgroundColor: '#ffffff',
+    borderRadius: 9999,
+    height: 8,
+  },
+  subjectsSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  subjectsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  viewAllButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  viewAllText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  loadingSubjectsText: {
+    color: '#9ca3af',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 12,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  browseButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    marginTop: 12,
+  },
+  browseButtonText: {
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+  subjectsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  subjectCard: {
+    width: '48%',
+    marginBottom: 16,
+  },
+  subjectGradient: {
+    padding: 20,
+    borderRadius: 16,
+  },
+  subjectLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  subjectLoadingCard: {
+    backgroundColor: '#1e293b',
+    padding: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subjectLoadingText: {
+    color: '#ffffff',
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  subjectIcon: {
+    marginBottom: 12,
+  },
+  subjectName: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  subjectProgress: {
+    color: '#ffffff',
+    opacity: 0.7,
+    fontSize: 14,
+  },
+  subjectProgressBar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 9999,
+    height: 6,
+    marginTop: 8,
+  },
+  subjectProgressFill: {
+    backgroundColor: '#ffffff',
+    borderRadius: 9999,
+    height: 6,
+  },
+  activitySection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  activityCard: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  activityContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityLesson: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  activitySubject: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  activityTime: {
+    color: '#6b7280',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  activityPoints: {
+    backgroundColor: '#eab308',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  activityPointsText: {
+    color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+});
 
 export default HomeScreen;

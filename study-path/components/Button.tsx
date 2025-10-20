@@ -3,43 +3,74 @@ import React from "react";
 
 type ButtonProps = {
   title: string;
-onPress?: () => void;
-theme?: "primary" | "secondary" | "tertiary";
-disabled?: boolean;
+  onPress?: () => void;
+  theme?: "primary" | "secondary" | "tertiary";
+  disabled?: boolean;
 } & PressableProps;
 
 export const Button = React.forwardRef<
   React.ComponentRef<typeof Pressable>,
-ButtonProps
+  ButtonProps
 >(({ title, onPress, theme = "primary", disabled, ...rest }, ref) => {
+  const getButtonStyle = () => {
+    const baseStyle = [styles.button];
+
+    switch (theme) {
+      case "primary":
+        baseStyle.push(styles.primaryButton);
+        break;
+      case "secondary":
+        baseStyle.push(styles.secondaryButton);
+        break;
+      case "tertiary":
+        baseStyle.push(styles.tertiaryButton);
+        break;
+    }
+
+    if (disabled) {
+      baseStyle.push(styles.disabled);
+    }
+
+    return baseStyle;
+  };
+
+  const getTextStyle = () => {
+    const baseStyle = [styles.text];
+
+    switch (theme) {
+      case "primary":
+        baseStyle.push(styles.primaryText);
+        break;
+      case "secondary":
+        baseStyle.push(styles.secondaryText);
+        break;
+      case "tertiary":
+        baseStyle.push(styles.tertiaryText);
+        break;
+    }
+
+    return baseStyle;
+  };
+
   return (
-  <Pressable
-  ref={ref}
-onPress={onPress}
-style={[
-  styles.base,
-styles[theme],
-disabled && styles.disabled,
-]}
-disabled={disabled}
-{...rest}
->
-<Text
-  style={[
-      styles.textBase,
-    styles[`${theme}Text`],
-]}
->
-{title}
-</Text>
-</Pressable>
-);
+    <Pressable
+      ref={ref}
+      onPress={onPress}
+      style={getButtonStyle()}
+      disabled={disabled}
+      {...rest}
+    >
+      <Text style={getTextStyle()}>
+        {title} {disabled}
+      </Text>
+    </Pressable>
+  );
 });
 
 Button.displayName = "Button";
 
 const styles = StyleSheet.create({
-  base: {
+  button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -49,33 +80,33 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
   },
-  primary: {
+  primaryButton: {
     backgroundColor: "#007AFF",
     borderColor: "#007AFF",
   },
-  secondary: {
-    backgroundColor: "white",
+  secondaryButton: {
+    backgroundColor: "#ffffff",
     borderColor: "#d1d5db",
   },
-  tertiary: {
+  tertiaryButton: {
     backgroundColor: "transparent",
     borderColor: "transparent",
   },
   disabled: {
     opacity: 0.5,
   },
-  textBase: {
+  text: {
     fontWeight: "600",
     fontSize: 18,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   primaryText: {
-    color: "white",
+    color: "#ffffff",
   },
   secondaryText: {
-    color: "black",
+    color: "#000000",
   },
   tertiaryText: {
-    color: "#374151",
+    color: "#4b5563",
   },
 });

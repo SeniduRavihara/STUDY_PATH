@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";
@@ -5,6 +6,7 @@ import {
   Animated,
   Modal,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -304,79 +306,61 @@ export default function RewardsScreen() {
   }) => {
     if (isActive) {
       return (
-        <TouchableOpacity className="flex-1" onPress={onPress}>
+        <TouchableOpacity style={styles.tabButtonContainer} onPress={onPress}>
           <LinearGradient
             colors={gradientColors}
-            style={{
-              paddingVertical: 12,
-              borderRadius: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-            }}
+            style={styles.activeTabGradient}
           >
             <Ionicons name={icon} size={20} color="white" />
-            <Text className="ml-2 font-semibold text-white">{title}</Text>
+            <Text style={styles.activeTabText}>{title}</Text>
           </LinearGradient>
         </TouchableOpacity>
       );
     }
 
     return (
-      <TouchableOpacity className="flex-1 py-3" onPress={onPress}>
-        <View className="flex-row items-center justify-center">
+      <TouchableOpacity style={styles.inactiveTabButton} onPress={onPress}>
+        <View style={styles.inactiveTabContent}>
           <Ionicons name={icon} size={20} color="#6b7280" />
-          <Text className="ml-2 font-semibold text-gray-400">{title}</Text>
+          <Text style={styles.inactiveTabText}>{title}</Text>
         </View>
       </TouchableOpacity>
     );
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header with Game-like Design */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-6"
+        style={styles.header}
       >
-        <View className="items-center">
-          <View className="flex-row items-center mb-4">
+        <View style={styles.headerContent}>
+          <View style={styles.headerTitle}>
             <Ionicons name="trophy" size={32} color="#f59e0b" />
-            <Text className="text-white text-3xl font-bold ml-2">
+            <Text style={styles.headerText}>
               Rewards Center
             </Text>
           </View>
-          <View className="flex-row items-center space-x-4">
+          <View style={styles.badgesContainer}>
             <LinearGradient
               colors={["#f59e0b", "#d97706"]}
-              style={{
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 9999,
-                borderWidth: 2,
-                borderColor: "#facc15",
-              }}
+              style={[styles.badge, styles.pointsBadge]}
             >
-              <View className="flex-row items-center">
+              <View style={styles.badgeContent}>
                 <Ionicons name="star" size={24} color="white" />
-                <Text className="text-white text-xl font-bold ml-2">
+                <Text style={styles.badgeText}>
                   {userPoints.toLocaleString()}
                 </Text>
               </View>
             </LinearGradient>
             <LinearGradient
               colors={["#8b5cf6", "#6d28d9"]}
-              style={{
-                paddingHorizontal: 24,
-                paddingVertical: 12,
-                borderRadius: 9999,
-                borderWidth: 2,
-                borderColor: "#a78bfa",
-              }}
+              style={[styles.badge, styles.vipBadge]}
             >
-              <View className="flex-row items-center">
+              <View style={styles.badgeContent}>
                 <Ionicons name="diamond" size={24} color="white" />
-                <Text className="text-white text-xl font-bold ml-2">
+                <Text style={styles.badgeText}>
                   VIP {vipLevel}
                 </Text>
               </View>
@@ -386,8 +370,8 @@ export default function RewardsScreen() {
       </LinearGradient>
 
       {/* Tab Navigation with Game-like Design */}
-      <View className="px-6 mt-6">
-        <View className="bg-slate-800 p-1 rounded-2xl flex-row border border-slate-700">
+      <View style={styles.tabNavigation}>
+        <View style={styles.tabContainer}>
           <TabButton
             title="Daily"
             icon="calendar"
@@ -413,48 +397,50 @@ export default function RewardsScreen() {
       </View>
 
       {/* Content based on selected tab */}
-      <View className="px-6 mt-6">
+      <View style={styles.content}>
         {selectedTab === "daily" && (
           <View>
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-xl font-bold">
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
                 Daily Rewards
               </Text>
-              <View className="bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500">
-                <Text className="text-blue-400 font-bold">Day 3/7</Text>
+              <View style={styles.dayBadge}>
+                <Text style={styles.dayBadgeText}>Day 3/7</Text>
               </View>
             </View>
-            <View className="flex-row flex-wrap justify-between">
+            <View style={styles.rewardsGrid}>
               {dailyRewards.map(reward => (
                 <TouchableOpacity
                   key={reward.id}
-                  className="w-[30%] mb-4"
+                  style={styles.rewardCard}
                   onPress={() => handleRedeem(reward)}
                 >
                   <LinearGradient
                     colors={["#1a1a2e", "#16213e"]}
-                    className="p-4 rounded-2xl items-center border border-slate-700"
+                    style={styles.rewardGradient}
                   >
                     <View
-                      className="p-3 rounded-full mb-2 border-2"
-                      style={{
-                        backgroundColor: getRarityColor(reward.rarity),
-                        borderColor:
-                          reward.rarity === "legendary"
-                            ? "#f59e0b"
-                            : "transparent",
-                      }}
+                      style={[
+                        styles.rewardIcon,
+                        {
+                          backgroundColor: getRarityColor(reward.rarity),
+                          borderColor:
+                            reward.rarity === "legendary"
+                              ? "#f59e0b"
+                              : "transparent",
+                        },
+                      ]}
                     >
                       <Ionicons name={reward.icon} size={24} color="white" />
                     </View>
-                    <Text className="text-white font-semibold text-center">
+                    <Text style={styles.rewardTitle}>
                       {reward.title}
                     </Text>
-                    <Text className="text-gray-400 text-sm text-center">
+                    <Text style={styles.rewardPoints}>
                       {reward.points} Points
                     </Text>
                     {reward.rarity === "legendary" && (
-                      <View className="absolute -top-2 -right-2">
+                      <View style={styles.legendaryBadge}>
                         <Ionicons name="flash" size={20} color="#f59e0b" />
                       </View>
                     )}
@@ -467,10 +453,10 @@ export default function RewardsScreen() {
 
         {selectedTab === "battle" && (
           <View>
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-xl font-bold">Battle Pass</Text>
-              <View className="bg-purple-500/20 px-4 py-2 rounded-full border border-purple-500">
-                <Text className="text-purple-400 font-bold">
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Battle Pass</Text>
+              <View style={styles.levelBadge}>
+                <Text style={styles.levelBadgeText}>
                   Level {battlePassLevel}
                 </Text>
               </View>
@@ -478,43 +464,46 @@ export default function RewardsScreen() {
             {battlePassRewards.map(reward => (
               <View
                 key={reward.id}
-                className="bg-slate-800 rounded-2xl p-4 mb-3 border border-slate-700"
+                style={styles.battlePassCard}
               >
-                <View className="flex-row items-center">
+                <View style={styles.battlePassContent}>
                   <View
-                    className="p-3 rounded-full mr-4 border-2"
-                    style={{
-                      backgroundColor: getRarityColor(reward.rarity),
-                      borderColor:
-                        reward.rarity === "legendary"
-                          ? "#f59e0b"
-                          : "transparent",
-                    }}
+                    style={[
+                      styles.battlePassIcon,
+                      {
+                        backgroundColor: getRarityColor(reward.rarity),
+                        borderColor:
+                          reward.rarity === "legendary"
+                            ? "#f59e0b"
+                            : "transparent",
+                      },
+                    ]}
                   >
                     <Ionicons name={reward.icon} size={24} color="white" />
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-white font-semibold text-base">
+                  <View style={styles.battlePassInfo}>
+                    <Text style={styles.battlePassTitle}>
                       {reward.title}
                     </Text>
-                    <Text className="text-gray-400 text-sm">
+                    <Text style={styles.battlePassPoints}>
                       {reward.points} points
                     </Text>
                   </View>
-                  <View className="bg-green-500/20 px-3 py-1 rounded-full border border-green-500">
-                    <Text className="text-green-400 font-bold text-sm">
+                  <View style={styles.progressBadge}>
+                    <Text style={styles.progressText}>
                       {reward.progress}%
                     </Text>
                   </View>
                 </View>
-                <View className="bg-slate-700 rounded-full h-2 mt-3">
+                <View style={styles.progressBarBackground}>
                   <LinearGradient
                     colors={["#3b82f6", "#60a5fa"]}
-                    style={{
-                      borderRadius: 9999,
-                      height: 8,
-                      width: `${((reward.progress || 0) / (reward.maxProgress || 100)) * 100}%`,
-                    }}
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        width: `${((reward.progress || 0) / (reward.maxProgress || 100)) * 100}%`,
+                      },
+                    ]}
                   />
                 </View>
               </View>
@@ -524,29 +513,31 @@ export default function RewardsScreen() {
 
         {selectedTab === "spin" && (
           <View>
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-white text-xl font-bold">Lucky Spin</Text>
-              <View className="bg-yellow-500/20 px-4 py-2 rounded-full border border-yellow-500">
-                <Text className="text-yellow-400 font-bold">
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Lucky Spin</Text>
+              <View style={styles.spinBadge}>
+                <Text style={styles.spinBadgeText}>
                   {spinCoins} Spins
                 </Text>
               </View>
             </View>
-            <View className="bg-slate-800 rounded-3xl p-6 items-center mb-6 border border-slate-700">
+            <View style={styles.spinContainer}>
               <Animated.View
-                className="w-64 h-64 rounded-full border-4 border-yellow-500 items-center justify-center mb-4"
-                style={{
-                  transform: [
-                    {
-                      rotate: spinAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: ["0deg", "1440deg"],
-                      }),
-                    },
-                  ],
-                }}
+                style={[
+                  styles.spinWheel,
+                  {
+                    transform: [
+                      {
+                        rotate: spinAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ["0deg", "1440deg"],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
               >
-                <Text className="text-white text-2xl font-bold">
+                <Text style={styles.spinText}>
                   SPIN TO WIN!
                 </Text>
               </Animated.View>
@@ -559,44 +550,40 @@ export default function RewardsScreen() {
               >
                 <LinearGradient
                   colors={["#eab308", "#facc15"]}
-                  style={{
-                    paddingHorizontal: 32,
-                    paddingVertical: 12,
-                    borderRadius: 9999,
-                    borderWidth: 2,
-                    borderColor: "#facc15",
-                  }}
+                  style={styles.spinButton}
                 >
-                  <Text className="text-white font-bold text-lg">
+                  <Text style={styles.spinButtonText}>
                     {spinCoins === 0 ? "NO SPINS LEFT" : "SPIN NOW"}
                   </Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
 
-            <Text className="text-white text-lg font-bold mb-4">
+            <Text style={styles.possibleRewardsTitle}>
               Possible Rewards
             </Text>
-            <View className="flex-row flex-wrap justify-between">
+            <View style={styles.rewardsGrid}>
               {spinRewards.map(reward => (
-                <View key={reward.id} className="w-[30%] mb-4">
+                <View key={reward.id} style={styles.spinRewardCard}>
                   <LinearGradient
                     colors={["#1a1a2e", "#16213e"]}
-                    className="p-4 rounded-2xl items-center border border-slate-700"
+                    style={styles.spinRewardGradient}
                   >
                     <View
-                      className="p-3 rounded-full mb-2 border-2"
-                      style={{
-                        backgroundColor: getRarityColor(reward.rarity),
-                        borderColor:
-                          reward.rarity === "legendary"
-                            ? "#f59e0b"
-                            : "transparent",
-                      }}
+                      style={[
+                        styles.spinRewardIcon,
+                        {
+                          backgroundColor: getRarityColor(reward.rarity),
+                          borderColor:
+                            reward.rarity === "legendary"
+                              ? "#f59e0b"
+                              : "transparent",
+                        },
+                      ]}
                     >
                       <Ionicons name={reward.icon} size={24} color="white" />
                     </View>
-                    <Text className="text-white font-semibold text-center">
+                    <Text style={styles.spinRewardTitle}>
                       {reward.title}
                     </Text>
                   </LinearGradient>
@@ -610,24 +597,26 @@ export default function RewardsScreen() {
       {/* Won Reward Animation */}
       {showRewardAnimation && wonReward && (
         <Modal visible={showRewardAnimation} transparent animationType="fade">
-          <View className="flex-1 items-center justify-center bg-black/80">
-            <View className="bg-slate-800 p-6 rounded-3xl items-center border-2 border-yellow-500">
+          <View style={styles.wonRewardOverlay}>
+            <View style={styles.wonRewardCard}>
               <View
-                className="p-4 rounded-full mb-4 border-2"
-                style={{
-                  backgroundColor: getRarityColor(wonReward.rarity),
-                  borderColor:
-                    wonReward.rarity === "legendary"
-                      ? "#f59e0b"
-                      : "transparent",
-                }}
+                style={[
+                  styles.wonRewardIcon,
+                  {
+                    backgroundColor: getRarityColor(wonReward.rarity),
+                    borderColor:
+                      wonReward.rarity === "legendary"
+                        ? "#f59e0b"
+                        : "transparent",
+                  },
+                ]}
               >
                 <Ionicons name={wonReward.icon} size={32} color="white" />
               </View>
-              <Text className="text-white text-xl font-bold mb-2">
+              <Text style={styles.congratsText}>
                 Congratulations!
               </Text>
-              <Text className="text-yellow-400 text-lg font-bold">
+              <Text style={styles.wonRewardText}>
                 You won {wonReward.title}!
               </Text>
             </View>
@@ -642,23 +631,25 @@ export default function RewardsScreen() {
         animationType="fade"
         onRequestClose={() => setShowRedeemModal(false)}
       >
-        <View className="flex-1 bg-black/80 items-center justify-center">
-          <View className="bg-slate-800 rounded-3xl p-6 w-[80%] border-2 border-slate-700">
-            <Text className="text-white text-xl font-bold text-center mb-4">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>
               Redeem Reward
             </Text>
             {selectedReward && (
               <>
-                <View className="items-center mb-4">
+                <View style={styles.modalRewardInfo}>
                   <View
-                    className="p-4 rounded-full mb-2 border-2"
-                    style={{
-                      backgroundColor: selectedReward.color,
-                      borderColor:
-                        selectedReward.rarity === "legendary"
-                          ? "#f59e0b"
-                          : "transparent",
-                    }}
+                    style={[
+                      styles.modalRewardIcon,
+                      {
+                        backgroundColor: selectedReward.color,
+                        borderColor:
+                          selectedReward.rarity === "legendary"
+                            ? "#f59e0b"
+                            : "transparent",
+                      },
+                    ]}
                   >
                     <Ionicons
                       name={selectedReward.icon}
@@ -666,41 +657,36 @@ export default function RewardsScreen() {
                       color="white"
                     />
                   </View>
-                  <Text className="text-white text-lg font-bold">
+                  <Text style={styles.modalRewardTitle}>
                     {selectedReward.title}
                   </Text>
-                  <Text className="text-yellow-400 text-center mt-2 font-semibold">
+                  <Text style={styles.modalRewardPoints}>
                     +{selectedReward.points} Points
                   </Text>
                   {selectedReward.description && (
-                    <Text className="text-gray-400 text-center mt-2">
+                    <Text style={styles.modalRewardDescription}>
                       {selectedReward.description}
                     </Text>
                   )}
                 </View>
-                <View className="flex-row justify-between">
+                <View style={styles.modalButtons}>
                   <TouchableOpacity
-                    className="flex-1 bg-slate-700 py-3 rounded-xl mr-2 border border-slate-600"
+                    style={styles.cancelButton}
                     onPress={() => setShowRedeemModal(false)}
                   >
-                    <Text className="text-white text-center font-semibold">
+                    <Text style={styles.cancelButtonText}>
                       Cancel
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={confirmRedeem}
-                    className="flex-1 ml-2"
+                    style={styles.confirmButtonContainer}
                   >
                     <LinearGradient
                       colors={["#3b82f6", "#60a5fa"]}
-                      style={{
-                        paddingVertical: 12,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: "#60a5fa",
-                      }}
+                      style={styles.confirmButton}
                     >
-                      <Text className="text-white text-center font-semibold">
+                      <Text style={styles.confirmButtonText}>
                         Confirm
                       </Text>
                     </LinearGradient>
@@ -712,7 +698,420 @@ export default function RewardsScreen() {
         </View>
       </Modal>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  headerText: {
+    color: '#ffffff',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  badge: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    borderWidth: 2,
+  },
+  pointsBadge: {
+    borderColor: '#facc15',
+  },
+  vipBadge: {
+    borderColor: '#a78bfa',
+  },
+  badgeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  tabNavigation: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  tabContainer: {
+    backgroundColor: '#1e293b',
+    padding: 4,
+    borderRadius: 16,
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  tabButtonContainer: {
+    flex: 1,
+  },
+  activeTabGradient: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  activeTabText: {
+    marginLeft: 8,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  inactiveTabButton: {
+    flex: 1,
+    paddingVertical: 12,
+  },
+  inactiveTabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inactiveTabText: {
+    marginLeft: 8,
+    fontWeight: '600',
+    color: '#9ca3af',
+  },
+  content: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  dayBadge: {
+    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+  },
+  dayBadgeText: {
+    color: '#60a5fa',
+    fontWeight: 'bold',
+  },
+  levelBadge: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#8b5cf6',
+  },
+  levelBadgeText: {
+    color: '#a78bfa',
+    fontWeight: 'bold',
+  },
+  spinBadge: {
+    backgroundColor: 'rgba(234, 179, 8, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#eab308',
+  },
+  spinBadgeText: {
+    color: '#facc15',
+    fontWeight: 'bold',
+  },
+  rewardsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  rewardCard: {
+    width: '30%',
+    marginBottom: 16,
+  },
+  rewardGradient: {
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  rewardIcon: {
+    padding: 12,
+    borderRadius: 9999,
+    marginBottom: 8,
+    borderWidth: 2,
+  },
+  rewardTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  rewardPoints: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  legendaryBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+  },
+  battlePassCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  battlePassContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  battlePassIcon: {
+    padding: 12,
+    borderRadius: 9999,
+    marginRight: 16,
+    borderWidth: 2,
+  },
+  battlePassInfo: {
+    flex: 1,
+  },
+  battlePassTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  battlePassPoints: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  progressBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    borderWidth: 1,
+    borderColor: '#10b981',
+  },
+  progressText: {
+    color: '#4ade80',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  progressBarBackground: {
+    backgroundColor: '#334155',
+    borderRadius: 9999,
+    height: 8,
+    marginTop: 12,
+  },
+  progressBarFill: {
+    borderRadius: 9999,
+    height: 8,
+  },
+  spinContainer: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    padding: 24,
+    alignItems: 'center',
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  spinWheel: {
+    width: 256,
+    height: 256,
+    borderRadius: 128,
+    borderWidth: 4,
+    borderColor: '#eab308',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  spinText: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  spinButton: {
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    borderWidth: 2,
+    borderColor: '#facc15',
+  },
+  spinButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  possibleRewardsTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  spinRewardCard: {
+    width: '30%',
+    marginBottom: 16,
+  },
+  spinRewardGradient: {
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  spinRewardIcon: {
+    padding: 12,
+    borderRadius: 9999,
+    marginBottom: 8,
+    borderWidth: 2,
+  },
+  spinRewardTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  wonRewardOverlay: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  wonRewardCard: {
+    backgroundColor: '#1e293b',
+    padding: 24,
+    borderRadius: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#eab308',
+  },
+  wonRewardIcon: {
+    padding: 16,
+    borderRadius: 9999,
+    marginBottom: 16,
+    borderWidth: 2,
+  },
+  congratsText: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  wonRewardText: {
+    color: '#facc15',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    padding: 24,
+    width: '80%',
+    borderWidth: 2,
+    borderColor: '#334155',
+  },
+  modalTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  modalRewardInfo: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalRewardIcon: {
+    padding: 16,
+    borderRadius: 9999,
+    marginBottom: 8,
+    borderWidth: 2,
+  },
+  modalRewardTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalRewardPoints: {
+    color: '#facc15',
+    textAlign: 'center',
+    marginTop: 8,
+    fontWeight: '600',
+  },
+  modalRewardDescription: {
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#334155',
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#475569',
+  },
+  cancelButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  confirmButtonContainer: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  confirmButton: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#60a5fa',
+  },
+  confirmButtonText: {
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+});

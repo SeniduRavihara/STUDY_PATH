@@ -6,6 +6,7 @@ import {
   Alert,
   Linking,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -32,34 +33,34 @@ export default function AboutScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-6"
+        style={styles.header}
       >
-        <View className="flex-row items-center justify-between">
+        <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">About</Text>
-          <View style={{ width: 24 }} />
+          <Text style={styles.headerTitle}>About</Text>
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
       {/* App Info */}
-      <View className="px-6 mt-8">
-        <View className="items-center mb-8">
-          <View className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 rounded-3xl mb-4">
+      <View style={styles.appInfoSection}>
+        <View style={styles.appInfoCenter}>
+          <View style={styles.appIcon}>
             <Ionicons name="book" size={48} color="white" />
           </View>
-          <Text className="text-white text-2xl font-bold mb-2">StudyPath</Text>
-          <Text className="text-gray-400 text-base">Version 1.0.0</Text>
-          <Text className="text-gray-500 text-sm mt-2">Build 2024.01.15</Text>
+          <Text style={styles.appName}>StudyPath</Text>
+          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.buildText}>Build 2024.01.15</Text>
         </View>
 
-        <View className="bg-slate-800 p-6 rounded-2xl mb-6">
-          <Text className="text-white text-base leading-6 text-center">
+        <View style={styles.descriptionCard}>
+          <Text style={styles.descriptionText}>
             StudyPath is a modern learning platform that helps students track
             their progress, import educational content, and achieve their
             academic goals through interactive quizzes and personalized study
@@ -69,50 +70,50 @@ export default function AboutScreen() {
       </View>
 
       {/* App Details */}
-      <View className="px-6">
-        <Text className="text-white text-lg font-bold mb-4">
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
           App Information
         </Text>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-400">Version</Text>
-            <Text className="text-white font-semibold">1.0.0</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Version</Text>
+            <Text style={styles.infoValue}>1.0.0</Text>
           </View>
         </View>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-400">Build</Text>
-            <Text className="text-white font-semibold">2024.01.15</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Build</Text>
+            <Text style={styles.infoValue}>2024.01.15</Text>
           </View>
         </View>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-400">Platform</Text>
-            <Text className="text-white font-semibold">React Native</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Platform</Text>
+            <Text style={styles.infoValue}>React Native</Text>
           </View>
         </View>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-gray-400">Database</Text>
-            <Text className="text-white font-semibold">SQLite + Supabase</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Database</Text>
+            <Text style={styles.infoValue}>SQLite + Supabase</Text>
           </View>
         </View>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleCheckUpdates}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="refresh-outline" size={24} color="#3b82f6" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>
                 Check for Updates
               </Text>
-              <Text className="text-gray-400 text-sm">
+              <Text style={styles.actionSubtitle}>
                 See if a new version is available
               </Text>
             </View>
@@ -122,48 +123,48 @@ export default function AboutScreen() {
       </View>
 
       {/* Social Links */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-lg font-bold mb-4">
+      <View style={styles.socialSection}>
+        <Text style={styles.sectionTitle}>
           Connect With Us
         </Text>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleOpenWebsite}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="globe-outline" size={24} color="#3b82f6" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Website</Text>
-              <Text className="text-gray-400 text-sm">studypath.app</Text>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Website</Text>
+              <Text style={styles.actionSubtitle}>studypath.app</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleOpenGitHub}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="logo-github" size={24} color="#6b7280" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">GitHub</Text>
-              <Text className="text-gray-400 text-sm">View source code</Text>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>GitHub</Text>
+              <Text style={styles.actionSubtitle}>View source code</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleOpenTwitter}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="logo-twitter" size={24} color="#1da1f2" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Twitter</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Twitter</Text>
+              <Text style={styles.actionSubtitle}>
                 Follow us for updates
               </Text>
             </View>
@@ -173,28 +174,172 @@ export default function AboutScreen() {
       </View>
 
       {/* Credits */}
-      <View className="px-6 mt-8 mb-8">
-        <Text className="text-white text-lg font-bold mb-4">Credits</Text>
+      <View style={styles.creditsSection}>
+        <Text style={styles.sectionTitle}>Credits</Text>
 
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white font-semibold mb-2">Developed by</Text>
-          <Text className="text-gray-400 mb-4">StudyPath Team</Text>
+        <View style={styles.creditsCard}>
+          <Text style={styles.creditTitle}>Developed by</Text>
+          <Text style={styles.creditText}>StudyPath Team</Text>
 
-          <Text className="text-white font-semibold mb-2">
+          <Text style={styles.creditTitle}>
             Technologies Used
           </Text>
-          <Text className="text-gray-400 mb-2">• React Native & Expo</Text>
-          <Text className="text-gray-400 mb-2">• TypeScript</Text>
-          <Text className="text-gray-400 mb-2">• Supabase</Text>
-          <Text className="text-gray-400 mb-2">• SQLite & Drizzle ORM</Text>
-          <Text className="text-gray-400 mb-2">
+          <Text style={styles.creditText}>• React Native & Expo</Text>
+          <Text style={styles.creditText}>• TypeScript</Text>
+          <Text style={styles.creditText}>• Supabase</Text>
+          <Text style={styles.creditText}>• SQLite & Drizzle ORM</Text>
+          <Text style={styles.creditText}>
             • NativeWind (Tailwind CSS)
           </Text>
 
-          <Text className="text-white font-semibold mb-2 mt-4">Icons</Text>
-          <Text className="text-gray-400">Ionicons by Ionic Framework</Text>
+          <Text style={styles.creditTitleWithMargin}>Icons</Text>
+          <Text style={styles.creditText}>Ionicons by Ionic Framework</Text>
         </View>
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  appInfoSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  appInfoCenter: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  appIcon: {
+    backgroundColor: "#3b82f6",
+    padding: 24,
+    borderRadius: 24,
+    marginBottom: 16,
+  },
+  appName: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  versionText: {
+    color: "#9ca3af",
+    fontSize: 16,
+  },
+  buildText: {
+    color: "#6b7280",
+    fontSize: 14,
+    marginTop: 8,
+  },
+  descriptionCard: {
+    backgroundColor: "#1e293b",
+    padding: 24,
+    borderRadius: 16,
+    marginBottom: 24,
+  },
+  descriptionText: {
+    color: "white",
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  section: {
+    paddingHorizontal: 24,
+  },
+  sectionTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  infoCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  infoLabel: {
+    color: "#9ca3af",
+  },
+  infoValue: {
+    color: "white",
+    fontWeight: "600",
+  },
+  actionCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  actionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionTextContainer: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  actionTitle: {
+    color: "white",
+    fontWeight: "600",
+  },
+  actionSubtitle: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  socialSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  creditsSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  creditsCard: {
+    backgroundColor: "#1e293b",
+    padding: 24,
+    borderRadius: 16,
+  },
+  creditTitle: {
+    color: "white",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  creditTitleWithMargin: {
+    color: "white",
+    fontWeight: "600",
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  creditText: {
+    color: "#9ca3af",
+    marginBottom: 8,
+  },
+});

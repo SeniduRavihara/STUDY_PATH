@@ -1,4 +1,4 @@
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet, Text, TextProps } from "react-native";
 
 type AppTextProps = {
   children: React.ReactNode;
@@ -6,8 +6,7 @@ type AppTextProps = {
   bold?: boolean;
   color?: "primary" | "secondary" | "tertiary";
   center?: boolean;
-  style?: any;
-};
+} & TextProps;
 
 export function AppText({
   children,
@@ -16,23 +15,70 @@ export function AppText({
   color = "primary",
   center = false,
   style,
+  ...rest
 }: AppTextProps) {
+  const getTextStyle = () => {
+    const baseStyle = [styles.text];
+
+    // Size variant
+    switch (size) {
+      case "small":
+        baseStyle.push(styles.small);
+        break;
+      case "medium":
+        baseStyle.push(styles.medium);
+        break;
+      case "large":
+        baseStyle.push(styles.large);
+        break;
+      case "heading":
+        baseStyle.push(styles.heading);
+        break;
+    }
+
+    // Bold variant
+    if (bold) {
+      baseStyle.push(styles.bold);
+    }
+
+    // Color variant
+    switch (color) {
+      case "primary":
+        baseStyle.push(styles.colorPrimary);
+        break;
+      case "secondary":
+        baseStyle.push(styles.colorSecondary);
+        break;
+      case "tertiary":
+        baseStyle.push(styles.colorTertiary);
+        break;
+    }
+
+    // Center variant
+    if (center) {
+      baseStyle.push(styles.center);
+    }
+
+    // Custom styles
+    if (style) {
+      baseStyle.push(style);
+    }
+
+    return baseStyle;
+  };
+
   return (
-    <Text
-      style={[
-        styles[size],
-        bold && styles.bold,
-        styles[color],
-        center && styles.center,
-        style,
-      ]}
-    >
+    <Text style={getTextStyle()} {...rest}>
       {children}
     </Text>
   );
 }
 
 const styles = StyleSheet.create({
+  text: {
+    // Base text styles
+  },
+  // Size variants
   small: {
     fontSize: 14,
     marginBottom: 8,
@@ -49,18 +95,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 20,
   },
+  // Bold variant
   bold: {
-    fontWeight: "bold",
+    fontWeight: "700",
   },
-  primary: {
-    color: "black",
+  // Color variants
+  colorPrimary: {
+    color: "#000000",
   },
-  secondary: {
-    color: "#6b7280",
+  colorSecondary: {
+    color: "#a0aec0",
   },
-  tertiary: {
-    color: "#9ca3af",
+  colorTertiary: {
+    color: "#cbd5e0",
   },
+  // Center variant
   center: {
     textAlign: "center",
   },

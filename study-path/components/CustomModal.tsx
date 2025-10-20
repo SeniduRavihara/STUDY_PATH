@@ -80,6 +80,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
     }
   };
 
+  const typeColor = getTypeColor();
+
   return (
     <Modal
       visible={visible}
@@ -93,13 +95,13 @@ const CustomModal: React.FC<CustomModalProps> = ({
             <View style={styles.modalContainer}>
               {/* Header */}
               <LinearGradient
-                colors={getTypeColor()}
+                colors={typeColor}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.headerGradient}
               >
                 <View style={styles.headerContent}>
-                  <View style={styles.iconContainer}>
+                  <View style={styles.iconBox}>
                     <Ionicons
                       name={getTypeIcon() as any}
                       size={24}
@@ -107,10 +109,10 @@ const CustomModal: React.FC<CustomModalProps> = ({
                     />
                   </View>
                   <View style={styles.headerText}>
-                    <Text style={styles.headerTitle}>
+                    <Text style={styles.typeTitle}>
                       {getTypeText()}
                     </Text>
-                    <Text style={styles.headerSubtitle}>
+                    <Text style={styles.estimatedTime}>
                       {estimatedTime && `Estimated time: ${estimatedTime}`}
                     </Text>
                   </View>
@@ -118,7 +120,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
               </LinearGradient>
 
               {/* Content */}
-              <View style={styles.content}>
+              <View style={styles.contentContainer}>
                 <Text style={styles.title}>
                   {title}
                 </Text>
@@ -127,7 +129,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
                 </Text>
 
                 {/* Action Buttons */}
-                <View style={styles.buttonContainer}>
+                <View style={styles.buttonRow}>
                   {showCancel && (
                     <>
                       <TouchableOpacity
@@ -146,13 +148,13 @@ const CustomModal: React.FC<CustomModalProps> = ({
                       onConfirm();
                       onClose();
                     }}
-                    style={styles.confirmButton}
+                    style={styles.confirmButtonWrapper}
                   >
                     <LinearGradient
-                      colors={getTypeColor()}
+                      colors={typeColor}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={styles.confirmButtonGradient}
+                      style={styles.confirmButton}
                     >
                       <Text style={styles.confirmButtonText}>
                         {confirmText}
@@ -172,89 +174,94 @@ const CustomModal: React.FC<CustomModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
   },
   modalContainer: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     borderRadius: 24,
-    width: '100%',
-    maxWidth: 400,
-    overflow: 'hidden',
+    width: "100%",
+    maxWidth: 380,
+    overflow: "hidden",
   },
   headerGradient: {
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
-  iconContainer: {
+  iconBox: {
     width: 48,
     height: 48,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 16,
   },
   headerText: {
     flex: 1,
   },
-  headerTitle: {
-    color: 'white',
+  typeTitle: {
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-  headerSubtitle: {
-    color: 'rgba(255,255,255,0.8)',
+  estimatedTime: {
+    color: "rgba(255, 255, 255, 0.8)",
     fontSize: 14,
+    marginTop: 4,
   },
-  content: {
-    padding: 24,
+  contentContainer: {
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   title: {
-    color: 'white',
+    color: "#ffffff",
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
   },
   description: {
-    color: '#cbd5e1',
+    color: "#d1d5db",
     fontSize: 16,
     lineHeight: 24,
     marginBottom: 24,
   },
-  buttonContainer: {
-    flexDirection: 'row',
+  buttonRow: {
+    flexDirection: "row",
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: '#334155',
+    backgroundColor: "#475569",
     paddingVertical: 16,
     borderRadius: 16,
-    alignItems: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   cancelButtonText: {
-    color: 'white',
-    fontWeight: '500',
+    color: "#ffffff",
+    fontWeight: "500",
   },
   buttonSpacer: {
     width: 12,
   },
-  confirmButton: {
+  confirmButtonWrapper: {
     flex: 1,
   },
-  confirmButtonGradient: {
+  confirmButton: {
     paddingVertical: 16,
     borderRadius: 16,
-    alignItems: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   confirmButtonText: {
-    color: 'white',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
   },
 });
 

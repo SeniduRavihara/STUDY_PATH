@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 type Lesson = {
   id: number;
@@ -91,59 +91,62 @@ export default function LessonScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={parsedSubject.color} className="px-6 pt-14 pb-8">
-        <View className="flex-row items-center mb-4">
+      <LinearGradient colors={parsedSubject.color} style={styles.header}>
+        <View style={styles.headerTop}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="bg-white bg-opacity-20 p-2 rounded-full mr-4"
+            style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white opacity-80 text-sm">
+          <View style={styles.headerInfo}>
+            <Text style={styles.subjectName}>
               {parsedSubject.name}
             </Text>
-            <Text className="text-white text-xl font-bold">
+            <Text style={styles.chapterTitle}>
               {parsedChapter.title}
             </Text>
           </View>
         </View>
 
         {/* Chapter Progress */}
-        <View className="bg-white bg-opacity-30 rounded-full h-2 mb-3">
+        <View style={styles.progressBarContainer}>
           <View
-            className="bg-white rounded-full h-2"
-            style={{
-              width: `${(parsedChapter.completed / parsedChapter.lessons) * 100}%`,
-            }}
+            style={[
+              styles.progressBar,
+              {
+                width: `${(parsedChapter.completed / parsedChapter.lessons) * 100}%`,
+              }
+            ]}
           />
         </View>
-        <Text className="text-white opacity-80 text-sm">
+        <Text style={styles.progressText}>
           {parsedChapter.completed}/{parsedChapter.lessons} lessons completed
         </Text>
       </LinearGradient>
 
       {/* Lessons List */}
-      <View className="px-6 mt-6">
-        <Text className="text-white text-xl font-bold mb-4">Lessons</Text>
+      <View style={styles.lessonsSection}>
+        <Text style={styles.sectionTitle}>Lessons</Text>
 
         {lessons.map((lesson, index) => (
           <TouchableOpacity
             key={lesson.id}
-            className={`rounded-3xl p-5 mb-4 ${
-              lesson.completed
-                ? "bg-slate-800"
-                : "bg-slate-800 border-2 border-blue-500"
-            }`}
+            style={[
+              styles.lessonCard,
+              lesson.completed ? styles.lessonCardCompleted : styles.lessonCardActive
+            ]}
             onPress={() => setSelectedLesson(lesson)}
           >
-            <View className="flex-row items-center">
-              <View className="mr-4">
+            <View style={styles.lessonContent}>
+              <View style={styles.lessonIconContainer}>
                 <View
-                  className="w-10 h-10 rounded-full items-center justify-center"
-                  style={{ backgroundColor: getTypeColor(lesson.type) }}
+                  style={[
+                    styles.lessonIcon,
+                    { backgroundColor: getTypeColor(lesson.type) }
+                  ]}
                 >
                   <Ionicons
                     name={getTypeIcon(lesson.type)}
@@ -153,31 +156,31 @@ export default function LessonScreen() {
                 </View>
               </View>
 
-              <View className="flex-1">
-                <View className="flex-row items-center justify-between mb-1">
-                  <Text className="text-white font-semibold text-base">
+              <View style={styles.lessonInfo}>
+                <View style={styles.lessonTitleRow}>
+                  <Text style={styles.lessonTitle}>
                     {lesson.title}
                   </Text>
                   {lesson.completed && (
-                    <View className="bg-green-500 p-1 rounded-full">
+                    <View style={styles.completedBadge}>
                       <Ionicons name="checkmark" size={16} color="white" />
                     </View>
                   )}
                 </View>
 
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-gray-400 text-sm capitalize">
+                <View style={styles.lessonMetaRow}>
+                  <Text style={styles.lessonMeta}>
                     {lesson.type} • {lesson.duration}
                   </Text>
-                  <View className="bg-yellow-500 px-2 py-1 rounded-full">
-                    <Text className="text-black text-xs font-bold">
+                  <View style={styles.pointsBadge}>
+                    <Text style={styles.pointsText}>
                       {lesson.points}pts
                     </Text>
                   </View>
                 </View>
               </View>
 
-              <View className="ml-3">
+              <View style={styles.lessonAction}>
                 <Ionicons
                   name={
                     lesson.completed
@@ -194,15 +197,15 @@ export default function LessonScreen() {
       </View>
 
       {/* Continue Button */}
-      <View className="px-6 mt-8 mb-8">
+      <View style={styles.continueSection}>
         <LinearGradient
           colors={parsedSubject.color}
-          className="rounded-2xl overflow-hidden"
+          style={styles.continueGradient}
         >
-          <TouchableOpacity className="p-4">
-            <View className="flex-row items-center justify-center">
+          <TouchableOpacity style={styles.continueButton}>
+            <View style={styles.continueContent}>
               <Ionicons name="play" size={24} color="white" />
-              <Text className="text-white font-bold text-lg ml-2">
+              <Text style={styles.continueText}>
                 Continue Learning
               </Text>
             </View>
@@ -212,3 +215,158 @@ export default function LessonScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  backButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 8,
+    borderRadius: 9999,
+    marginRight: 16,
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  subjectName: {
+    color: '#ffffff',
+    opacity: 0.8,
+    fontSize: 14,
+  },
+  chapterTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  progressBarContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 9999,
+    height: 8,
+    marginBottom: 12,
+  },
+  progressBar: {
+    backgroundColor: '#ffffff',
+    borderRadius: 9999,
+    height: 8,
+  },
+  progressText: {
+    color: '#ffffff',
+    opacity: 0.8,
+    fontSize: 14,
+  },
+  lessonsSection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  lessonCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
+  },
+  lessonCardCompleted: {
+    backgroundColor: '#1e293b',
+  },
+  lessonCardActive: {
+    backgroundColor: '#1e293b',
+    borderWidth: 2,
+    borderColor: '#3b82f6',
+  },
+  lessonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  lessonIconContainer: {
+    marginRight: 16,
+  },
+  lessonIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lessonInfo: {
+    flex: 1,
+  },
+  lessonTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  lessonTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  completedBadge: {
+    backgroundColor: '#10b981',
+    padding: 4,
+    borderRadius: 9999,
+  },
+  lessonMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lessonMeta: {
+    color: '#9ca3af',
+    fontSize: 14,
+    textTransform: 'capitalize',
+  },
+  pointsBadge: {
+    backgroundColor: '#eab308',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  pointsText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  lessonAction: {
+    marginLeft: 12,
+  },
+  continueSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  continueGradient: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  continueButton: {
+    padding: 16,
+  },
+  continueContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginLeft: 8,
+  },
+});

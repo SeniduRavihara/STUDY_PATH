@@ -49,29 +49,29 @@ interface LearningFlowPathProps {
 
 // 3-Column Grid System Configuration
 const FLOW_CONFIG = {
-  nodeSpacing: 140, // Vertical spacing between nodes (reduced for better density)
-  leftColumnX: 0.2, // 20% from left edge (left column)
-  centerColumnX: 0.5, // 50% from left edge (center column)
-  rightColumnX: 0.8, // 80% from left edge (right column)
-  startY: 100, // Start 100px from top
-  nodeSize: 110, // Node diameter for positioning (slightly smaller)
-  connectionOffset: 25, // Vertical offset for L-shaped connections
+  nodeSpacing: 140,
+  leftColumnX: 0.2,
+  centerColumnX: 0.5,
+  rightColumnX: 0.8,
+  startY: 100,
+  nodeSize: 110,
+  connectionOffset: 25,
 };
 
 // 3-Column Grid Flow Pattern (Center acts as transition hub)
 const POSITION_PATTERN = [
-  "center", // Row 1: Start center
-  "right", // Row 2: Move right
-  "center", // Row 3: Back to center
-  "left", // Row 4: Move left
-  "center", // Row 5: Back to center
-  "right", // Row 6: Move right
-  "center", // Row 7: Back to center (FIXED!)
-  "left", // Row 8: Move left
-  "center", // Row 9: Back to center
-  "right", // Row 10: Move right
-  "center", // Row 11: Back to center
-  "left", // Row 12: Move left
+  "center",
+  "right",
+  "center",
+  "left",
+  "center",
+  "right",
+  "center",
+  "left",
+  "center",
+  "right",
+  "center",
+  "left",
 ];
 
 // Get smart position for node based on Mimo's organic pattern
@@ -89,10 +89,8 @@ const generateVerticalFlowPositions = (
   const { width: screenWidth } = Dimensions.get("window");
 
   return nodes.map((node, index) => {
-    // Get position from organic pattern
     const positionKey = getSmartPosition(index);
 
-    // Map position to actual X coordinate
     let x: number;
     switch (positionKey) {
       case "left":
@@ -106,7 +104,6 @@ const generateVerticalFlowPositions = (
         break;
     }
 
-    // Calculate Y position with proper spacing
     const y = FLOW_CONFIG.startY + index * FLOW_CONFIG.nodeSpacing;
 
     return {
@@ -153,25 +150,19 @@ const getConnectionPoints = (
   let startPoint: { x: number; y: number };
   let endPoint: { x: number; y: number };
 
-  // FIXED LOGIC: Based on your exact requirements
   if (currentPos === "center" && nextPos === "right") {
-    // 1st node (center) → 2nd node (right): Start from RIGHT side, end at TOP
     startPoint = getNodeAnchorPoint(currentNode, "right");
     endPoint = getNodeAnchorPoint(nextNode, "top");
   } else if (currentPos === "right" && nextPos === "center") {
-    // 2nd node (right) → 3rd node (center): Start from BOTTOM, end at RIGHT side
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "right");
   } else if (currentPos === "center" && nextPos === "left") {
-    // 3rd node (center) → 4th node (left): Start from LEFT side, end at TOP
     startPoint = getNodeAnchorPoint(currentNode, "left");
     endPoint = getNodeAnchorPoint(nextNode, "top");
   } else if (currentPos === "left" && nextPos === "center") {
-    // 4th node (left) → 5th node (center): Start from BOTTOM, end at LEFT side
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "left");
   } else {
-    // Fallback for other combinations
     startPoint = getNodeAnchorPoint(currentNode, "bottom");
     endPoint = getNodeAnchorPoint(nextNode, "top");
   }
@@ -189,55 +180,42 @@ const createVerticalFlowPath = (
   const start = points.start;
   const end = points.end;
 
-  // SPECIFIC L-SHAPE PATTERNS: Based on exact connection types
   const currentPos = getSmartPosition(nodeIndex);
   const nextPos = getSmartPosition(nodeIndex + 1);
 
   let path: string;
 
-  // Create L-shape patterns with smooth corners (small radius)
-  const cornerRadius = 8; // Small radius to smooth the sharp turns
+  const cornerRadius = 8;
 
   if (currentPos === "center" && nextPos === "right") {
-    // 1st → 2nd: Center to Right - go RIGHT first, then DOWN with smooth corner
     const cornerX = end.x - cornerRadius;
     const cornerY = start.y + cornerRadius;
     path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
   } else if (currentPos === "right" && nextPos === "center") {
-    // 2nd → 3rd: Right to Center - go DOWN first, then LEFT with smooth corner
     const cornerX = start.x - cornerRadius;
     const cornerY = end.y - cornerRadius;
     path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
   } else if (currentPos === "center" && nextPos === "left") {
-    // 3rd → 4th: Center to Left - go LEFT first, then DOWN with smooth corner
     const cornerX = end.x + cornerRadius;
     const cornerY = start.y + cornerRadius;
     path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
   } else if (currentPos === "left" && nextPos === "center") {
-    // 4th → 5th: Left to Center - go DOWN first, then RIGHT with smooth corner
     const cornerX = start.x + cornerRadius;
     const cornerY = end.y - cornerRadius;
     path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
   } else if (currentPos === "center" && nextPos === "center") {
-    // Center to Center - straight line down
     path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
   } else {
-    // Fallback: determine based on relative positions
     if (start.x === end.x) {
-      // Same X position - straight line down
       path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     } else if (start.y === end.y) {
-      // Same Y position - straight line across
       path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
     } else {
-      // Different X and Y - create L-shape with smooth corner
       if (end.x > start.x) {
-        // Target is to the RIGHT of current - go RIGHT first, then DOWN with smooth corner
         const cornerX = end.x - cornerRadius;
         const cornerY = start.y + cornerRadius;
         path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
       } else {
-        // Target is to the LEFT of current - go DOWN first, then LEFT with smooth corner
         const cornerX = start.x - cornerRadius;
         const cornerY = end.y - cornerRadius;
         path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
@@ -285,7 +263,6 @@ const LearningNodeComponent: React.FC<{
     }).start();
   };
 
-  // Pulse animation for current node
   React.useEffect(() => {
     if (node.status === "current") {
       const pulse = Animated.loop(
@@ -308,18 +285,18 @@ const LearningNodeComponent: React.FC<{
   }, [node.status, pulseAnim]);
 
   const getNodeSize = () => {
-    const baseSize = FLOW_CONFIG.nodeSize; // Use the configured node size (160px)
+    const baseSize = FLOW_CONFIG.nodeSize;
     switch (node.status) {
       case "current":
-        return baseSize; // Full size for current node
+        return baseSize;
       case "completed":
-        return baseSize * 0.9; // 90% of base size
+        return baseSize * 0.9;
       case "available":
-        return baseSize * 0.85; // 85% of base size
+        return baseSize * 0.85;
       case "locked":
-        return baseSize * 0.8; // 80% of base size
+        return baseSize * 0.8;
       default:
-        return baseSize * 0.85; // 85% of base size
+        return baseSize * 0.85;
     }
   };
 
@@ -351,18 +328,21 @@ const LearningNodeComponent: React.FC<{
 
   const nodeSize = getNodeSize();
   const isDisabled = node.status === "locked";
+  const nodeColor = getNodeColor();
 
   return (
     <Animated.View
-      style={{
-        position: "absolute",
-        left: node.position.x - nodeSize / 2,
-        top: node.position.y - nodeSize / 2,
-        transform: [
-          { scale: scaleAnim },
-          { scale: node.status === "current" ? pulseAnim : 1 },
-        ],
-      }}
+      style={[
+        styles.nodeContainer,
+        {
+          left: node.position.x - nodeSize / 2,
+          top: node.position.y - nodeSize / 2,
+          transform: [
+            { scale: scaleAnim },
+            { scale: node.status === "current" ? pulseAnim : 1 },
+          ],
+        },
+      ]}
     >
       <TouchableOpacity
         onPress={onPress}
@@ -372,17 +352,17 @@ const LearningNodeComponent: React.FC<{
         activeOpacity={0.8}
       >
         <LinearGradient
-          colors={getNodeColor()}
-          style={[styles.nodeGradient, {
-            width: nodeSize,
-            height: nodeSize,
-            borderRadius: 16,
-            shadowColor: getNodeColor()[0],
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }]}
+          colors={nodeColor}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.nodeGradient,
+            {
+              width: nodeSize,
+              height: nodeSize,
+              shadowColor: nodeColor[0],
+            },
+          ]}
         >
           <Ionicons
             name={getNodeIcon() as any}
@@ -392,19 +372,27 @@ const LearningNodeComponent: React.FC<{
         </LinearGradient>
 
         {/* Node label */}
-        <View style={[styles.nodeLabel, { minWidth: 100 }]}>
-          <Text style={styles.nodeLabelText}
-            style={{
-              color: node.status === "locked" ? "#6b7280" : "#ffffff",
-            }}
+        <View style={styles.nodeLabelContainer}>
+          <Text
+            style={[
+              styles.nodeTitle,
+              {
+                color: node.status === "locked" ? "#6b7280" : "#ffffff",
+              },
+            ]}
             numberOfLines={2}
           >
             {node.title}
           </Text>
           {node.xp > 0 && (
-            <Text style={[styles.nodeXpText, {
-              color: node.status === "locked" ? "#6b7280" : "#fbbf24",
-            }]}>
+            <Text
+              style={[
+                styles.nodeXp,
+                {
+                  color: node.status === "locked" ? "#6b7280" : "#fbbf24",
+                },
+              ]}
+            >
               +{node.xp} XP
             </Text>
           )}
@@ -412,15 +400,20 @@ const LearningNodeComponent: React.FC<{
 
         {/* Difficulty indicator */}
         {node.status !== "locked" && (
-          <View style={[styles.difficultyIndicator, { minWidth: 20 }]}>
-            <Text style={[styles.difficultyText, {
-              color:
-                node.difficulty === "easy"
-                  ? "#10b981"
-                  : node.difficulty === "medium"
-                    ? "#f59e0b"
-                    : "#ef4444",
-            }]}>
+          <View style={styles.difficultyBadge}>
+            <Text
+              style={[
+                styles.difficultyText,
+                {
+                  color:
+                    node.difficulty === "easy"
+                      ? "#10b981"
+                      : node.difficulty === "medium"
+                        ? "#f59e0b"
+                        : "#ef4444",
+                },
+              ]}
+            >
               {node.difficulty === "easy"
                 ? "E"
                 : node.difficulty === "medium"
@@ -442,154 +435,138 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
   courseProgress,
   onTitlePress,
 }) => {
-  // Generate vertical flow positions and paths
   const flowNodes = generateVerticalFlowPositions(nodes);
   const verticalPaths = generateVerticalFlowPaths(flowNodes);
 
-  // Calculate total content height for scrolling (shows 4-5 nodes at once)
   const totalContentHeight =
     flowNodes.length > 0
       ? flowNodes[flowNodes.length - 1].position.y +
         FLOW_CONFIG.nodeSpacing +
-        300 // Extra padding for better scrolling
+        300
       : Dimensions.get("window").height;
 
   return (
-    <View className="flex-1 bg-slate-900">
+    <View style={styles.container}>
       {/* Header with gamification elements */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-6"
+        style={styles.headerGradient}
       >
         {/* User Stats */}
-        <View className="flex-row justify-between items-center mb-4">
-          <View className="flex-row space-x-4">
+        <View style={styles.statsContainer}>
+          <View style={styles.statsRow}>
             {/* Hearts */}
-            <View className="bg-red-500 bg-opacity-20 px-4 py-2 rounded-full flex-row items-center">
+            <View style={styles.statBadge}>
               <Ionicons name="heart" size={20} color="#ef4444" />
-              <Text className="text-white font-bold ml-2">
-                {userStats.hearts}
-              </Text>
+              <Text style={styles.statText}>{userStats.hearts}</Text>
             </View>
 
             {/* Coins */}
-            <View className="bg-yellow-500 bg-opacity-20 px-4 py-2 rounded-full flex-row items-center">
+            <View style={[styles.statBadge, styles.coinBadge]}>
               <Ionicons name="diamond" size={20} color="#fbbf24" />
-              <Text className="text-white font-bold ml-2">
-                {userStats.coins}
-              </Text>
+              <Text style={styles.statText}>{userStats.coins}</Text>
             </View>
 
             {/* Streak */}
-            <View className="bg-orange-500 bg-opacity-20 px-4 py-2 rounded-full flex-row items-center">
+            <View style={[styles.statBadge, styles.streakBadge]}>
               <Ionicons name="flame" size={20} color="#f97316" />
-              <Text className="text-white font-bold ml-2">
-                {userStats.streak}
-              </Text>
+              <Text style={styles.statText}>{userStats.streak}</Text>
             </View>
           </View>
 
           {/* Menu */}
-          <TouchableOpacity className="bg-slate-800 p-3 rounded-full">
+          <TouchableOpacity style={styles.menuButton}>
             <Ionicons name="menu" size={24} color="#00d4ff" />
           </TouchableOpacity>
         </View>
 
         {/* Course Title */}
-        <View className="bg-slate-800 bg-opacity-50 px-6 py-4 rounded-2xl mb-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1">
-              <TouchableOpacity
-                onPress={onTitlePress}
-                disabled={!onTitlePress}
-                activeOpacity={onTitlePress ? 0.7 : 1}
+        <View style={styles.courseTitleContainer}>
+          <View style={styles.courseTitleContent}>
+            <TouchableOpacity
+              onPress={onTitlePress}
+              disabled={!onTitlePress}
+              activeOpacity={onTitlePress ? 0.7 : 1}
+            >
+              <Text
+                style={[
+                  styles.courseTitle,
+                  {
+                    color: onTitlePress ? "#60a5fa" : "#ffffff",
+                  },
+                ]}
               >
-                <Text className={`text-2xl font-bold ${
-                  onTitlePress ? "text-blue-400" : "text-white"
-                }`}>
-                  {courseTitle}
-                </Text>
-                <Text className="text-gray-400 text-sm mt-1">
-                  {Math.round(courseProgress)}% Complete
-                </Text>
-                {onTitlePress && (
-                  <Text className="text-blue-300 text-xs mt-1">
-                    Tap to change topic
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-            <View className="items-end">
-              <Text className="text-white text-xl font-bold">
-                {userStats.totalXp}
+                {courseTitle}
               </Text>
-              <Text className="text-gray-400 text-xs">Total XP</Text>
-            </View>
+              <Text style={styles.courseProgress}>
+                {Math.round(courseProgress)}% Complete
+              </Text>
+              {onTitlePress && (
+                <Text style={styles.courseHint}>Tap to change topic</Text>
+              )}
+            </TouchableOpacity>
           </View>
+          <View style={styles.xpContainer}>
+            <Text style={styles.xpValue}>{userStats.totalXp}</Text>
+            <Text style={styles.xpLabel}>Total XP</Text>
+          </View>
+        </View>
 
-          {/* Progress Bar */}
-          <View className="bg-slate-700 rounded-full h-3 mt-3">
-            <LinearGradient
-              colors={["#8b5cf6", "#7c3aed"]}
-              className="rounded-full h-3"
-              style={{ width: `${courseProgress}%` }}
-            />
-          </View>
+        {/* Progress Bar */}
+        <View style={styles.progressBarContainer}>
+          <LinearGradient
+            colors={["#8b5cf6", "#7c3aed"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[
+              styles.progressBarFill,
+              { width: `${courseProgress}%` },
+            ]}
+          />
         </View>
       </LinearGradient>
 
       {/* Vertical Flow ScrollView */}
       <ScrollView
-        className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          minHeight: totalContentHeight,
-          paddingBottom: 100,
-        }}
-        style={{
-          backgroundColor: '#0f172a', // slate-900 background
-        }}
+        contentContainerStyle={[
+          styles.scrollContentContainer,
+          { minHeight: totalContentHeight },
+        ]}
+        style={styles.scrollView}
       >
         <View
-          style={[styles.flowContainer, {
-            minHeight: totalContentHeight,
-            width: screenWidth,
-          }]}
+          style={[
+            styles.flowContainer,
+            {
+              minHeight: totalContentHeight,
+              width: screenWidth,
+            },
+          ]}
         >
           {/* Dotted Grid Background */}
-          <View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: '#0f172a',
-            }}
-          >
-            {/* Create dotted grid with larger spacing for better performance */}
+          <View style={styles.gridBackground}>
             {Array.from({ length: Math.ceil(totalContentHeight / 40) }, (_, row) =>
               Array.from({ length: Math.ceil(screenWidth / 40) }, (_, col) => (
                 <View
                   key={`dot-${row}-${col}`}
-                  style={{
-                    position: 'absolute',
-                    left: col * 40,
-                    top: row * 40,
-                    width: 2,
-                    height: 2,
-                    backgroundColor: '#374151',
-                    borderRadius: 1,
-                  }}
+                  style={[
+                    styles.gridDot,
+                    {
+                      left: col * 40,
+                      top: row * 40,
+                    },
+                  ]}
                 />
               ))
             )}
           </View>
+
           {/* Vertical Flow Paths SVG */}
           <Svg
             height={totalContentHeight}
             width="100%"
-            style={{ position: "absolute", top: 0, left: 0 }}
+            style={styles.svgContainer}
           >
             {verticalPaths.map((path, index) => (
               <Path
@@ -618,22 +595,22 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
       </ScrollView>
 
       {/* Bottom Info Panel */}
-      <View className="absolute bottom-0 left-0 right-0 bg-slate-800 bg-opacity-95 backdrop-blur-sm p-4">
-        <View className="flex-row justify-between items-center">
+      <View style={styles.bottomPanel}>
+        <View style={styles.bottomContent}>
           <View>
-            <Text className="text-white font-semibold">
+            <Text style={styles.nextLabel}>
               Next:{" "}
               {flowNodes.find(n => n.status === "current")?.title ||
                 "Complete the course!"}
             </Text>
-            <Text className="text-gray-400 text-sm">
+            <Text style={styles.completedLabel}>
               {flowNodes.filter(n => n.status === "completed").length} of{" "}
               {flowNodes.length} completed
             </Text>
           </View>
-          <View className="flex-row items-center">
+          <View style={styles.trophyContainer}>
             <Ionicons name="trophy" size={20} color="#fbbf24" />
-            <Text className="text-yellow-400 font-bold ml-1">
+            <Text style={styles.trophyText}>
               {Math.round(courseProgress)}%
             </Text>
           </View>
@@ -644,47 +621,201 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  headerGradient: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  statBadge: {
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  coinBadge: {
+    backgroundColor: "rgba(251, 191, 36, 0.2)",
+  },
+  streakBadge: {
+    backgroundColor: "rgba(249, 115, 22, 0.2)",
+  },
+  statText: {
+    color: "#ffffff",
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+  menuButton: {
+    backgroundColor: "#1e293b",
+    padding: 12,
+    borderRadius: 9999,
+  },
+  courseTitleContainer: {
+    backgroundColor: "rgba(30, 41, 59, 0.5)",
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  courseTitleContent: {
+    flex: 1,
+  },
+  courseTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  courseProgress: {
+    color: "#9ca3af",
+    fontSize: 14,
+    marginTop: 4,
+  },
+  courseHint: {
+    color: "#93c5fd",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  xpContainer: {
+    alignItems: "flex-end",
+  },
+  xpValue: {
+    color: "#ffffff",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  xpLabel: {
+    color: "#9ca3af",
+    fontSize: 12,
+  },
+  progressBarContainer: {
+    backgroundColor: "#334155",
+    borderRadius: 9999,
+    height: 12,
+  },
+  progressBarFill: {
+    borderRadius: 9999,
+    height: 12,
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  scrollContentContainer: {
+    paddingBottom: 100,
+  },
+  flowContainer: {
+    position: "relative",
+    backgroundColor: "#0f172a",
+  },
+  gridBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#0f172a",
+  },
+  gridDot: {
+    position: "absolute",
+    width: 2,
+    height: 2,
+    backgroundColor: "#4b5563",
+    borderRadius: 1,
+  },
+  svgContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+  },
+  nodeContainer: {
+    position: "absolute",
+  },
   nodeGradient: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 16,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  nodeLabel: {
-    position: 'absolute',
+  nodeLabelContainer: {
+    position: "absolute",
     bottom: -32,
-    left: '50%',
+    left: "50%",
     transform: [{ translateX: -50 }],
+    minWidth: 100,
   },
-  nodeLabelText: {
-    textAlign: 'center',
+  nodeTitle: {
+    textAlign: "center",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-  nodeXpText: {
-    textAlign: 'center',
+  nodeXp: {
+    textAlign: "center",
     fontSize: 12,
     marginTop: 4,
   },
-  difficultyIndicator: {
-    position: 'absolute',
+  difficultyBadge: {
+    position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    borderRadius: 9999,
     paddingHorizontal: 8,
     paddingVertical: 4,
+    minWidth: 20,
   },
   difficultyText: {
     fontSize: 12,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
-  flowContainer: {
-    position: 'relative',
-    backgroundColor: '#0f172a',
+  bottomPanel: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(30, 41, 59, 0.95)",
+    padding: 16,
+  },
+  bottomContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  nextLabel: {
+    color: "#ffffff",
+    fontWeight: "600",
+  },
+  completedLabel: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  trophyContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  trophyText: {
+    color: "#fbbf24",
+    fontWeight: "bold",
+    marginLeft: 4,
   },
 });
 

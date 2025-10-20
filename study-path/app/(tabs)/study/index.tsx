@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View
@@ -99,7 +100,7 @@ export default function StudyScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-900"
+      style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -107,81 +108,81 @@ export default function StudyScreen() {
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-8"
+        style={styles.header}
       >
-        <View className="flex-row justify-between items-center">
+        <View style={styles.headerContent}>
           <View>
-            <Text className="text-white text-2xl font-bold">Study Hub</Text>
-            <Text className="text-gray-400 text-base">
+            <Text style={styles.headerTitle}>Study Hub</Text>
+            <Text style={styles.headerSubtitle}>
               Your subscribed subjects
             </Text>
           </View>
-          <TouchableOpacity className="bg-slate-800 p-3 rounded-full">
+          <TouchableOpacity style={styles.searchButton}>
             <Ionicons name="search" size={24} color="#00d4ff" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
 
       {/* Subjects */}
-      <View className="px-6 mt-8">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-white text-xl font-bold">Your Subjects</Text>
+      <View style={styles.subjectsSection}>
+        <View style={styles.subjectsHeader}>
+          <Text style={styles.sectionTitle}>Your Subjects</Text>
           <TouchableOpacity
             onPress={handleSubscribeToSubjects}
-            className="bg-blue-600 px-4 py-2 rounded-full"
+            style={styles.addButton}
           >
-            <Text className="text-white text-sm font-medium">
+            <Text style={styles.addButtonText}>
               + Add Subject
             </Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
-          <View className="items-center py-8">
-            <Text className="text-gray-400">Loading your subjects...</Text>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading your subjects...</Text>
           </View>
         ) : subscribedSubjects.length === 0 ? (
-          <View className="items-center py-8">
+          <View style={styles.emptyState}>
             <Ionicons name="book-outline" size={64} color="#6b7280" />
-            <Text className="text-white text-lg font-semibold mt-4">
+            <Text style={styles.emptyTitle}>
               No Subjects Yet
             </Text>
-            <Text className="text-gray-400 text-center mt-2">
+            <Text style={styles.emptyText}>
               Subscribe to subjects to start learning
             </Text>
             <TouchableOpacity
               onPress={handleSubscribeToSubjects}
-              className="bg-blue-600 px-6 py-3 rounded-full mt-4"
+              style={styles.browseButton}
             >
-              <Text className="text-white font-medium">Browse Subjects</Text>
+              <Text style={styles.browseButtonText}>Browse Subjects</Text>
             </TouchableOpacity>
           </View>
         ) : (
           subscribedSubjects.map((subject) => (
             <TouchableOpacity
               key={subject.id}
-              className="mb-4"
+              style={styles.subjectCard}
               onPress={() => handleNavigateToFlow(subject)}
               disabled={navigatingToFlow === subject.id}
             >
               <LinearGradient
                 colors={["#1a1a2e", "#16213e"]}
-                className="p-6 rounded-3xl"
+                style={styles.subjectGradient}
               >
                 {navigatingToFlow === subject.id && (
-                  <View className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center z-10">
-                    <View className="bg-slate-800 p-4 rounded-2xl flex-row items-center">
+                  <View style={styles.loadingOverlay}>
+                    <View style={styles.loadingCard}>
                       <ActivityIndicator size="small" color="#00d4ff" />
-                      <Text className="text-white ml-3 font-medium">
+                      <Text style={styles.loadingCardText}>
                         Loading...
                       </Text>
                     </View>
                   </View>
                 )}
-                <View className="flex-row items-center">
+                <View style={styles.subjectContent}>
                   <LinearGradient
                     colors={subject.color || ["#3B82F6", "#3B82F6"]}
-                    className="p-4 rounded-2xl mr-4"
+                    style={styles.iconContainer}
                   >
                     <Ionicons
                       name={subject.icon as any}
@@ -190,45 +191,47 @@ export default function StudyScreen() {
                     />
                   </LinearGradient>
 
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-center mb-2">
-                      <Text className="text-white text-lg font-bold">
+                  <View style={styles.subjectInfo}>
+                    <View style={styles.subjectTitleRow}>
+                      <Text style={styles.subjectTitle}>
                         {subject.name}
                       </Text>
-                      <View className="bg-slate-700 px-3 py-1 rounded-full">
-                        <Text className="text-gray-300 text-xs">
+                      <View style={styles.difficultyBadge}>
+                        <Text style={styles.difficultyText}>
                           {subject.difficulty}
                         </Text>
                       </View>
                     </View>
 
-                    <View className="flex-row justify-between items-center mb-3">
-                      <Text className="text-gray-400 text-sm">
+                    <View style={styles.subjectStatsRow}>
+                      <Text style={styles.chaptersText}>
                         {subject.completed}/{subject.chapters} chapters
                         completed
                       </Text>
-                      <View className="flex-row items-center">
+                      <View style={styles.xpContainer}>
                         <Ionicons name="star" size={16} color="#FFD700" />
-                        <Text className="text-yellow-400 text-sm ml-1">
+                        <Text style={styles.xpText}>
                           {subject.xp} XP
                         </Text>
                       </View>
                     </View>
 
-                    <View className="bg-slate-700 rounded-full h-2">
+                    <View style={styles.progressBarContainer}>
                       <LinearGradient
                         colors={subject.color || ["#3B82F6", "#3B82F6"]}
-                        className="rounded-full h-2"
-                        style={{
-                          width: `${(subject.completed / subject.chapters) * 100}%`
-                        }}
+                        style={[
+                          styles.progressBar,
+                          {
+                            width: `${(subject.completed / subject.chapters) * 100}%`
+                          }
+                        ]}
                       />
                     </View>
 
                     {subject.streak > 0 && (
-                      <View className="flex-row items-center mt-2">
+                      <View style={styles.streakContainer}>
                         <Ionicons name="flame" size={16} color="#FF6B6B" />
-                        <Text className="text-red-400 text-xs ml-1">
+                        <Text style={styles.streakText}>
                           {subject.streak} day streak
                         </Text>
                       </View>
@@ -243,7 +246,202 @@ export default function StudyScreen() {
         )}
       </View>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+  },
+  searchButton: {
+    backgroundColor: '#1e293b',
+    padding: 12,
+    borderRadius: 9999,
+  },
+  subjectsSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  subjectsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  addButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+  },
+  addButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  loadingText: {
+    color: '#9ca3af',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  browseButton: {
+    backgroundColor: '#2563eb',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    marginTop: 16,
+  },
+  browseButtonText: {
+    color: '#ffffff',
+    fontWeight: '500',
+  },
+  subjectCard: {
+    marginBottom: 16,
+  },
+  subjectGradient: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  loadingCard: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingCardText: {
+    color: '#ffffff',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+  subjectContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    padding: 16,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  subjectInfo: {
+    flex: 1,
+  },
+  subjectTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  subjectTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  difficultyBadge: {
+    backgroundColor: '#334155',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  difficultyText: {
+    color: '#d1d5db',
+    fontSize: 12,
+  },
+  subjectStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  chaptersText: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  xpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  xpText: {
+    color: '#facc15',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  progressBarContainer: {
+    backgroundColor: '#334155',
+    borderRadius: 9999,
+    height: 8,
+  },
+  progressBar: {
+    borderRadius: 9999,
+    height: 8,
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  streakText: {
+    color: '#f87171',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+});

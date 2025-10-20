@@ -6,6 +6,7 @@ import {
   Alert,
   Linking,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -65,34 +66,34 @@ export default function HelpSupportScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-6"
+        style={styles.header}
       >
-        <View className="flex-row items-center justify-between">
+        <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Help & Support</Text>
-          <View style={{ width: 24 }} />
+          <Text style={styles.headerTitle}>Help & Support</Text>
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
       {/* Quick Actions */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-lg font-bold mb-4">Quick Actions</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleContactSupport}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="chatbubble-outline" size={24} color="#3b82f6" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Contact Support</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Contact Support</Text>
+              <Text style={styles.actionSubtitle}>
                 Get help from our team
               </Text>
             </View>
@@ -101,28 +102,28 @@ export default function HelpSupportScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleRateApp}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="star-outline" size={24} color="#f59e0b" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Rate App</Text>
-              <Text className="text-gray-400 text-sm">Share your feedback</Text>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Rate App</Text>
+              <Text style={styles.actionSubtitle}>Share your feedback</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={handleShareApp}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="share-outline" size={24} color="#10b981" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Share App</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Share App</Text>
+              <Text style={styles.actionSubtitle}>
                 Tell your friends about us
               </Text>
             </View>
@@ -132,17 +133,17 @@ export default function HelpSupportScreen() {
       </View>
 
       {/* FAQ Section */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-lg font-bold mb-4">
+      <View style={styles.faqSection}>
+        <Text style={styles.sectionTitle}>
           Frequently Asked Questions
         </Text>
 
         {faqItems.map((item, index) => (
-          <View key={index} className="bg-slate-800 p-4 rounded-2xl mb-3">
-            <Text className="text-white font-semibold mb-2">
+          <View key={index} style={styles.faqCard}>
+            <Text style={styles.faqQuestion}>
               {item.question}
             </Text>
-            <Text className="text-gray-400 text-sm leading-5">
+            <Text style={styles.faqAnswer}>
               {item.answer}
             </Text>
           </View>
@@ -150,18 +151,18 @@ export default function HelpSupportScreen() {
       </View>
 
       {/* Resources Section */}
-      <View className="px-6 mt-8 mb-8">
-        <Text className="text-white text-lg font-bold mb-4">Resources</Text>
+      <View style={styles.resourcesSection}>
+        <Text style={styles.sectionTitle}>Resources</Text>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={() => Linking.openURL("https://studypath.app/privacy")}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="shield-outline" size={24} color="#6b7280" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Privacy Policy</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Privacy Policy</Text>
+              <Text style={styles.actionSubtitle}>
                 How we protect your data
               </Text>
             </View>
@@ -170,14 +171,14 @@ export default function HelpSupportScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={() => Linking.openURL("https://studypath.app/terms")}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="document-text-outline" size={24} color="#6b7280" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Terms of Service</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Terms of Service</Text>
+              <Text style={styles.actionSubtitle}>
                 Our terms and conditions
               </Text>
             </View>
@@ -186,14 +187,14 @@ export default function HelpSupportScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.actionCard}
           onPress={() => Linking.openURL("https://studypath.app/tutorials")}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionContent}>
             <Ionicons name="play-circle-outline" size={24} color="#6b7280" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Video Tutorials</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionTitle}>Video Tutorials</Text>
+              <Text style={styles.actionSubtitle}>
                 Learn how to use the app
               </Text>
             </View>
@@ -204,3 +205,85 @@ export default function HelpSupportScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  section: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  sectionTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  actionCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  actionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionTextContainer: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  actionTitle: {
+    color: "white",
+    fontWeight: "600",
+  },
+  actionSubtitle: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  faqSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  faqCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  faqQuestion: {
+    color: "white",
+    fontWeight: "600",
+    marginBottom: 8,
+  },
+  faqAnswer: {
+    color: "#9ca3af",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  resourcesSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+});

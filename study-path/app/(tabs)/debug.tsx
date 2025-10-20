@@ -1,7 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   checkAuthStorage,
@@ -15,42 +15,42 @@ export default function DebugScreen() {
   const { user, session, loading } = useAuth();
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-8"
+        style={styles.header}
       >
-        <Text className="text-white text-2xl font-bold">Debug Tools</Text>
-        <Text className="text-gray-400 text-base">
+        <Text style={styles.headerTitle}>Debug Tools</Text>
+        <Text style={styles.headerSubtitle}>
           Developer utilities and database tools
         </Text>
       </LinearGradient>
 
-      <View className="px-6 mt-8 space-y-6">
+      <View style={styles.content}>
         {/* Authentication Tools */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             🔐 Authentication Tools
           </Text>
 
           {/* Current Auth Status */}
-          <View className="bg-slate-700 p-4 rounded-xl mb-4">
-            <Text className="text-white font-semibold mb-2">
+          <View style={styles.statusBox}>
+            <Text style={styles.statusTitle}>
               Current Status:
             </Text>
-            <Text className="text-gray-300 text-sm">
+            <Text style={styles.statusText}>
               User: {user?.email || "Not logged in"}
             </Text>
-            <Text className="text-gray-300 text-sm">
+            <Text style={styles.statusText}>
               Loading: {loading ? "Yes" : "No"}
             </Text>
-            <Text className="text-gray-300 text-sm">
+            <Text style={styles.statusText}>
               Session: {session ? "Active" : "None"}
             </Text>
           </View>
 
           <TouchableOpacity
-            className="bg-blue-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonBlue]}
             onPress={async () => {
               try {
                 const info = await getSessionInfo();
@@ -64,16 +64,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🔍 Check Session Info
             </Text>
-            <Text className="text-blue-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextBlue]}>
               Get detailed session information
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-green-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonGreen]}
             onPress={async () => {
               try {
                 const result = await checkAuthStorage();
@@ -89,16 +89,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               📱 Check Storage
             </Text>
-            <Text className="text-green-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextGreen]}>
               Check if auth data is stored
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-yellow-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonYellow]}
             onPress={async () => {
               try {
                 const result = await refreshSession();
@@ -113,16 +113,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🔄 Refresh Session
             </Text>
-            <Text className="text-yellow-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextYellow]}>
               Force refresh authentication session
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-red-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonRed]}
             onPress={async () => {
               Alert.alert(
                 "Clear Auth Storage",
@@ -153,23 +153,23 @@ export default function DebugScreen() {
               );
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🗑️ Clear Auth Storage
             </Text>
-            <Text className="text-red-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextRed]}>
               Clear all stored authentication data
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Database Tools */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             🚀 Drizzle ORM Tools
           </Text>
 
           <TouchableOpacity
-            className="bg-purple-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonPurple]}
             onPress={async () => {
               try {
                 const drizzleQuizService = await import(
@@ -182,16 +182,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🧪 Test Drizzle ORM
             </Text>
-            <Text className="text-purple-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextPurple]}>
               Create sample data with Drizzle
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-green-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonGreen]}
             onPress={async () => {
               try {
                 const drizzleQuizService = await import(
@@ -205,16 +205,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               📈 Log Database Stats
             </Text>
-            <Text className="text-green-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextGreen]}>
               Print table counts to console
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-orange-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonOrange]}
             onPress={async () => {
               try {
                 const drizzleQuizService = await import(
@@ -228,16 +228,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🌱 Re-seed Database
             </Text>
-            <Text className="text-orange-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextOrange]}>
               Clear and add sample data
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-red-500 p-4 rounded-xl"
+            style={[styles.button, styles.buttonRed, styles.buttonLast]}
             onPress={async () => {
               try {
                 // Clear SQLite database
@@ -271,23 +271,23 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🗑️ Clear Database
             </Text>
-            <Text className="text-red-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextRed]}>
               Clear SQLite + Reset Import Flags
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Full Reset */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             ⚠️ Full Reset
           </Text>
 
           <TouchableOpacity
-            className="bg-red-600 p-4 rounded-xl"
+            style={[styles.button, styles.buttonRedDark, styles.buttonLast]}
             onPress={async () => {
               Alert.alert(
                 "Full Reset",
@@ -340,23 +340,23 @@ export default function DebugScreen() {
               );
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🔥 Full Reset Everything
             </Text>
-            <Text className="text-red-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextRed]}>
               Clear ALL data + Reset ALL flags (with confirmation)
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Quiz Tools */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             🎯 Quiz Tools
           </Text>
 
           <TouchableOpacity
-            className="bg-purple-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonPurple]}
             onPress={async () => {
               try {
                 const drizzleQuizService = await import(
@@ -372,16 +372,16 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               📚 Log Math Quizzes
             </Text>
-            <Text className="text-purple-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextPurple]}>
               Show all Mathematics quizzes
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-indigo-500 p-4 rounded-xl"
+            style={[styles.button, styles.buttonIndigo, styles.buttonLast]}
             onPress={async () => {
               try {
                 const drizzleQuizService = await import(
@@ -394,23 +394,23 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🔧 Initialize Quiz Service
             </Text>
-            <Text className="text-indigo-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextIndigo]}>
               Force initialize database
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Feed Import Management */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             📥 Feed Import Management
           </Text>
 
           <TouchableOpacity
-            className="bg-red-500 p-4 rounded-xl mb-4"
+            style={[styles.button, styles.buttonRed, styles.buttonLast]}
             onPress={async () => {
               try {
                 const { FeedService } = await import("../../lib/feedService");
@@ -431,69 +431,206 @@ export default function DebugScreen() {
               }
             }}
           >
-            <Text className="text-white font-semibold text-center text-lg">
+            <Text style={styles.buttonText}>
               🔄 Reset Import Flags
             </Text>
-            <Text className="text-red-100 text-center text-sm mt-1">
+            <Text style={[styles.buttonSubtext, styles.buttonSubtextRed]}>
               Reset all quiz pack import flags in Supabase
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* App Info */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">ℹ️ App Info</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ℹ️ App Info</Text>
 
-          <View className="space-y-2">
-            <Text className="text-gray-300">
-              <Text className="font-semibold">Version:</Text> 1.0.0
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>Version:</Text> 1.0.0
             </Text>
-            <Text className="text-gray-300">
-              <Text className="font-semibold">Database:</Text> SQLite + Drizzle
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>Database:</Text> SQLite + Drizzle
               ORM
             </Text>
-            <Text className="text-gray-300">
-              <Text className="font-semibold">Platform:</Text> Expo SDK 51
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>Platform:</Text> Expo SDK 51
             </Text>
-            <Text className="text-gray-300">
-              <Text className="font-semibold">Database Location:</Text> App
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>Database Location:</Text> App
               Internal Storage
             </Text>
-            <Text className="text-gray-300">
-              <Text className="font-semibold">Database File:</Text> studypath.db
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>Database File:</Text> studypath.db
             </Text>
-            <Text className="text-gray-300">
-              <Text className="font-semibold">ORM:</Text> Drizzle (Type-safe)
+            <Text style={styles.infoText}>
+              <Text style={styles.infoLabel}>ORM:</Text> Drizzle (Type-safe)
             </Text>
           </View>
         </View>
 
         {/* Instructions */}
-        <View className="bg-slate-800 p-6 rounded-2xl">
-          <Text className="text-white text-lg font-bold mb-4">
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
             📖 Instructions
           </Text>
 
-          <Text className="text-gray-300 text-sm leading-6">
-            • <Text className="font-semibold">Test Drizzle ORM:</Text> Creates
+          <Text style={styles.instructionText}>
+            • <Text style={styles.instructionBold}>Test Drizzle ORM:</Text> Creates
             sample data using Drizzle{"\n"}•{" "}
-            <Text className="font-semibold">Log Stats:</Text> Prints table
+            <Text style={styles.instructionBold}>Log Stats:</Text> Prints table
             counts to the console{"\n"}•{" "}
-            <Text className="font-semibold">Re-seed:</Text> Clears and adds
+            <Text style={styles.instructionBold}>Re-seed:</Text> Clears and adds
             sample quiz data{"\n"}•{" "}
-            <Text className="font-semibold">Clear:</Text> Removes all data from
+            <Text style={styles.instructionBold}>Clear:</Text> Removes all data from
             database{"\n"}•{" "}
-            <Text className="font-semibold">Log Math Quizzes:</Text> Shows all
+            <Text style={styles.instructionBold}>Log Math Quizzes:</Text> Shows all
             Mathematics quizzes{"\n"}•{" "}
-            <Text className="font-semibold">Initialize:</Text> Force initialize
+            <Text style={styles.instructionBold}>Initialize:</Text> Force initialize
             Drizzle database{"\n"}•{" "}
-            <Text className="font-semibold">Check console:</Text> Open developer
+            <Text style={styles.instructionBold}>Check console:</Text> Open developer
             tools to see logs
           </Text>
         </View>
       </View>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+  },
+  content: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    gap: 24,
+  },
+  section: {
+    backgroundColor: '#1e293b',
+    padding: 24,
+    borderRadius: 16,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  statusBox: {
+    backgroundColor: '#334155',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  statusTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  statusText: {
+    color: '#d1d5db',
+    fontSize: 14,
+  },
+  button: {
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  buttonLast: {
+    marginBottom: 0,
+  },
+  buttonBlue: {
+    backgroundColor: '#3b82f6',
+  },
+  buttonGreen: {
+    backgroundColor: '#22c55e',
+  },
+  buttonYellow: {
+    backgroundColor: '#eab308',
+  },
+  buttonRed: {
+    backgroundColor: '#ef4444',
+  },
+  buttonRedDark: {
+    backgroundColor: '#dc2626',
+  },
+  buttonPurple: {
+    backgroundColor: '#a855f7',
+  },
+  buttonOrange: {
+    backgroundColor: '#f97316',
+  },
+  buttonIndigo: {
+    backgroundColor: '#6366f1',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    textAlign: 'center',
+    fontSize: 18,
+  },
+  buttonSubtext: {
+    textAlign: 'center',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  buttonSubtextBlue: {
+    color: '#dbeafe',
+  },
+  buttonSubtextGreen: {
+    color: '#dcfce7',
+  },
+  buttonSubtextYellow: {
+    color: '#fef9c3',
+  },
+  buttonSubtextRed: {
+    color: '#fecaca',
+  },
+  buttonSubtextPurple: {
+    color: '#f3e8ff',
+  },
+  buttonSubtextOrange: {
+    color: '#fed7aa',
+  },
+  buttonSubtextIndigo: {
+    color: '#e0e7ff',
+  },
+  infoContainer: {
+    gap: 8,
+  },
+  infoText: {
+    color: '#d1d5db',
+  },
+  infoLabel: {
+    fontWeight: '600',
+  },
+  instructionText: {
+    color: '#d1d5db',
+    fontSize: 14,
+    lineHeight: 24,
+  },
+  instructionBold: {
+    fontWeight: '600',
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+});

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { supabase } from "../../../superbase/supabase";
 import { useAuth } from "../../../contexts/AuthContext";
 
@@ -170,47 +170,45 @@ export default function TakeQuizScreen() {
     };
   };
 
-  // Removed unused handleFinishQuiz function
-
   if (showResults) {
     const results = calculateResults();
     return (
-      <View className="flex-1 bg-slate-900">
+      <View style={styles.container}>
         <LinearGradient
           colors={["#0f0f23", "#1a1a2e", "#16213e"]}
-          className="flex-1"
+          style={styles.flex1}
         >
           {/* Header */}
-          <View className="px-6 pt-14 pb-6">
-            <View className="flex-row items-center mb-4">
+          <View style={styles.resultsHeader}>
+            <View style={styles.resultsHeaderRow}>
               <TouchableOpacity
                 onPress={() => router.back()}
-                className="bg-white bg-opacity-20 p-2 rounded-full mr-4"
+                style={styles.backButton}
               >
                 <Ionicons name="arrow-back" size={24} color="white" />
               </TouchableOpacity>
-              <View className="flex-1">
-                <Text className="text-white text-2xl font-bold">
+              <View style={styles.flex1}>
+                <Text style={styles.resultsTitle}>
                   Quiz Results
                 </Text>
-                <Text className="text-white opacity-80">How did you do?</Text>
+                <Text style={styles.resultsSubtitle}>How did you do?</Text>
               </View>
             </View>
           </View>
 
           {/* Results Content */}
-          <ScrollView className="flex-1 px-6">
-            <View className="items-center mb-8">
-              <View className="bg-slate-800 p-8 rounded-3xl items-center mb-6 border border-slate-700">
-                <Text className="text-white text-5xl font-bold mb-2">
+          <ScrollView style={[styles.flex1, styles.scrollPadding]}>
+            <View style={styles.resultsScoreSection}>
+              <View style={styles.scoreCard}>
+                <Text style={styles.scoreValue}>
                   {results.score}%
                 </Text>
-                <Text className="text-gray-300 text-lg">Your Score</Text>
+                <Text style={styles.scoreLabel}>Your Score</Text>
               </View>
 
               {/* Performance Badge */}
-              <View className="bg-slate-800 px-6 py-3 rounded-full mb-6 border border-slate-700">
-                <Text className="text-white text-lg font-semibold">
+              <View style={styles.performanceBadge}>
+                <Text style={styles.performanceBadgeText}>
                   {results.score >= 80
                     ? "🏆 Excellent Performance!"
                     : results.score >= 60
@@ -221,78 +219,84 @@ export default function TakeQuizScreen() {
             </View>
 
             {/* Stats Cards */}
-            <View className="mb-8">
-              <View className="bg-slate-800 p-4 rounded-2xl border border-slate-700 mb-4">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-gray-300 text-lg">Correct Answers</Text>
-                  <Text className="text-white font-bold text-xl">
+            <View style={styles.statsSection}>
+              <View style={styles.statCard}>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Correct Answers</Text>
+                  <Text style={styles.statValue}>
                     {results.correctAnswers}/{results.totalQuestions}
                   </Text>
                 </View>
-                <View className="bg-slate-700 rounded-full h-2">
+                <View style={styles.progressBarBg}>
                   <View
-                    className="bg-green-400 rounded-full h-2"
-                    style={{
-                      width: `${(results.correctAnswers / results.totalQuestions) * 100}%`,
-                    }}
+                    style={[
+                      styles.progressBarGreen,
+                      {
+                        width: `${(results.correctAnswers / results.totalQuestions) * 100}%`,
+                      },
+                    ]}
                   />
                 </View>
               </View>
 
-              <View className="bg-slate-800 p-4 rounded-2xl border border-slate-700 mb-4">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-gray-300 text-lg">Time Taken</Text>
-                  <Text className="text-white font-bold text-xl">
+              <View style={styles.statCard}>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Time Taken</Text>
+                  <Text style={styles.statValue}>
                     {formatTime(results.timeTaken)}
                   </Text>
                 </View>
-                <View className="bg-slate-700 rounded-full h-2">
+                <View style={styles.progressBarBg}>
                   <View
-                    className="bg-blue-400 rounded-full h-2"
-                    style={{
-                      width: `${((parsedQuiz.timeLimit * 60 - results.timeTaken) / (parsedQuiz.timeLimit * 60)) * 100}%`,
-                    }}
+                    style={[
+                      styles.progressBarBlue,
+                      {
+                        width: `${((30 * 60 - results.timeTaken) / (30 * 60)) * 100}%`,
+                      },
+                    ]}
                   />
                 </View>
               </View>
 
-              <View className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-gray-300 text-lg">Accuracy</Text>
-                  <Text className="text-white font-bold text-xl">
+              <View style={styles.statCard}>
+                <View style={styles.statRow}>
+                  <Text style={styles.statLabel}>Accuracy</Text>
+                  <Text style={styles.statValue}>
                     {Math.round(
                       (results.correctAnswers / results.totalQuestions) * 100,
                     )}
                     %
                   </Text>
                 </View>
-                <View className="bg-slate-700 rounded-full h-2">
+                <View style={styles.progressBarBg}>
                   <View
-                    className="bg-yellow-400 rounded-full h-2"
-                    style={{
-                      width: `${(results.correctAnswers / results.totalQuestions) * 100}%`,
-                    }}
+                    style={[
+                      styles.progressBarYellow,
+                      {
+                        width: `${(results.correctAnswers / results.totalQuestions) * 100}%`,
+                      },
+                    ]}
                   />
                 </View>
               </View>
             </View>
 
             {/* Action Buttons */}
-            <View className="mb-8">
+            <View style={styles.actionButtonsSection}>
               <TouchableOpacity
-                className="bg-slate-800 p-4 rounded-2xl items-center border border-slate-700 mb-4"
+                style={styles.reviewButton}
                 onPress={() => setShowResults(false)}
               >
-                <Text className="text-white font-semibold text-lg">
+                <Text style={styles.reviewButtonText}>
                   🔍 Review Answers
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="bg-blue-600 p-4 rounded-2xl items-center"
+                style={styles.backToQuizzesButton}
                 onPress={() => router.back()}
               >
-                <Text className="text-white font-semibold text-lg">
+                <Text style={styles.backToQuizzesButtonText}>
                   📚 Back to Quizzes
                 </Text>
               </TouchableOpacity>
@@ -305,13 +309,13 @@ export default function TakeQuizScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-slate-900">
-        <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} className="flex-1">
-          <View className="flex-1 justify-center items-center px-6">
-            <Text className="text-white text-2xl font-bold mb-4">
+      <View style={styles.container}>
+        <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} style={styles.flex1}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingTitle}>
               Loading Quiz...
             </Text>
-            <Text className="text-white opacity-80">
+            <Text style={styles.loadingSubtitle}>
               Please wait while we prepare your questions
             </Text>
           </View>
@@ -322,13 +326,13 @@ export default function TakeQuizScreen() {
 
   if (questions.length === 0) {
     return (
-      <View className="flex-1 bg-slate-900">
-        <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} className="flex-1">
-          <View className="flex-1 justify-center items-center px-6">
-            <Text className="text-white text-2xl font-bold mb-4">
+      <View style={styles.container}>
+        <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} style={styles.flex1}>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingTitle}>
               No Questions Available
             </Text>
-            <Text className="text-white opacity-80">
+            <Text style={styles.loadingSubtitle}>
               This quiz doesn't have any questions yet
             </Text>
           </View>
@@ -339,103 +343,105 @@ export default function TakeQuizScreen() {
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Show loading state if questions haven't loaded yet
   if (loading || !currentQuestion) {
     return (
-      <View className="flex-1 bg-slate-900 justify-center items-center">
-        <Text className="text-white text-lg">Loading quiz...</Text>
+      <View style={styles.centerContainer}>
+        <Text style={styles.loadingText}>Loading quiz...</Text>
       </View>
     );
   }
 
-  // Show error state if no questions available
   if (questions.length === 0) {
     return (
-      <View className="flex-1 bg-slate-900 justify-center items-center px-6">
-        <Text className="text-white text-xl font-bold mb-4">
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorTitle}>
           No Questions Available
         </Text>
-        <Text className="text-gray-400 text-center mb-6">
+        <Text style={styles.errorSubtitle}>
           This quiz doesn't have any questions yet.
         </Text>
         <TouchableOpacity
-          className="bg-blue-500 px-6 py-3 rounded-2xl"
+          style={styles.goBackButton}
           onPress={() => router.back()}
         >
-          <Text className="text-white font-semibold">Go Back</Text>
+          <Text style={styles.goBackButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-slate-900">
+    <View style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} className="px-6 pt-14 pb-6">
-        <View className="flex-row items-center justify-between mb-4">
+      <LinearGradient colors={parsedSubject?.color || ['#3B82F6', '#3B82F6']} style={styles.quizHeader}>
+        <View style={styles.quizHeaderRow}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="bg-white bg-opacity-20 p-2 rounded-full"
+            style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <View className="items-center">
-            <Text className="text-white text-lg font-bold">
+          <View style={styles.quizHeaderCenter}>
+            <Text style={styles.questionCountText}>
               Question {currentQuestionIndex + 1} of {questions.length}
             </Text>
-            <Text className="text-white opacity-80 text-sm">
+            <Text style={styles.quizTitleText}>
               {quizTitle || "Quiz"}
             </Text>
           </View>
-          <View className="bg-white bg-opacity-20 px-3 py-2 rounded-full">
-            <Text className="text-white font-bold">{formatTime(timeLeft)}</Text>
+          <View style={styles.timerBadge}>
+            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
           </View>
         </View>
 
         {/* Progress Bar */}
-        <View className="bg-white bg-opacity-30 rounded-full h-2">
+        <View style={styles.headerProgressBarBg}>
           <View
-            className="bg-white rounded-full h-2"
-            style={{
-              width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
-            }}
+            style={[
+              styles.headerProgressBar,
+              {
+                width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`,
+              },
+            ]}
           />
         </View>
       </LinearGradient>
 
       {/* Question */}
-      <ScrollView className="flex-1 px-6 pt-6">
-        <View className="bg-slate-800 rounded-3xl p-6 mb-6">
-          <Text className="text-white text-lg font-semibold mb-4">
+      <ScrollView style={styles.quizContent}>
+        <View style={styles.questionCard}>
+          <Text style={styles.questionText}>
             {currentQuestion.question}
           </Text>
         </View>
 
         {/* Answer Options */}
-        <View className="mb-8">
+        <View style={styles.optionsSection}>
           {currentQuestion.options?.map((option, index) => (
             <TouchableOpacity
               key={index}
-              className={`p-4 rounded-2xl border-2 mb-4 ${
+              style={[
+                styles.optionCard,
                 selectedAnswer === index
-                  ? "border-blue-400 bg-blue-400 bg-opacity-20"
-                  : "border-slate-700 bg-slate-800"
-              }`}
+                  ? styles.optionCardSelected
+                  : styles.optionCardUnselected,
+              ]}
               onPress={() => handleAnswerSelect(index)}
             >
-              <View className="flex-row items-center">
+              <View style={styles.optionContent}>
                 <View
-                  className={`w-6 h-6 rounded-full border-2 mr-4 items-center justify-center ${
+                  style={[
+                    styles.radioButton,
                     selectedAnswer === index
-                      ? "border-blue-400 bg-blue-400"
-                      : "border-slate-600"
-                  }`}
+                      ? styles.radioButtonSelected
+                      : styles.radioButtonUnselected,
+                  ]}
                 >
                   {selectedAnswer === index && (
                     <Ionicons name="checkmark" size={16} color="white" />
                   )}
                 </View>
-                <Text className="text-white text-base flex-1">
+                <Text style={styles.optionText}>
                   {option}
                 </Text>
               </View>
@@ -444,13 +450,12 @@ export default function TakeQuizScreen() {
         </View>
 
         {/* Navigation Buttons */}
-        <View className="flex-row justify-between mb-8">
+        <View style={styles.navigationButtons}>
           <TouchableOpacity
-            className={`px-6 py-3 rounded-full ${
-              currentQuestionIndex === 0
-                ? "bg-slate-700 opacity-50"
-                : "bg-slate-700"
-            }`}
+            style={[
+              styles.previousButton,
+              currentQuestionIndex === 0 && styles.buttonDisabled,
+            ]}
             onPress={() => {
               if (currentQuestionIndex > 0) {
                 setCurrentQuestionIndex(currentQuestionIndex - 1);
@@ -459,14 +464,14 @@ export default function TakeQuizScreen() {
             }}
             disabled={currentQuestionIndex === 0}
           >
-            <Text className="text-white font-semibold">Previous</Text>
+            <Text style={styles.buttonText}>Previous</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-blue-500 px-6 py-3 rounded-full"
+            style={styles.nextButton}
             onPress={handleNextQuestion}
           >
-            <Text className="text-white font-semibold">
+            <Text style={styles.buttonText}>
               {currentQuestionIndex === questions.length - 1
                 ? "Finish"
                 : "Next"}
@@ -477,3 +482,333 @@ export default function TakeQuizScreen() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  flex1: {
+    flex: 1,
+  },
+  scrollPadding: {
+    paddingHorizontal: 24,
+  },
+  resultsHeader: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  resultsHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    padding: 8,
+    borderRadius: 9999,
+    marginRight: 16,
+  },
+  resultsTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  resultsSubtitle: {
+    color: "white",
+    opacity: 0.8,
+  },
+  resultsScoreSection: {
+    alignItems: "center",
+    marginBottom: 32,
+  },
+  scoreCard: {
+    backgroundColor: "#1e293b",
+    padding: 32,
+    borderRadius: 24,
+    alignItems: "center",
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  scoreValue: {
+    color: "white",
+    fontSize: 48,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  scoreLabel: {
+    color: "#d1d5db",
+    fontSize: 18,
+  },
+  performanceBadge: {
+    backgroundColor: "#1e293b",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: "#334155",
+  },
+  performanceBadgeText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  statsSection: {
+    marginBottom: 32,
+  },
+  statCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#334155",
+    marginBottom: 16,
+  },
+  statRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  statLabel: {
+    color: "#d1d5db",
+    fontSize: 18,
+  },
+  statValue: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 20,
+  },
+  progressBarBg: {
+    backgroundColor: "#334155",
+    borderRadius: 9999,
+    height: 8,
+  },
+  progressBarGreen: {
+    backgroundColor: "#4ade80",
+    borderRadius: 9999,
+    height: 8,
+  },
+  progressBarBlue: {
+    backgroundColor: "#60a5fa",
+    borderRadius: 9999,
+    height: 8,
+  },
+  progressBarYellow: {
+    backgroundColor: "#fbbf24",
+    borderRadius: 9999,
+    height: 8,
+  },
+  actionButtonsSection: {
+    marginBottom: 32,
+  },
+  reviewButton: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#334155",
+    marginBottom: 16,
+  },
+  reviewButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+  },
+  backToQuizzesButton: {
+    backgroundColor: "#2563eb",
+    padding: 16,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  backToQuizzesButtonText: {
+    color: "white",
+    fontWeight: "600",
+    fontSize: 18,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  loadingTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  loadingSubtitle: {
+    color: "white",
+    opacity: 0.8,
+  },
+  centerContainer: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "white",
+    fontSize: 18,
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  errorTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  errorSubtitle: {
+    color: "#9ca3af",
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  goBackButton: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 16,
+  },
+  goBackButtonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+  quizHeader: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  quizHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  quizHeaderCenter: {
+    alignItems: "center",
+  },
+  questionCountText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  quizTitleText: {
+    color: "white",
+    opacity: 0.8,
+    fontSize: 14,
+  },
+  timerBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 9999,
+  },
+  timerText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  headerProgressBarBg: {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 9999,
+    height: 8,
+  },
+  headerProgressBar: {
+    backgroundColor: "white",
+    borderRadius: 9999,
+    height: 8,
+  },
+  quizContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+  },
+  questionCard: {
+    backgroundColor: "#1e293b",
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+  },
+  questionText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: 16,
+  },
+  optionsSection: {
+    marginBottom: 32,
+  },
+  optionCard: {
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    marginBottom: 16,
+  },
+  optionCardSelected: {
+    borderColor: "#60a5fa",
+    backgroundColor: "rgba(96, 165, 250, 0.2)",
+  },
+  optionCardUnselected: {
+    borderColor: "#334155",
+    backgroundColor: "#1e293b",
+  },
+  optionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 9999,
+    borderWidth: 2,
+    marginRight: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  radioButtonSelected: {
+    borderColor: "#60a5fa",
+    backgroundColor: "#60a5fa",
+  },
+  radioButtonUnselected: {
+    borderColor: "#475569",
+  },
+  optionText: {
+    color: "white",
+    fontSize: 16,
+    flex: 1,
+  },
+  navigationButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 32,
+  },
+  previousButton: {
+    backgroundColor: "#334155",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+  },
+  nextButton: {
+    backgroundColor: "#3b82f6",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 9999,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: "white",
+    fontWeight: "600",
+  },
+});

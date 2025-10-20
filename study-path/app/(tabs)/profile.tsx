@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, router } from "expo-router";
@@ -13,179 +14,6 @@ import {
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import { UserService } from "@/superbase/services/userService";
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: 'white',
-    fontSize: 18,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 56,
-    paddingBottom: 24,
-  },
-  profileCard: {
-    marginHorizontal: 24,
-    marginBottom: 24,
-    backgroundColor: '#1e293b',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  name: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  email: {
-    color: '#9ca3af',
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  levelBadge: {
-    backgroundColor: '#06b6d4',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  levelText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginHorizontal: 24,
-    marginBottom: 24,
-  },
-  statCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  statNumber: {
-    color: '#06b6d4',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: '#9ca3af',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  section: {
-    marginHorizontal: 24,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-  },
-  achievementCard: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  achievementIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#06b6d4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  achievementContent: {
-    flex: 1,
-  },
-  achievementName: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  achievementDate: {
-    color: '#9ca3af',
-    fontSize: 12,
-  },
-  menuItem: {
-    backgroundColor: '#1e293b',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  menuItemContent: {
-    flex: 1,
-  },
-  menuItemTitle: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  menuItemSubtitle: {
-    color: '#9ca3af',
-    fontSize: 14,
-  },
-  logoutButton: {
-    backgroundColor: '#dc2626',
-    marginHorizontal: 24,
-    marginBottom: 32,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 type UserStats = {
   name: string;
@@ -323,19 +151,22 @@ export default function ProfileScreen() {
         colors={["#0f0f23", "#1a1a2e"]}
         style={styles.header}
       >
-        <View style={styles.profileCard}>
-          <View style={styles.avatarContainer}>
+        <View style={styles.profileContainer}>
+          <View style={styles.avatarWrapper}>
             <Image
               source={{
                 uri: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
               }}
               style={styles.avatar}
             />
+            <TouchableOpacity style={styles.cameraButton}>
+              <Ionicons name="camera" size={16} color="white" />
+            </TouchableOpacity>
           </View>
-          <Text style={styles.name}>
+          <Text style={styles.userName}>
             {userStats.name}
           </Text>
-          <Text style={styles.email}>{userStats.email}</Text>
+          <Text style={styles.userEmail}>{userStats.email}</Text>
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>{userStats.level}</Text>
           </View>
@@ -343,10 +174,11 @@ export default function ProfileScreen() {
       </LinearGradient>
 
       {/* Stats Grid */}
-      <View style={styles.statsContainer}>
+      <View style={styles.statsSection}>
+        <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Ionicons name="trophy" size={24} color="#f59e0b" />
-            <Text style={styles.statNumber}>
+            <Text style={styles.statValue}>
               {userStats.points.toLocaleString()}
             </Text>
             <Text style={styles.statLabel}>Total Points</Text>
@@ -354,7 +186,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <Ionicons name="flame" size={24} color="#ef4444" />
-            <Text style={styles.statNumber}>
+            <Text style={styles.statValue}>
               {userStats.streak}
             </Text>
             <Text style={styles.statLabel}>Day Streak</Text>
@@ -362,7 +194,7 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <Ionicons name="book" size={24} color="#10b981" />
-            <Text style={styles.statNumber}>
+            <Text style={styles.statValue}>
               {userStats.completedLessons}
             </Text>
             <Text style={styles.statLabel}>Lessons Done</Text>
@@ -370,37 +202,40 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <Ionicons name="time" size={24} color="#8b5cf6" />
-            <Text style={styles.statNumber}>
+            <Text style={styles.statValue}>
               {userStats.totalHours}h
             </Text>
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
+        </View>
       </View>
 
       {/* Recent Achievements */}
-      <View style={styles.section}>
+      <View style={styles.achievementsSection}>
         <Text style={styles.sectionTitle}>
           Recent Achievements
         </Text>
         {recentAchievements.map((achievement, index) => (
           <View key={index} style={styles.achievementCard}>
-            <View style={styles.achievementIcon}>
-              <Ionicons name={achievement.icon} size={20} color="white" />
-            </View>
             <View style={styles.achievementContent}>
-              <Text style={styles.achievementName}>
-                {achievement.name}
-              </Text>
-              <Text style={styles.achievementDate}>
-                {achievement.date}
-              </Text>
+              <View style={styles.achievementIconContainer}>
+                <Ionicons name={achievement.icon} size={20} color="black" />
+              </View>
+              <View style={styles.achievementInfo}>
+                <Text style={styles.achievementName}>
+                  {achievement.name}
+                </Text>
+                <Text style={styles.achievementDate}>
+                  {achievement.date}
+                </Text>
+              </View>
             </View>
           </View>
         ))}
       </View>
 
       {/* Menu Items */}
-      <View style={styles.section}>
+      <View style={styles.menuSection}>
         <Text style={styles.sectionTitle}>Settings</Text>
         {menuItems.map((item, index) => (
           <TouchableOpacity
@@ -408,34 +243,242 @@ export default function ProfileScreen() {
             style={styles.menuItem}
             onPress={() => handleMenuItemPress(item.title)}
           >
-            <View style={styles.menuItemIcon}>
+            <View style={styles.menuItemContent}>
               <Ionicons
                 name={item.icon}
                 size={24}
                 color="#6b7280"
+                style={styles.menuIcon}
               />
+              <View style={styles.menuTextContainer}>
+                <Text style={styles.menuTitle}>{item.title}</Text>
+                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#6b7280" />
             </View>
-            <View style={styles.menuItemContent}>
-              <Text style={styles.menuItemTitle}>{item.title}</Text>
-              <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Logout Button */}
+      <View style={styles.logoutSection}>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <View style={styles.logoutContent}>
+            <Ionicons name="log-out-outline" size={24} color="white" />
+            <Text style={styles.logoutText}>
+              Logout
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Floating Action Button */}
       <TouchableOpacity
-        style={styles.logoutButton}
-        onPress={handleLogout}
+        style={styles.fab}
+        onPress={() => Alert.alert("Premium", "Premium features coming soon!")}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="log-out-outline" size={24} color="white" />
-          <Text style={styles.logoutButtonText}>
-            Logout
-          </Text>
-        </View>
+        <LinearGradient
+          colors={["#a855f7", "#ec4899"]}
+          style={styles.fabGradient}
+        >
+          <Ionicons name="sparkles" size={24} color="white" />
+        </LinearGradient>
       </TouchableOpacity>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#ffffff',
+    fontSize: 18,
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  profileContainer: {
+    alignItems: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+  },
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: -8,
+    right: -8,
+    backgroundColor: '#3b82f6',
+    padding: 8,
+    borderRadius: 9999,
+  },
+  userName: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 16,
+  },
+  userEmail: {
+    color: '#9ca3af',
+    fontSize: 16,
+  },
+  levelBadge: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    marginTop: 12,
+  },
+  levelText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  statsSection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    width: '48%',
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  statValue: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  statLabel: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  achievementsSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  sectionTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  achievementCard: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  achievementContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  achievementIconContainer: {
+    backgroundColor: '#eab308',
+    padding: 12,
+    borderRadius: 9999,
+    marginRight: 16,
+  },
+  achievementInfo: {
+    flex: 1,
+  },
+  achievementName: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  achievementDate: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  menuSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  menuItem: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    marginRight: 16,
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuTitle: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  menuSubtitle: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  logoutSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  logoutButton: {
+    backgroundColor: '#dc2626',
+    padding: 16,
+    borderRadius: 16,
+  },
+  logoutContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 18,
+    marginLeft: 8,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 96,
+    right: 24,
+    borderRadius: 9999,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  fabGradient: {
+    padding: 16,
+    borderRadius: 9999,
+  },
+});

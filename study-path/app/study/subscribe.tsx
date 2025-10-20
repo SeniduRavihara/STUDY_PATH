@@ -6,6 +6,7 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -124,7 +125,7 @@ export default function SubscribeScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-900"
+      style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -132,30 +133,30 @@ export default function SubscribeScreen() {
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-8"
+        style={styles.header}
       >
-        <View className="flex-row justify-between items-center mb-6">
+        <View style={styles.headerRow}>
           <View>
-            <Text className="text-white text-2xl font-bold">
+            <Text style={styles.headerTitle}>
               Browse Subjects
             </Text>
-            <Text className="text-gray-400 text-base">
+            <Text style={styles.headerSubtitle}>
               Subscribe to new subjects
             </Text>
           </View>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="bg-slate-800 p-3 rounded-full"
+            style={styles.closeButton}
           >
             <Ionicons name="close" size={24} color="#00d4ff" />
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
-        <View className="bg-slate-800 rounded-2xl px-4 py-3 flex-row items-center">
+        <View style={styles.searchBar}>
           <Ionicons name="search" size={20} color="#6b7280" />
           <TextInput
-            className="flex-1 text-white ml-3"
+            style={styles.searchInput}
             placeholder="Search subjects..."
             placeholderTextColor="#6b7280"
             value={searchTerm}
@@ -165,18 +166,18 @@ export default function SubscribeScreen() {
       </LinearGradient>
 
       {/* Subjects List */}
-      <View className="px-6 mt-6">
+      <View style={styles.subjectsList}>
         {loading ? (
-          <View className="items-center py-8">
-            <Text className="text-gray-400">Loading subjects...</Text>
+          <View style={styles.centerContent}>
+            <Text style={styles.loadingText}>Loading subjects...</Text>
           </View>
         ) : filteredSubjects.length === 0 ? (
-          <View className="items-center py-8">
+          <View style={styles.centerContent}>
             <Ionicons name="book-outline" size={64} color="#6b7280" />
-            <Text className="text-white text-lg font-semibold mt-4">
+            <Text style={styles.emptyTitle}>
               {searchTerm ? "No Results Found" : "All Caught Up!"}
             </Text>
-            <Text className="text-gray-400 text-center mt-2">
+            <Text style={styles.emptySubtitle}>
               {searchTerm
                 ? "Try searching for a different subject"
                 : "You've subscribed to all available subjects"}
@@ -184,15 +185,15 @@ export default function SubscribeScreen() {
           </View>
         ) : (
           filteredSubjects.map(subject => (
-            <View key={subject.id} className="mb-4">
+            <View key={subject.id} style={styles.subjectCardWrapper}>
               <LinearGradient
                 colors={["#1a1a2e", "#16213e"]}
-                className="p-6 rounded-3xl"
+                style={styles.subjectCard}
               >
-                <View className="flex-row items-center">
+                <View style={styles.subjectContent}>
                   <LinearGradient
                     colors={subject.color || ['#3B82F6', '#3B82F6']}
-                    className="p-4 rounded-2xl mr-4"
+                    style={styles.subjectIcon}
                   >
                     <Ionicons
                       name={getValidIcon(subject.icon)}
@@ -201,26 +202,26 @@ export default function SubscribeScreen() {
                     />
                   </LinearGradient>
 
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-center mb-2">
-                      <Text className="text-white text-lg font-bold">
+                  <View style={styles.subjectInfo}>
+                    <View style={styles.subjectTitleRow}>
+                      <Text style={styles.subjectTitle}>
                         {subject.name}
                       </Text>
-                      <View className="bg-slate-700 px-3 py-1 rounded-full">
-                        <Text className="text-gray-300 text-xs">
+                      <View style={styles.difficultyBadge}>
+                        <Text style={styles.difficultyText}>
                           {subject.difficulty}
                         </Text>
                       </View>
                     </View>
 
                     {subject.description && (
-                      <Text className="text-gray-400 text-sm mb-3">
+                      <Text style={styles.subjectDescription}>
                         {subject.description}
                       </Text>
                     )}
 
-                    <View className="flex-row justify-between items-center">
-                      <Text className="text-gray-400 text-sm">
+                    <View style={styles.subjectFooter}>
+                      <Text style={styles.chaptersText}>
                         {subject.chapters} chapters available
                       </Text>
                       <TouchableOpacity
@@ -228,13 +229,12 @@ export default function SubscribeScreen() {
                           handleSubscribe(subject.id, subject.name)
                         }
                         disabled={subscribing === subject.id}
-                        className={`px-4 py-2 rounded-full ${
-                          subscribing === subject.id
-                            ? "bg-gray-600"
-                            : "bg-blue-600"
-                        }`}
+                        style={[
+                          styles.subscribeButton,
+                          subscribing === subject.id && styles.subscribeButtonDisabled,
+                        ]}
                       >
-                        <Text className="text-white text-sm font-medium">
+                        <Text style={styles.subscribeButtonText}>
                           {subscribing === subject.id
                             ? "Subscribing..."
                             : "Subscribe"}
@@ -249,7 +249,145 @@ export default function SubscribeScreen() {
         )}
       </View>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  headerSubtitle: {
+    color: "#9ca3af",
+    fontSize: 16,
+  },
+  closeButton: {
+    backgroundColor: "#1e293b",
+    padding: 12,
+    borderRadius: 9999,
+  },
+  searchBar: {
+    backgroundColor: "#1e293b",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  searchInput: {
+    flex: 1,
+    color: "white",
+    marginLeft: 12,
+  },
+  subjectsList: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  centerContent: {
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  loadingText: {
+    color: "#9ca3af",
+  },
+  emptyTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    color: "#9ca3af",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  subjectCardWrapper: {
+    marginBottom: 16,
+  },
+  subjectCard: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  subjectContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  subjectIcon: {
+    padding: 16,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  subjectInfo: {
+    flex: 1,
+  },
+  subjectTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  subjectTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  difficultyBadge: {
+    backgroundColor: "#334155",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  difficultyText: {
+    color: "#d1d5db",
+    fontSize: 10,
+  },
+  subjectDescription: {
+    color: "#9ca3af",
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  subjectFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  chaptersText: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  subscribeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    backgroundColor: "#2563eb",
+  },
+  subscribeButtonDisabled: {
+    backgroundColor: "#4b5563",
+  },
+  subscribeButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+});

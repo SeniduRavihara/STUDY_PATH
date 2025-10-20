@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import {
   Alert,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
@@ -53,38 +54,38 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-6"
+        style={styles.header}
       >
-        <View className="flex-row items-center justify-between">
+        <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <Text className="text-white text-xl font-bold">Settings</Text>
-          <View style={{ width: 24 }} />
+          <Text style={styles.headerTitle}>Settings</Text>
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
       {/* Notifications Section */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-lg font-bold mb-4">Notifications</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Notifications</Text>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
               <Ionicons
                 name="notifications-outline"
                 size={24}
                 color="#6b7280"
               />
-              <View className="ml-4">
-                <Text className="text-white font-semibold">
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>
                   Push Notifications
                 </Text>
-                <Text className="text-gray-400 text-sm">
+                <Text style={styles.settingSubtitle}>
                   Receive study reminders
                 </Text>
               </View>
@@ -98,13 +99,13 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
               <Ionicons name="volume-high-outline" size={24} color="#6b7280" />
-              <View className="ml-4">
-                <Text className="text-white font-semibold">Sound Effects</Text>
-                <Text className="text-gray-400 text-sm">
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>Sound Effects</Text>
+                <Text style={styles.settingSubtitle}>
                   Play sounds for actions
                 </Text>
               </View>
@@ -120,16 +121,16 @@ export default function SettingsScreen() {
       </View>
 
       {/* Appearance Section */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-lg font-bold mb-4">Appearance</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Appearance</Text>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
               <Ionicons name="moon-outline" size={24} color="#6b7280" />
-              <View className="ml-4">
-                <Text className="text-white font-semibold">Dark Mode</Text>
-                <Text className="text-gray-400 text-sm">Use dark theme</Text>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>Dark Mode</Text>
+                <Text style={styles.settingSubtitle}>Use dark theme</Text>
               </View>
             </View>
             <Switch
@@ -143,18 +144,18 @@ export default function SettingsScreen() {
       </View>
 
       {/* Data & Storage Section */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-lg font-bold mb-4">
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>
           Data & Storage
         </Text>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
               <Ionicons name="save-outline" size={24} color="#6b7280" />
-              <View className="ml-4">
-                <Text className="text-white font-semibold">Auto Save</Text>
-                <Text className="text-gray-400 text-sm">
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>Auto Save</Text>
+                <Text style={styles.settingSubtitle}>
                   Automatically save progress
                 </Text>
               </View>
@@ -168,13 +169,13 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        <View className="bg-slate-800 p-4 rounded-2xl mb-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center">
+        <View style={styles.settingCard}>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
               <Ionicons name="cloud-outline" size={24} color="#6b7280" />
-              <View className="ml-4">
-                <Text className="text-white font-semibold">Cloud Sync</Text>
-                <Text className="text-gray-400 text-sm">
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingTitle}>Cloud Sync</Text>
+                <Text style={styles.settingSubtitle}>
                   Sync data across devices
                 </Text>
               </View>
@@ -189,14 +190,14 @@ export default function SettingsScreen() {
         </View>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.settingCard}
           onPress={handleClearCache}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionRow}>
             <Ionicons name="trash-outline" size={24} color="#ef4444" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Clear Cache</Text>
-              <Text className="text-gray-400 text-sm">
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingTitle}>Clear Cache</Text>
+              <Text style={styles.settingSubtitle}>
                 Free up storage space
               </Text>
             </View>
@@ -204,32 +205,32 @@ export default function SettingsScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          className="bg-slate-800 p-4 rounded-2xl mb-3"
+          style={styles.settingCard}
           onPress={handleExportData}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionRow}>
             <Ionicons name="download-outline" size={24} color="#10b981" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Export Data</Text>
-              <Text className="text-gray-400 text-sm">Download your data</Text>
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingTitle}>Export Data</Text>
+              <Text style={styles.settingSubtitle}>Download your data</Text>
             </View>
           </View>
         </TouchableOpacity>
       </View>
 
       {/* Account Section */}
-      <View className="px-6 mt-8 mb-8">
-        <Text className="text-white text-lg font-bold mb-4">Account</Text>
+      <View style={styles.accountSection}>
+        <Text style={styles.sectionTitle}>Account</Text>
 
         <TouchableOpacity
-          className="bg-red-600 p-4 rounded-2xl"
+          style={styles.deleteAccountButton}
           onPress={handleDeleteAccount}
         >
-          <View className="flex-row items-center">
+          <View style={styles.actionRow}>
             <Ionicons name="warning-outline" size={24} color="white" />
-            <View className="ml-4">
-              <Text className="text-white font-semibold">Delete Account</Text>
-              <Text className="text-red-200 text-sm">
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.deleteAccountTitle}>Delete Account</Text>
+              <Text style={styles.deleteAccountSubtitle}>
                 Permanently delete your account
               </Text>
             </View>
@@ -239,3 +240,88 @@ export default function SettingsScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  section: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  sectionTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
+  settingCard: {
+    backgroundColor: "#1e293b",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  settingInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  settingTextContainer: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  settingTitle: {
+    color: "white",
+    fontWeight: "600",
+  },
+  settingSubtitle: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  accountSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+    marginBottom: 32,
+  },
+  deleteAccountButton: {
+    backgroundColor: "#dc2626",
+    padding: 16,
+    borderRadius: 16,
+  },
+  deleteAccountTitle: {
+    color: "white",
+    fontWeight: "600",
+  },
+  deleteAccountSubtitle: {
+    color: "#fecaca",
+    fontSize: 14,
+  },
+});

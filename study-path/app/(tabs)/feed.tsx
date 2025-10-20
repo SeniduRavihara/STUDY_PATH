@@ -19,133 +19,6 @@ type SubjectColors = {
   [key: string]: [string, string];
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0f172a',
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 56,
-    paddingBottom: 24,
-  },
-  headerTitle: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  headerSubtitle: {
-    color: '#9ca3af',
-    fontSize: 16,
-    marginTop: 4,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  emptyIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#1e293b',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  emptyText: {
-    color: '#9ca3af',
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  emptyButton: {
-    backgroundColor: '#06b6d4',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
-  emptyButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  postCard: {
-    backgroundColor: '#1e293b',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  postAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  postUserInfo: {
-    flex: 1,
-  },
-  postUsername: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  postTimestamp: {
-    color: '#9ca3af',
-    fontSize: 12,
-  },
-  postContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  postText: {
-    color: 'white',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  postImage: {
-    width: '100%',
-    height: 200,
-  },
-  postActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  actionText: {
-    color: '#9ca3af',
-    fontSize: 14,
-    marginLeft: 8,
-  },
-});
-
 export default function FeedScreen() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -279,6 +152,7 @@ export default function FeedScreen() {
       subscription.unsubscribe();
     };
   }, []);
+
   const subjectColors: SubjectColors = FeedService.getSubjectColors();
 
   const getPostTypeIcon = (
@@ -388,7 +262,7 @@ export default function FeedScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-900"
+      style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -396,16 +270,16 @@ export default function FeedScreen() {
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-6"
+        style={styles.header}
       >
-        <View className="flex-row justify-between items-center">
+        <View style={styles.headerContent}>
           <View>
-            <Text className="text-white text-2xl font-bold">Study Feed</Text>
-            <Text className="text-gray-400 text-base">
+            <Text style={styles.headerTitle}>Study Feed</Text>
+            <Text style={styles.headerSubtitle}>
               Connect with fellow students
             </Text>
           </View>
-          <TouchableOpacity className="bg-slate-800 p-3 rounded-full">
+          <TouchableOpacity style={styles.addButton}>
             <Ionicons name="add" size={24} color="#00d4ff" />
           </TouchableOpacity>
         </View>
@@ -413,60 +287,55 @@ export default function FeedScreen() {
 
       {/* Loading State */}
       {loading && (
-        <View className="flex-1 justify-center items-center py-20">
-          <Text className="text-gray-400 text-lg">Loading feed posts...</Text>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading feed posts...</Text>
         </View>
       )}
 
       {/* Posts */}
-      <View className="px-6 mt-4">
+      <View style={styles.postsContainer}>
         {!loading && posts.length === 0 && (
-          <View className="flex-1 justify-center items-center py-20">
-            <Text className="text-gray-400 text-lg">No posts yet</Text>
-            <Text className="text-gray-500 text-sm mt-2">
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No posts yet</Text>
+            <Text style={styles.emptySubtext}>
               Be the first to share your study progress!
             </Text>
           </View>
         )}
 
         {posts.map(post => (
-          <View key={post.id} className="bg-slate-800 rounded-3xl p-5 mb-4">
+          <View key={post.id} style={styles.postCard}>
             {/* User Info */}
-            <View className="flex-row items-center mb-4">
-              <View className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center">
-                <Text className="text-white font-bold text-lg">
-                  {post.users.name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-              <View className="flex-1 ml-3">
-                <View className="flex-row items-center">
-                  <Text className="text-white font-bold text-base">
-                    {post.users.name}
+            <View style={styles.postHeader}>
+              <View style={styles.avatarContainer}>
+                <LinearGradient
+                  colors={["#3b82f6", "#9333ea"]}
+                  style={styles.avatar}
+                >
+                  <Text style={styles.avatarText}>
+                    {post.users.name.charAt(0).toUpperCase()}
                   </Text>
-                  <View className="bg-blue-500 px-2 py-1 rounded-full ml-2">
-                    <Text className="text-white text-xs">
-                      {post.users.level}
-                    </Text>
+                </LinearGradient>
+              </View>
+              <View style={styles.userInfo}>
+                <View style={styles.userNameRow}>
+                  <Text style={styles.userName}>{post.users.name}</Text>
+                  <View style={styles.levelBadge}>
+                    <Text style={styles.levelText}>{post.users.level}</Text>
                   </View>
-                  <View className="bg-yellow-500/20 px-2 py-1 rounded-full ml-2">
-                    <Text className="text-yellow-400 text-xs">
-                      {post.users.rank}
-                    </Text>
+                  <View style={styles.rankBadge}>
+                    <Text style={styles.rankText}>{post.users.rank}</Text>
                   </View>
                 </View>
-                <View className="flex-row items-center">
-                  <Text className="text-gray-400 text-sm">
-                    {post.users.points} points
-                  </Text>
-                  <Text className="text-gray-400 text-sm mx-2">•</Text>
-                  <View className="flex-row items-center">
+                <View style={styles.userStatsRow}>
+                  <Text style={styles.userStats}>{post.users.points} points</Text>
+                  <Text style={styles.userStatsSeparator}>•</Text>
+                  <View style={styles.streakContainer}>
                     <Ionicons name="flame" size={14} color="#FF6B6B" />
-                    <Text className="text-red-400 text-sm ml-1">
-                      {post.users.streak} days
-                    </Text>
+                    <Text style={styles.streakText}>{post.users.streak} days</Text>
                   </View>
-                  <Text className="text-gray-400 text-sm mx-2">•</Text>
-                  <Text className="text-gray-400 text-sm">
+                  <Text style={styles.userStatsSeparator}>•</Text>
+                  <Text style={styles.timeAgo}>
                     {FeedService.formatTimeAgo(post.created_at)}
                   </Text>
                 </View>
@@ -474,54 +343,46 @@ export default function FeedScreen() {
             </View>
 
             {/* Subject & Achievement */}
-            <View className="flex-row items-center mb-3">
+            <View style={styles.badgesRow}>
               <LinearGradient
                 colors={subjectColors[post.subject] || ["#6b7280", "#4b5563"]}
-                className="px-3 py-1 rounded-full mr-2"
+                style={styles.subjectBadge}
               >
-                <Text className="text-white text-xs font-semibold">
-                  {post.subject}
-                </Text>
+                <Text style={styles.subjectText}>{post.subject}</Text>
               </LinearGradient>
-              <View className="bg-yellow-500 px-3 py-1 rounded-full">
-                <Text className="text-black text-xs font-bold">
-                  {post.achievement}
-                </Text>
+              <View style={styles.achievementBadge}>
+                <Text style={styles.achievementText}>{post.achievement}</Text>
               </View>
               {post.points_earned > 0 && (
-                <View className="bg-green-500/20 px-3 py-1 rounded-full ml-2">
-                  <Text className="text-green-400 text-xs font-bold">
-                    +{post.points_earned} XP
-                  </Text>
+                <View style={styles.xpBadge}>
+                  <Text style={styles.xpText}>+{post.points_earned} XP</Text>
                 </View>
               )}
             </View>
 
             {/* Content */}
-            <Text className="text-white text-base leading-6 mb-4">
-              {post.content}
-            </Text>
+            <Text style={styles.postContent}>{post.content}</Text>
 
             {/* Media */}
             {post.media_url && (
               <Image
                 source={{ uri: post.media_url }}
-                className="w-full h-48 rounded-2xl mb-4"
+                style={styles.postImage}
                 resizeMode="cover"
               />
             )}
 
             {/* Import Button for Educational Packs */}
             {(post.type === "quiz_pack" || post.type === "lesson_pack") && (
-              <View className="mb-4">
+              <View style={styles.packContainer}>
                 {post.pack_data?.imported ? (
-                  <View className="bg-green-500/20 p-3 rounded-2xl flex-row items-center justify-center border border-green-500/30">
+                  <View style={styles.importedBadge}>
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
                       color="#10b981"
                     />
-                    <Text className="text-green-400 font-semibold ml-2">
+                    <Text style={styles.importedText}>
                       {post.type === "quiz_pack"
                         ? "Quiz Pack Imported"
                         : "Lesson Pack Imported"}
@@ -529,11 +390,11 @@ export default function FeedScreen() {
                   </View>
                 ) : (
                   <TouchableOpacity
-                    className="bg-blue-500 p-3 rounded-2xl flex-row items-center justify-center"
+                    style={styles.importButton}
                     onPress={() => handleImportPack(post)}
                   >
                     <Ionicons name="download" size={20} color="white" />
-                    <Text className="text-white font-semibold ml-2">
+                    <Text style={styles.importButtonText}>
                       {post.type === "quiz_pack"
                         ? "Import Quiz Pack"
                         : "Import Lesson Pack"}
@@ -541,12 +402,12 @@ export default function FeedScreen() {
                   </TouchableOpacity>
                 )}
                 {post.pack_data && (
-                  <View className="mt-2 bg-blue-500/10 p-3 rounded-xl">
-                    <Text className="text-blue-400 text-sm text-center">
+                  <View style={styles.packInfo}>
+                    <Text style={styles.packInfoText}>
                       📚 {post.pack_data.question_count || 0} questions •{" "}
                       {post.pack_data.difficulty || "Medium"} level
                       {post.pack_data?.imported && (
-                        <Text className="text-green-400">
+                        <Text style={styles.packInfoImported}>
                           {" "}
                           • Added to {post.subject}
                         </Text>
@@ -558,9 +419,9 @@ export default function FeedScreen() {
             )}
 
             {/* Actions */}
-            <View className="flex-row justify-between items-center pt-4 border-t border-slate-700">
+            <View style={styles.actionsContainer}>
               <TouchableOpacity
-                className="flex-row items-center"
+                style={styles.actionButton}
                 onPress={() => handleLike(post.id)}
               >
                 <Ionicons
@@ -569,34 +430,35 @@ export default function FeedScreen() {
                   color={likedPosts.has(post.id) ? "#ef4444" : "#6b7280"}
                 />
                 <Text
-                  className={`ml-2 text-sm ${likedPosts.has(post.id) ? "text-red-400" : "text-gray-400"}`}
+                  style={[
+                    styles.actionText,
+                    likedPosts.has(post.id) && styles.actionTextLiked,
+                  ]}
                 >
                   {post.likes}
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="flex-row items-center"
+                style={styles.actionButton}
                 onPress={() => handleOpenComments(post.id)}
               >
                 <Ionicons name="chatbubble-outline" size={20} color="#6b7280" />
-                <Text className="text-gray-400 text-sm ml-2">
-                  {post.comments}
-                </Text>
+                <Text style={styles.actionText}>{post.comments}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity className="flex-row items-center">
+              <TouchableOpacity style={styles.actionButton}>
                 <Ionicons name="share-outline" size={20} color="#6b7280" />
-                <Text className="text-gray-400 text-sm ml-2">Share</Text>
+                <Text style={styles.actionText}>Share</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity className="flex-row items-center">
+              <TouchableOpacity style={styles.actionButton}>
                 <Ionicons
                   name={getPostTypeIcon(post.type)}
                   size={20}
                   color="#6b7280"
                 />
-                <Text className="text-gray-400 text-sm ml-2">
+                <Text style={styles.actionText}>
                   {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
                 </Text>
               </TouchableOpacity>
@@ -605,7 +467,7 @@ export default function FeedScreen() {
         ))}
       </View>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
 
       {/* Comments Modal */}
       <Modal
@@ -615,22 +477,21 @@ export default function FeedScreen() {
         onRequestClose={handleCloseComments}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/80 backdrop-blur-xl justify-start items-center px-5 pt-16"
+          style={styles.modalOverlay}
           activeOpacity={1}
           onPress={handleCloseComments}
         >
           <TouchableOpacity
-            className="bg-slate-900 rounded-3xl w-full max-w-md border border-slate-700/50"
-            style={{ height: "90%" }}
+            style={styles.modalContent}
             activeOpacity={1}
             onPress={e => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <View className="px-6 py-4 rounded-t-3xl">
-              <View className="flex-row items-center justify-end">
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderContent}>
                 <TouchableOpacity
                   onPress={handleCloseComments}
-                  className="bg-slate-700/80 p-2 rounded-full"
+                  style={styles.closeButton}
                 >
                   <Ionicons name="close" size={20} color="white" />
                 </TouchableOpacity>
@@ -638,56 +499,56 @@ export default function FeedScreen() {
             </View>
 
             {/* Comments List */}
-            <ScrollView className="flex-1 px-6">
+            <ScrollView style={styles.commentsList}>
               {loadingComments ? (
-                <View className="flex-1 justify-center items-center py-20">
-                  <Text className="text-gray-400 text-lg">
+                <View style={styles.loadingCommentsContainer}>
+                  <Text style={styles.loadingCommentsText}>
                     Loading comments...
                   </Text>
                 </View>
               ) : comments.length === 0 ? (
-                <View className="flex-1 justify-center items-center py-20">
-                  <Text className="text-gray-400 text-lg">No comments yet</Text>
-                  <Text className="text-gray-500 text-sm mt-2">
+                <View style={styles.emptyCommentsContainer}>
+                  <Text style={styles.emptyCommentsText}>No comments yet</Text>
+                  <Text style={styles.emptyCommentsSubtext}>
                     Be the first to comment!
                   </Text>
                 </View>
               ) : (
-                <View className="py-4">
+                <View style={styles.commentsContent}>
                   {comments.map(comment => (
-                    <View
-                      key={comment.id}
-                      className="bg-slate-800 rounded-2xl p-4 mb-4"
-                    >
+                    <View key={comment.id} style={styles.commentCard}>
                       {/* Comment User Info */}
-                      <View className="flex-row items-center mb-3">
-                        <View className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 items-center justify-center">
-                          <Text className="text-white font-bold text-sm">
-                            {comment.users?.name?.charAt(0)?.toUpperCase() ||
-                              "?"}
-                          </Text>
+                      <View style={styles.commentHeader}>
+                        <View style={styles.commentAvatarContainer}>
+                          <LinearGradient
+                            colors={["#3b82f6", "#9333ea"]}
+                            style={styles.commentAvatar}
+                          >
+                            <Text style={styles.commentAvatarText}>
+                              {comment.users?.name?.charAt(0)?.toUpperCase() ||
+                                "?"}
+                            </Text>
+                          </LinearGradient>
                         </View>
-                        <View className="flex-1 ml-3">
-                          <View className="flex-row items-center">
-                            <Text className="text-white font-semibold text-sm">
+                        <View style={styles.commentUserInfo}>
+                          <View style={styles.commentUserNameRow}>
+                            <Text style={styles.commentUserName}>
                               {comment.users?.name || "Unknown User"}
                             </Text>
-                            <View className="bg-blue-500 px-2 py-1 rounded-full ml-2">
-                              <Text className="text-white text-xs">
+                            <View style={styles.commentLevelBadge}>
+                              <Text style={styles.commentLevelText}>
                                 {comment.users?.level || "Beginner"}
                               </Text>
                             </View>
                           </View>
-                          <Text className="text-gray-400 text-xs">
+                          <Text style={styles.commentTimeAgo}>
                             {FeedService.formatTimeAgo(comment.created_at)}
                           </Text>
                         </View>
                       </View>
 
                       {/* Comment Content */}
-                      <Text className="text-white text-sm leading-5">
-                        {comment.content}
-                      </Text>
+                      <Text style={styles.commentText}>{comment.content}</Text>
                     </View>
                   ))}
                 </View>
@@ -695,10 +556,10 @@ export default function FeedScreen() {
             </ScrollView>
 
             {/* Comment Input */}
-            <View className="bg-slate-800 p-4 border-t border-slate-700/50 rounded-b-3xl">
-              <View className="flex-row items-end">
+            <View style={styles.commentInputContainer}>
+              <View style={styles.commentInputRow}>
                 <TextInput
-                  className="flex-1 bg-slate-700 text-white p-3 rounded-2xl mr-3 max-h-20"
+                  style={styles.commentInput}
                   placeholder="Write a comment..."
                   placeholderTextColor="#9ca3af"
                   value={newComment}
@@ -709,9 +570,12 @@ export default function FeedScreen() {
                 <TouchableOpacity
                   onPress={handleAddComment}
                   disabled={!newComment.trim()}
-                  className={`p-3 rounded-2xl ${
-                    newComment.trim() ? "bg-blue-500" : "bg-slate-600"
-                  }`}
+                  style={[
+                    styles.sendButton,
+                    newComment.trim()
+                      ? styles.sendButtonActive
+                      : styles.sendButtonInactive,
+                  ]}
                 >
                   <Ionicons
                     name="send"
@@ -727,3 +591,428 @@ export default function FeedScreen() {
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f172a',
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 24,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  headerSubtitle: {
+    color: '#9ca3af',
+    fontSize: 16,
+  },
+  addButton: {
+    backgroundColor: '#1e293b',
+    padding: 12,
+    borderRadius: 9999,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  loadingText: {
+    color: '#9ca3af',
+    fontSize: 18,
+  },
+  postsContainer: {
+    paddingHorizontal: 24,
+    marginTop: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  emptyText: {
+    color: '#9ca3af',
+    fontSize: 18,
+  },
+  emptySubtext: {
+    color: '#6b7280',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  postCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  userInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  userNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userName: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  levelBadge: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    marginLeft: 8,
+  },
+  levelText: {
+    color: '#ffffff',
+    fontSize: 12,
+  },
+  rankBadge: {
+    backgroundColor: 'rgba(234, 179, 8, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    marginLeft: 8,
+  },
+  rankText: {
+    color: '#facc15',
+    fontSize: 12,
+  },
+  userStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  userStats: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  userStatsSeparator: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginHorizontal: 8,
+  },
+  streakContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  streakText: {
+    color: '#f87171',
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  timeAgo: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  subjectBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    marginRight: 8,
+  },
+  subjectText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  achievementBadge: {
+    backgroundColor: '#eab308',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  achievementText: {
+    color: '#000000',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  xpBadge: {
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    marginLeft: 8,
+  },
+  xpText: {
+    color: '#4ade80',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  postContent: {
+    color: '#ffffff',
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  postImage: {
+    width: '100%',
+    height: 192,
+    borderRadius: 16,
+    marginBottom: 16,
+  },
+  packContainer: {
+    marginBottom: 16,
+  },
+  importedBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    padding: 12,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  importedText: {
+    color: '#4ade80',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  importButton: {
+    backgroundColor: '#3b82f6',
+    padding: 12,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  importButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  packInfo: {
+    marginTop: 8,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    padding: 12,
+    borderRadius: 12,
+  },
+  packInfoText: {
+    color: '#60a5fa',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  packInfoImported: {
+    color: '#4ade80',
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#334155',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  actionText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#9ca3af',
+  },
+  actionTextLiked: {
+    color: '#f87171',
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 64,
+  },
+  modalContent: {
+    backgroundColor: '#0f172a',
+    borderRadius: 24,
+    width: '100%',
+    maxWidth: 448,
+    height: '90%',
+    borderWidth: 1,
+    borderColor: 'rgba(51, 65, 85, 0.5)',
+  },
+  modalHeader: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  modalHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  closeButton: {
+    backgroundColor: 'rgba(51, 65, 85, 0.8)',
+    padding: 8,
+    borderRadius: 9999,
+  },
+  commentsList: {
+    flex: 1,
+    paddingHorizontal: 24,
+  },
+  loadingCommentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  loadingCommentsText: {
+    color: '#9ca3af',
+    fontSize: 18,
+  },
+  emptyCommentsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  emptyCommentsText: {
+    color: '#9ca3af',
+    fontSize: 18,
+  },
+  emptyCommentsSubtext: {
+    color: '#6b7280',
+    fontSize: 14,
+    marginTop: 8,
+  },
+  commentsContent: {
+    paddingVertical: 16,
+  },
+  commentCard: {
+    backgroundColor: '#1e293b',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  commentAvatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  commentAvatar: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentAvatarText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  commentUserInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  commentUserNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  commentUserName: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  commentLevelBadge: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    marginLeft: 8,
+  },
+  commentLevelText: {
+    color: '#ffffff',
+    fontSize: 12,
+  },
+  commentTimeAgo: {
+    color: '#9ca3af',
+    fontSize: 12,
+  },
+  commentText: {
+    color: '#ffffff',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  commentInputContainer: {
+    backgroundColor: '#1e293b',
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(51, 65, 85, 0.5)',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: '#334155',
+    color: '#ffffff',
+    padding: 12,
+    borderRadius: 16,
+    marginRight: 12,
+    maxHeight: 80,
+  },
+  sendButton: {
+    padding: 12,
+    borderRadius: 16,
+  },
+  sendButtonActive: {
+    backgroundColor: '#3b82f6',
+  },
+  sendButtonInactive: {
+    backgroundColor: '#475569',
+  },
+});

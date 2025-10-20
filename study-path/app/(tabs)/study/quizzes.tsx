@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import drizzleQuizService from "../../../lib/drizzleQuizService";
 import type { Quiz } from "../../../lib/schema";
 
@@ -148,85 +148,90 @@ export default function QuizzesScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-slate-900">
+    <ScrollView style={styles.container}>
       {/* Header */}
-      <LinearGradient colors={parsedSubject.color} className="px-6 pt-14 pb-8">
-        <View className="flex-row items-center mb-4">
+      <LinearGradient colors={parsedSubject.color} style={styles.header}>
+        <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="bg-white bg-opacity-20 p-2 rounded-full mr-4"
+            style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white text-2xl font-bold">
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>
               {parsedTopic.title}
             </Text>
-            <Text className="text-white opacity-80">Test your knowledge</Text>
+            <Text style={styles.headerSubtitle}>Test your knowledge</Text>
           </View>
         </View>
 
         {/* Progress Bar */}
-        <View className="bg-white bg-opacity-30 rounded-full h-3 mb-4">
+        <View style={styles.progressBarContainer}>
           <View
-            className="bg-white rounded-full h-3"
-            style={{
-              width: `${(parsedTopic.completed / parsedTopic.count) * 100}%`,
-            }}
+            style={[
+              styles.progressBar,
+              {
+                width: `${(parsedTopic.completed / parsedTopic.count) * 100}%`,
+              },
+            ]}
           />
         </View>
 
         {/* Stats */}
-        <View className="flex-row justify-between">
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>
               {quizzes.length}
             </Text>
-            <Text className="text-white opacity-80 text-sm">Available</Text>
+            <Text style={styles.statLabel}>Available</Text>
           </View>
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>
               {quizzes.reduce((sum, quiz) => sum + quiz.questionCount, 0)}
             </Text>
-            <Text className="text-white opacity-80 text-sm">Questions</Text>
+            <Text style={styles.statLabel}>Questions</Text>
           </View>
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">2.1k</Text>
-            <Text className="text-white opacity-80 text-sm">Points</Text>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>2.1k</Text>
+            <Text style={styles.statLabel}>Points</Text>
           </View>
         </View>
       </LinearGradient>
 
       {/* Quiz Topics */}
-      <View className="px-6 mt-8">
-        <Text className="text-white text-xl font-bold mb-6">
+      <View style={styles.quizzesSection}>
+        <Text style={styles.sectionTitle}>
           Available Quizzes
         </Text>
 
         {loading ? (
-          <View className="items-center py-8">
-            <Text className="text-white text-lg">Loading quizzes...</Text>
+          <View style={styles.centerContent}>
+            <Text style={styles.loadingText}>Loading quizzes...</Text>
           </View>
         ) : quizzes.length === 0 ? (
-          <View className="items-center py-8">
-            <Text className="text-white text-lg">No quizzes available</Text>
+          <View style={styles.centerContent}>
+            <Text style={styles.loadingText}>No quizzes available</Text>
           </View>
         ) : (
           quizzes.map(quiz => {
             const quizWithImport = quiz as QuizWithImport;
             return (
-              <View key={quiz.id} className="mb-4">
+              <View key={quiz.id} style={styles.quizCardWrapper}>
                 <LinearGradient
                   colors={["#1a1a2e", "#16213e"]}
-                  className="p-6 rounded-3xl"
+                  style={styles.quizCard}
                 >
-                  <View className="flex-row items-center">
+                  <View style={styles.quizCardContent}>
                     <View
-                      className={`p-4 rounded-2xl mr-4 ${
-                        quizWithImport.isImported
-                          ? "bg-green-500"
-                          : "bg-blue-500"
-                      }`}
+                      style={[
+                        styles.quizIcon,
+                        {
+                          backgroundColor: quizWithImport.isImported
+                            ? "#10b981"
+                            : "#3b82f6",
+                        },
+                      ]}
                     >
                       <Ionicons
                         name={
@@ -236,49 +241,49 @@ export default function QuizzesScreen() {
                         color="white"
                       />
                     </View>
-                    <View className="flex-1">
-                      <View className="mb-2">
-                        <View className="flex-row justify-between items-start mb-1">
-                          <Text
-                            className="text-white text-lg font-bold flex-1 mr-2"
-                            numberOfLines={2}
-                            ellipsizeMode="tail"
-                          >
-                            {quiz.title}
-                          </Text>
-                          <View className="flex-row items-center flex-shrink-0">
-                            <View
-                              className="px-3 py-1 rounded-full mr-2"
-                              style={{
+                    <View style={styles.quizInfo}>
+                      <View style={styles.quizTitleRow}>
+                        <Text
+                          style={styles.quizTitle}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {quiz.title}
+                        </Text>
+                        <View style={styles.badgesContainer}>
+                          <View
+                            style={[
+                              styles.difficultyBadge,
+                              {
                                 backgroundColor: getDifficultyColor(
                                   quiz.difficulty,
                                 ),
-                              }}
-                            >
-                              <Text className="text-white text-xs font-semibold">
-                                {quiz.difficulty}
+                              },
+                            ]}
+                          >
+                            <Text style={styles.difficultyText}>
+                              {quiz.difficulty}
+                            </Text>
+                          </View>
+                          {quizWithImport.isImported && (
+                            <View style={styles.importedBadge}>
+                              <Text style={styles.importedText}>
+                                Imported
                               </Text>
                             </View>
-                            {quizWithImport.isImported && (
-                              <View className="bg-green-500/20 px-2 py-1 rounded-full">
-                                <Text className="text-green-400 text-xs font-semibold">
-                                  Imported
-                                </Text>
-                              </View>
-                            )}
-                          </View>
+                          )}
                         </View>
                       </View>
                       <Text
-                        className="text-gray-400 text-sm mb-3"
+                        style={styles.quizDescription}
                         numberOfLines={3}
                         ellipsizeMode="tail"
                       >
                         {quiz.description}
                       </Text>
-                      <View className="flex-row justify-between items-center mb-3">
+                      <View style={styles.quizMetaRow}>
                         <Text
-                          className="text-gray-400 text-sm flex-1 mr-2"
+                          style={styles.quizMeta}
                           numberOfLines={1}
                           ellipsizeMode="tail"
                         >
@@ -286,7 +291,7 @@ export default function QuizzesScreen() {
                         </Text>
                         {quizWithImport.isImported && (
                           <TouchableOpacity
-                            className="bg-red-500/20 p-2 rounded-full flex-shrink-0"
+                            style={styles.removeButton}
                             onPress={() => handleRemoveImportedQuiz(quiz.id)}
                           >
                             <Ionicons name="close" size={16} color="#ef4444" />
@@ -294,7 +299,7 @@ export default function QuizzesScreen() {
                         )}
                       </View>
                     </View>
-                    <View className="flex-shrink-0 ml-2">
+                    <View style={styles.quizAction}>
                       {quizWithImport.isImported ? (
                         <TouchableOpacity onPress={() => handleQuizPress(quiz)}>
                           <Ionicons
@@ -322,36 +327,248 @@ export default function QuizzesScreen() {
       </View>
 
       {/* Quick Stats */}
-      <View className="px-6 mt-6">
+      <View style={styles.performanceSection}>
         <LinearGradient
           colors={["#1a1a2e", "#16213e"]}
-          className="p-6 rounded-3xl"
+          style={styles.performanceCard}
         >
-          <Text className="text-white text-lg font-bold mb-4 text-center">
+          <Text style={styles.performanceTitle}>
             Quiz Performance
           </Text>
-          <View className="flex-row justify-between">
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-green-400">
+          <View style={styles.performanceStats}>
+            <View style={styles.performanceStat}>
+              <Text style={styles.performanceValueGreen}>
                 {quizzes.length}
               </Text>
-              <Text className="text-gray-400 text-sm">Available</Text>
+              <Text style={styles.performanceLabel}>Available</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-blue-400">
+            <View style={styles.performanceStat}>
+              <Text style={styles.performanceValueBlue}>
                 {quizzes.reduce((sum, quiz) => sum + quiz.questionCount, 0)}
               </Text>
-              <Text className="text-gray-400 text-sm">Questions</Text>
+              <Text style={styles.performanceLabel}>Questions</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-2xl font-bold text-yellow-400">85%</Text>
-              <Text className="text-gray-400 text-sm">Success Rate</Text>
+            <View style={styles.performanceStat}>
+              <Text style={styles.performanceValueYellow}>85%</Text>
+              <Text style={styles.performanceLabel}>Success Rate</Text>
             </View>
           </View>
         </LinearGradient>
       </View>
 
-      <View className="h-24" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    padding: 8,
+    borderRadius: 9999,
+    marginRight: 16,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  headerSubtitle: {
+    color: "white",
+    opacity: 0.8,
+  },
+  progressBarContainer: {
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 9999,
+    height: 12,
+    marginBottom: 16,
+  },
+  progressBar: {
+    backgroundColor: "white",
+    borderRadius: 9999,
+    height: 12,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statValue: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  statLabel: {
+    color: "white",
+    opacity: 0.8,
+    fontSize: 12,
+  },
+  quizzesSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  sectionTitle: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 24,
+  },
+  centerContent: {
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  loadingText: {
+    color: "white",
+    fontSize: 18,
+  },
+  quizCardWrapper: {
+    marginBottom: 16,
+  },
+  quizCard: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  quizCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  quizIcon: {
+    padding: 16,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  quizInfo: {
+    flex: 1,
+  },
+  quizTitleRow: {
+    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 4,
+  },
+  quizTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    flex: 1,
+    marginRight: 8,
+  },
+  badgesContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 0,
+  },
+  difficultyBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+    marginRight: 8,
+  },
+  difficultyText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  importedBadge: {
+    backgroundColor: "rgba(16, 185, 129, 0.2)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  importedText: {
+    color: "#34d399",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  quizDescription: {
+    color: "#9ca3af",
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  quizMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  quizMeta: {
+    color: "#9ca3af",
+    fontSize: 14,
+    flex: 1,
+    marginRight: 8,
+  },
+  removeButton: {
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
+    padding: 8,
+    borderRadius: 9999,
+    flexShrink: 0,
+  },
+  quizAction: {
+    flexShrink: 0,
+    marginLeft: 8,
+  },
+  performanceSection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+  },
+  performanceCard: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  performanceTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  performanceStats: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  performanceStat: {
+    alignItems: "center",
+  },
+  performanceValueGreen: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#34d399",
+  },
+  performanceValueBlue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#60a5fa",
+  },
+  performanceValueYellow: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#fbbf24",
+  },
+  performanceLabel: {
+    color: "#9ca3af",
+    fontSize: 12,
+  },
+  bottomSpacer: {
+    height: 96,
+  },
+});

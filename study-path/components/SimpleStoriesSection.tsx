@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, Text, View, TouchableOpacity, Image, Dimensions, Modal } from "react-native";
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Image, Dimensions, Modal } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -72,85 +72,59 @@ const SimpleStoriesSection = () => {
   };
 
   return (
-    <View style={{ backgroundColor: '#0f172a', paddingVertical: 12 }}>
-      <View style={{ paddingHorizontal: 24, marginBottom: 12 }}>
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>Stories</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Stories</Text>
       </View>
       
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingRight: 48 }}
+        contentContainerStyle={styles.scrollContent}
       >
         {mockStories.map((story) => (
           <TouchableOpacity
             key={story.id}
             onPress={() => handleStoryPress(story)}
             activeOpacity={0.9}
-            style={{ width: cardWidth, marginRight: 12 }}
+            style={styles.cardWrapper}
           >
-            <View 
-              style={{ 
-                height: cardHeight,
-                borderRadius: 16,
-                overflow: 'hidden',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
-                shadowRadius: 8,
-                elevation: 8,
-              }}
-            >
+            <View style={styles.card}>
               {story.isOwn ? (
                 // Add Story Card
                 <LinearGradient
                   colors={['#667eea', '#764ba2']}
-                  style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+                  style={styles.addStoryGradient}
                 >
-                  <View style={{ alignItems: 'center' }}>
-                    <View style={{ 
-                      width: 48, 
-                      height: 48, 
-                      backgroundColor: 'white', 
-                      borderRadius: 24, 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      marginBottom: 8
-                    }}>
+                  <View style={styles.addStoryContent}>
+                    <View style={styles.addButton}>
                       <Ionicons name="add" size={28} color="#667eea" />
                     </View>
-                    <Text style={{ color: 'white', fontWeight: '600', fontSize: 14 }}>Add Story</Text>
+                    <Text style={styles.addStoryText}>Add Story</Text>
                   </View>
                 </LinearGradient>
               ) : (
                 // Regular Story Card
-                <View style={{ flex: 1, position: 'relative' }}>
+                <View style={styles.storyCard}>
                   {/* Background Image */}
                   <Image
                     source={{ uri: story.mediaUrl }}
-                    style={{ width: '100%', height: '100%' }}
+                    style={styles.backgroundImage}
                     resizeMode="cover"
                   />
 
                   {/* Dark Overlay */}
                   <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.7)']}
-                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                    style={styles.darkOverlay}
                   />
 
                   {/* Profile Picture */}
-                  <View style={{ position: 'absolute', top: 12, left: 12 }}>
-                    <View style={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 20, 
-                      overflow: 'hidden', 
-                      borderWidth: 2, 
-                      borderColor: 'white' 
-                    }}>
+                  <View style={styles.profileContainer}>
+                    <View style={styles.profilePicture}>
                       <Image
                         source={{ uri: story.userAvatar }}
-                        style={{ width: '100%', height: '100%' }}
+                        style={styles.profileImage}
                         resizeMode="cover"
                       />
                     </View>
@@ -158,34 +132,27 @@ const SimpleStoriesSection = () => {
 
                   {/* Viewed Indicator */}
                   {story.isViewed && (
-                    <View style={{ 
-                      position: 'absolute', 
-                      top: 12, 
-                      right: 12, 
-                      backgroundColor: 'rgba(0,0,0,0.5)', 
-                      borderRadius: 12, 
-                      padding: 4 
-                    }}>
+                    <View style={styles.viewedIndicator}>
                       <Ionicons name="checkmark-done" size={16} color="#9ca3af" />
                     </View>
                   )}
 
                   {/* Bottom Content */}
-                  <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 12 }}>
-                    <Text style={{ color: 'white', fontWeight: '600', fontSize: 16, marginBottom: 4 }} numberOfLines={1}>
+                  <View style={styles.bottomContent}>
+                    <Text style={styles.userName} numberOfLines={1}>
                       {story.userName}
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Text style={{ color: 'white', fontSize: 14, opacity: 0.8 }} numberOfLines={1}>
+                    <View style={styles.bottomRow}>
+                      <Text style={styles.content} numberOfLines={1}>
                         {story.content}
                       </Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 8 }}>
-                        <Text style={{ color: 'white', fontSize: 12, opacity: 0.6, marginRight: 8 }}>
+                      <View style={styles.metaContainer}>
+                        <Text style={styles.timestamp}>
                           {story.timestamp}
                         </Text>
-                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={styles.viewCountContainer}>
                           <Ionicons name="eye" size={12} color="rgba(255,255,255,0.6)" />
-                          <Text style={{ color: 'white', fontSize: 12, opacity: 0.6, marginLeft: 4 }}>
+                          <Text style={styles.viewCount}>
                             {story.viewCount}
                           </Text>
                         </View>
@@ -206,29 +173,11 @@ const SimpleStoriesSection = () => {
         animationType="fade"
         statusBarTranslucent
       >
-        <View style={{ flex: 1, backgroundColor: 'black' }}>
+        <View style={styles.modalContainer}>
           {/* Progress Bar */}
-          <View style={{ 
-            flexDirection: 'row', 
-            paddingHorizontal: 16, 
-            paddingTop: 48, 
-            paddingBottom: 8 
-          }}>
-            <View style={{ 
-              flex: 1, 
-              height: 4, 
-              backgroundColor: 'rgba(255,255,255,0.3)', 
-              borderRadius: 2, 
-              marginRight: 4 
-            }}>
-              <View
-                style={{
-                  height: 4,
-                  backgroundColor: 'white',
-                  borderRadius: 2,
-                  width: '30%'
-                }}
-              />
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBarBg}>
+              <View style={styles.progressBar} />
             </View>
           </View>
 
@@ -236,52 +185,44 @@ const SimpleStoriesSection = () => {
           <TouchableOpacity
             activeOpacity={1}
             onPress={handleCloseModal}
-            style={{ flex: 1 }}
+            style={styles.modalContent}
           >
             {selectedStory?.mediaUrl ? (
               <Image
                 source={{ uri: selectedStory.mediaUrl }}
-                style={{ flex: 1 }}
+                style={styles.modalImage}
                 resizeMode="cover"
               />
             ) : (
               <LinearGradient
                 colors={['#667eea', '#764ba2']}
-                style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
+                style={styles.modalGradient}
               >
-                <Text style={{ color: 'white', fontSize: 24, fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 32 }}>
+                <Text style={styles.modalText}>
                   {selectedStory?.content}
                 </Text>
               </LinearGradient>
             )}
 
             {/* Story Info Overlay */}
-            <View style={{ position: 'absolute', top: 60, left: 16, right: 16 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View style={{ 
-                  width: 40, 
-                  height: 40, 
-                  borderRadius: 20, 
-                  backgroundColor: '#1f2937', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  marginRight: 12 
-                }}>
+            <View style={styles.infoOverlay}>
+              <View style={styles.infoRow}>
+                <View style={styles.avatarContainer}>
                   {selectedStory?.userAvatar ? (
                     <Image
                       source={{ uri: selectedStory.userAvatar }}
-                      style={{ width: 40, height: 40, borderRadius: 20 }}
+                      style={styles.avatar}
                       resizeMode="cover"
                     />
                   ) : (
                     <Ionicons name="person" size={20} color="#9ca3af" />
                   )}
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: 'white', fontWeight: '600', fontSize: 16 }}>
+                <View style={styles.userInfo}>
+                  <Text style={styles.modalUserName}>
                     {selectedStory?.userName}
                   </Text>
-                  <Text style={{ color: 'white', fontSize: 14, opacity: 0.8 }}>
+                  <Text style={styles.modalTimestamp}>
                     {selectedStory?.timestamp}
                   </Text>
                 </View>
@@ -291,17 +232,7 @@ const SimpleStoriesSection = () => {
             {/* Close Button */}
             <TouchableOpacity
               onPress={handleCloseModal}
-              style={{ 
-                position: 'absolute', 
-                top: 60, 
-                right: 16, 
-                width: 40, 
-                height: 40, 
-                borderRadius: 20, 
-                backgroundColor: 'rgba(0,0,0,0.5)', 
-                alignItems: 'center', 
-                justifyContent: 'center' 
-              }}
+              style={styles.closeButton}
             >
               <Ionicons name="close" size={24} color="white" />
             </TouchableOpacity>
@@ -311,5 +242,235 @@ const SimpleStoriesSection = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: '#0f172a',
+    paddingVertical: 12,
+  },
+  header: {
+    paddingHorizontal: 24,
+    marginBottom: 12,
+  },
+  title: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingRight: 48,
+  },
+  cardWrapper: {
+    width: cardWidth,
+    marginRight: 12,
+  },
+  card: {
+    height: cardHeight,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  addStoryGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addStoryContent: {
+    alignItems: 'center',
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    backgroundColor: 'white',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  addStoryText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  storyCard: {
+    flex: 1,
+    position: 'relative',
+  },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  darkOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  profileContainer: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+  },
+  profilePicture: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  viewedIndicator: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 12,
+    padding: 4,
+  },
+  bottomContent: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 12,
+  },
+  userName: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  content: {
+    color: 'white',
+    fontSize: 14,
+    opacity: 0.8,
+    flex: 1,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  timestamp: {
+    color: 'white',
+    fontSize: 12,
+    opacity: 0.6,
+    marginRight: 8,
+  },
+  viewCountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewCount: {
+    color: 'white',
+    fontSize: 12,
+    opacity: 0.6,
+    marginLeft: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingTop: 48,
+    paddingBottom: 8,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 2,
+    marginRight: 4,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'white',
+    borderRadius: 2,
+    width: '30%',
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalImage: {
+    flex: 1,
+  },
+  modalGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 32,
+  },
+  infoOverlay: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    right: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1f2937',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  modalUserName: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  modalTimestamp: {
+    color: 'white',
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
 
 export default SimpleStoriesSection;

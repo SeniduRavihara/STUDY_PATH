@@ -6,6 +6,7 @@ import {
   Alert,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -113,7 +114,7 @@ export default function SubscribeScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-slate-900"
+      style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
@@ -121,20 +122,20 @@ export default function SubscribeScreen() {
       {/* Header */}
       <LinearGradient
         colors={["#0f0f23", "#1a1a2e"]}
-        className="px-6 pt-14 pb-8"
+        style={styles.header}
       >
-        <View className="flex-row items-center mb-4">
+        <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => router.back()}
-            className="bg-slate-800 p-2 rounded-full mr-4"
+            style={styles.backButton}
           >
             <Ionicons name="arrow-back" size={24} color="#00d4ff" />
           </TouchableOpacity>
-          <View className="flex-1">
-            <Text className="text-white text-2xl font-bold">
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>
               Browse Subjects
             </Text>
-            <Text className="text-gray-400 text-base">
+            <Text style={styles.headerSubtitle}>
               Subscribe to subjects you want to learn
             </Text>
           </View>
@@ -142,22 +143,22 @@ export default function SubscribeScreen() {
       </LinearGradient>
 
       {/* Subjects */}
-      <View className="px-6 mt-8">
+      <View style={styles.subjectsSection}>
         {loading ? (
-          <View className="items-center py-8">
-            <Text className="text-gray-400">Loading subjects...</Text>
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading subjects...</Text>
           </View>
         ) : (
           allSubjects.map(subject => (
-            <View key={subject.id} className="mb-4">
+            <View key={subject.id} style={styles.subjectCardWrapper}>
               <LinearGradient
                 colors={["#1a1a2e", "#16213e"]}
-                className="p-6 rounded-3xl"
+                style={styles.subjectCard}
               >
-                <View className="flex-row items-center">
+                <View style={styles.subjectContent}>
                   <LinearGradient
                     colors={subject.color || ['#3B82F6', '#3B82F6']}
-                    className="p-4 rounded-2xl mr-4"
+                    style={styles.subjectIcon}
                   >
                     <Ionicons
                       name={getValidIcon(subject.icon)}
@@ -166,38 +167,38 @@ export default function SubscribeScreen() {
                     />
                   </LinearGradient>
 
-                  <View className="flex-1">
-                    <View className="flex-row justify-between items-center mb-2">
-                      <Text className="text-white text-lg font-bold">
+                  <View style={styles.subjectInfo}>
+                    <View style={styles.subjectTitleRow}>
+                      <Text style={styles.subjectTitle}>
                         {subject.name}
                       </Text>
-                      <View className="bg-slate-700 px-3 py-1 rounded-full">
-                        <Text className="text-gray-300 text-xs">
+                      <View style={styles.difficultyBadge}>
+                        <Text style={styles.difficultyText}>
                           {subject.difficulty}
                         </Text>
                       </View>
                     </View>
 
-                    <Text className="text-gray-400 text-sm mb-3">
+                    <Text style={styles.subjectDescription}>
                       {subject.description}
                     </Text>
 
-                    <View className="flex-row justify-between items-center mb-3">
-                      <Text className="text-gray-400 text-sm">
+                    <View style={styles.subjectMetaRow}>
+                      <Text style={styles.subjectMeta}>
                         {subject.chapters} chapters
                       </Text>
-                      <View className="flex-row items-center">
+                      <View style={styles.xpContainer}>
                         <Ionicons name="star" size={16} color="#FFD700" />
-                        <Text className="text-yellow-400 text-sm ml-1">
+                        <Text style={styles.xpText}>
                           {subject.xp} XP
                         </Text>
                       </View>
                     </View>
 
                     {subject.streak > 0 && (
-                      <View className="flex-row items-center mb-3">
+                      <View style={styles.streakContainer}>
                         <Ionicons name="flame" size={16} color="#FF6B6B" />
-                        <Text className="text-red-400 text-xs ml-1">
+                        <Text style={styles.streakText}>
                           {subject.streak} day streak
                         </Text>
                       </View>
@@ -209,11 +210,14 @@ export default function SubscribeScreen() {
                           ? handleUnsubscribe(subject)
                           : handleSubscribe(subject)
                       }
-                      className={`py-3 px-6 rounded-full ${
-                        subject.isSubscribed ? "bg-red-600" : "bg-blue-600"
-                      }`}
+                      style={[
+                        styles.subscribeButton,
+                        subject.isSubscribed
+                          ? styles.unsubscribeButton
+                          : styles.subscribeButtonActive,
+                      ]}
                     >
-                      <Text className="text-white font-semibold text-center">
+                      <Text style={styles.subscribeButtonText}>
                         {subject.isSubscribed ? "Unsubscribe" : "Subscribe"}
                       </Text>
                     </TouchableOpacity>
@@ -225,7 +229,146 @@ export default function SubscribeScreen() {
         )}
       </View>
 
-      <View className="h-8" />
+      <View style={styles.bottomSpacer} />
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0f172a",
+  },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 56,
+    paddingBottom: 32,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  backButton: {
+    backgroundColor: "#1e293b",
+    padding: 8,
+    borderRadius: 9999,
+    marginRight: 16,
+  },
+  headerTextContainer: {
+    flex: 1,
+  },
+  headerTitle: {
+    color: "white",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  headerSubtitle: {
+    color: "#9ca3af",
+    fontSize: 16,
+  },
+  subjectsSection: {
+    paddingHorizontal: 24,
+    marginTop: 32,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    paddingVertical: 32,
+  },
+  loadingText: {
+    color: "#9ca3af",
+  },
+  subjectCardWrapper: {
+    marginBottom: 16,
+  },
+  subjectCard: {
+    padding: 24,
+    borderRadius: 24,
+  },
+  subjectContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  subjectIcon: {
+    padding: 16,
+    borderRadius: 16,
+    marginRight: 16,
+  },
+  subjectInfo: {
+    flex: 1,
+  },
+  subjectTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  subjectTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  difficultyBadge: {
+    backgroundColor: "#334155",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 9999,
+  },
+  difficultyText: {
+    color: "#d1d5db",
+    fontSize: 10,
+  },
+  subjectDescription: {
+    color: "#9ca3af",
+    fontSize: 14,
+    marginBottom: 12,
+  },
+  subjectMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  subjectMeta: {
+    color: "#9ca3af",
+    fontSize: 14,
+  },
+  xpContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  xpText: {
+    color: "#fbbf24",
+    fontSize: 14,
+    marginLeft: 4,
+  },
+  streakContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  streakText: {
+    color: "#f87171",
+    fontSize: 10,
+    marginLeft: 4,
+  },
+  subscribeButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 9999,
+  },
+  subscribeButtonActive: {
+    backgroundColor: "#2563eb",
+  },
+  unsubscribeButton: {
+    backgroundColor: "#dc2626",
+  },
+  subscribeButtonText: {
+    color: "white",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  bottomSpacer: {
+    height: 32,
+  },
+});
