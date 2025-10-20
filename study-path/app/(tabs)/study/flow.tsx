@@ -1,11 +1,9 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Alert, View, ActivityIndicator, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CustomModal from "../../../components/CustomModal";
-import LearningFlowPath, {
-  LearningNode,
-} from "../../../components/LearningFlowPath";
+import { LearningFlowPath, LearningNode } from "../../../components/LearningFlowPath";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SupabaseService } from "../../../superbase/services/supabaseService";
 
@@ -24,6 +22,7 @@ export default function FlowStudyScreen() {
 
   // Learning nodes - loaded from database
   const [learningNodes, setLearningNodes] = useState<LearningNode[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentFlowId, setCurrentFlowId] = useState<string | null>(null);
   const [topics, setTopics] = useState<any[]>([]);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
@@ -76,102 +75,84 @@ export default function FlowStudyScreen() {
     };
 
     loadTopics();
-  }, [parsedSubject?.id, user?.id]);
+    }, [parsedSubject?.id, parsedSubject?.name, user?.id]);
 
-  // Load existing flow when topic is selected
-  useEffect(() => {
-    const loadExistingFlow = async () => {
-      if (!currentTopicId || !user?.id) return;
-      
-      setIsLoading(true);
-      try {
-        // Get flows for this topic
-        const { data: flows, error } = await SupabaseService.getFlowsByTopic(currentTopicId);
-        
-        if (error) {
-          console.error("Error loading flows:", error);
-          return;
-        }
-        
-        if (flows && flows.length > 0) {
-          // Load the first flow
-          const flow = flows[0];
-          await loadFlow(flow.id);
-        } else {
-          // No flow exists for this topic, start fresh
-          setLearningNodes([]);
-          setCurrentFlowId(null);
-        }
-      } catch (error) {
-        console.error("Error loading existing flow:", error);
-        // On error, start fresh
-        setLearningNodes([]);
-        setCurrentFlowId(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadExistingFlow();
-  }, [currentTopicId, user?.id]);
-
-  // Load flow from database
-  const loadFlow = async (flowId: string) => {
+    // Load flow from database
+    const loadFlow = useCallback(async (flowId: string) => {
     try {
-      const { data: flowWithNodes, error } = await SupabaseService.loadFlowWithNodes(flowId);
-      
-      if (error) {
-        console.error("Error loading flow:", error);
-        return;
-      }
-      
-      if (flowWithNodes && flowWithNodes.nodes) {
-        // Convert database nodes back to LearningNode format
-        const convertedNodes: LearningNode[] = flowWithNodes.nodes.map((node: any) => ({
-          id: node.id,
-          title: node.title,
-          type: node.node_type === "start" ? "lesson" : 
-                node.node_type === "end" ? "milestone" :
-                node.node_type === "quiz" ? "quiz" :
-                node.node_type === "assignment" ? "project" : "lesson",
-          status: node.status,
-          difficulty: node.difficulty,
-          xp: node.xp_reward,
-          position: { x: 0, y: 0 }, // Will be calculated by grid system
-          icon: getNodeIcon(node.node_type),
-          color: getNodeColor(node.node_type),
-          description: node.description,
-          estimatedTime: `${node.estimated_time} min`,
-          config: node.config // Preserve the config including quiz_pack_id
-        }));
+    const { data: flowWithNodes, error } = await SupabaseService.loadFlowWithNodes(flowId);
 
-        setLearningNodes(convertedNodes);
-        setCurrentFlowId(flowId);
+    if (error) {
+      console.error("Error loading flow:", error);
+    return;
+    }
+
+    if (flowWithNodes && flowWithNodes.nodes) {
+    // Convert database nodes back to LearningNode format
+    const convertedNodes: LearningNode[] = flowWithNodes.nodes.map((node: any) => ({
+      id: node.id,
+      title: node.title,
+      type: node.node_type === "start" ? "lesson" :
+          node.node_type === "end" ? "milestone" :
+          node.node_type === "quiz" ? "quiz" :
+          node.node_type === "assignment" ? "project" : "lesson",
+      status: node.status,
+    difficulty: node.difficulty,
+    xp: node.xp_reward,
+    position: { x: 0, y: 0 }, // Will be calculated by grid system
+      icon: getNodeIcon(node.node_type),
+        color: getNodeColor(node.node_type),
+      description: node.description,
+      estimatedTime: `${node.estimated_time} min`,
+      config: node.config // Preserve the config including quiz_pack_id
+    }));
+
+    setLearningNodes(convertedNodes);
+      setCurrentFlowId(flowId);
       }
     } catch (error) {
       console.error("Error loading flow:", error);
-    }
-  };
+      }
+  }, []);
 
-  // Helper function to get valid icon name
-  const getValidIcon = (iconName: string | null): keyof typeof Ionicons.glyphMap => {
-    if (!iconName) return "book";
-    
-    // List of valid Ionicons names
-    const validIcons = [
-      "book", "library", "school", "calculator", "flask", "bulb", "globe", 
-      "code-slash", "phone-portrait", "logo-python", "brain", "git-branch",
-      "play-circle", "help-circle", "videocam", "document-text", "checkmark-circle", "trophy"
-    ];
-    
-    // If the icon name is valid, use it
-    if (validIcons.includes(iconName)) {
-      return iconName as keyof typeof Ionicons.glyphMap;
+    // Load existing flow when topic is selected
+    useEffect(() => {
+    const loadExistingFlow = async () => {
+    if (!currentTopicId || !user?.id) return;
+
+    setIsLoading(true);
+    try {
+      // Get flows for this topic
+      const { data: flows, error } = await SupabaseService.getFlowsByTopic(currentTopicId);
+
+    if (error) {
+      console.error("Error loading flows:", error);
+    return;
     }
-    
-    // Default fallback
-    return "book";
-  };
+
+    if (flows && flows.length > 0) {
+    // Load the first flow
+    const flow = flows[0];
+    await loadFlow(flow.id);
+    } else {
+    // No flow exists for this topic, start fresh
+    setLearningNodes([]);
+    setCurrentFlowId(null);
+    }
+    } catch (error) {
+    console.error("Error loading existing flow:", error);
+    // On error, start fresh
+    setLearningNodes([]);
+        setCurrentFlowId(null);
+    } finally {
+    setIsLoading(false);
+    }
+    };
+
+    loadExistingFlow();
+    }, [currentTopicId, user?.id, loadFlow]);
+
+
 
   // Helper functions for node conversion
   const getNodeIcon = (nodeType: string): keyof typeof Ionicons.glyphMap => {
@@ -322,6 +303,10 @@ export default function FlowStudyScreen() {
   };
 
   const getCurrentTopic = () => {
+    if (!currentTopicId) {
+      return { id: null, name: "No Topic Selected", description: "Please select a topic" };
+    }
+
     // Find topic in the hierarchical structure from database
     const findTopicInHierarchy = (topics: any[], topicId: string): any => {
       for (const topic of topics) {
@@ -333,12 +318,12 @@ export default function FlowStudyScreen() {
       }
       return null;
     };
-    
+
     // For now, return a basic topic object if not found
-    return findTopicInHierarchy(topics, currentTopicId) || { 
-      id: currentTopicId, 
-      name: "Unknown Topic", 
-      description: "Topic not found" 
+    return findTopicInHierarchy(topics, currentTopicId!) || {
+      id: currentTopicId,
+      name: "Unknown Topic",
+      description: "Topic not found"
     };
   };
 
@@ -437,7 +422,7 @@ export default function FlowStudyScreen() {
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           title={selectedNode.title}
-          description={selectedNode.description}
+          description={selectedNode.description || "No description available"}
           estimatedTime={selectedNode.estimatedTime}
           type={selectedNode.type}
           onConfirm={handleModalConfirm}
@@ -491,7 +476,7 @@ export default function FlowStudyScreen() {
                     No Topics Available
                   </Text>
                   <Text style={styles.emptyStateText}>
-                    This subject doesn't have any topics yet.
+                    This subject doesn&apos;t have any topics yet.
                   </Text>
                 </View>
               )}

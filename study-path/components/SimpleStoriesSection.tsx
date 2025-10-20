@@ -7,8 +7,21 @@ const { width: screenWidth } = Dimensions.get('window');
 const cardWidth = screenWidth * 0.35;
 const cardHeight = cardWidth * 1.4;
 
+// Story interface
+interface Story {
+  id: string;
+  isOwn?: boolean;
+  userName: string;
+  userAvatar?: string;
+  content?: string;
+  mediaUrl?: string;
+  timestamp?: string;
+  viewCount?: number;
+  isViewed?: boolean;
+}
+
 // Mock data
-const mockStories = [
+const mockStories: Story[] = [
   {
     id: 'add-story',
     isOwn: true,
@@ -54,10 +67,10 @@ const mockStories = [
 ];
 
 const SimpleStoriesSection = () => {
-  const [selectedStory, setSelectedStory] = useState(null);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleStoryPress = (story: any) => {
+  const handleStoryPress = (story: Story) => {
     if (story.isOwn) {
       console.log('Create story pressed');
     } else {

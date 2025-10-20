@@ -2,15 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
+Animated,
+ColorValue,
+Dimensions,
+ScrollView,
+StyleSheet,
+Text,
+TouchableOpacity,
   View,
 } from "react-native";
-import Svg, { Path, Circle } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -84,7 +85,7 @@ const getSmartPosition = (index: number): "left" | "center" | "right" => {
 
 // Generate vertical flow positions for nodes using 3-column system
 const generateVerticalFlowPositions = (
-  nodes: LearningNode[],
+  nodes: LearningNode[]
 ): LearningNode[] => {
   const { width: screenWidth } = Dimensions.get("window");
 
@@ -116,7 +117,7 @@ const generateVerticalFlowPositions = (
 // Get node anchor point based on position and direction
 const getNodeAnchorPoint = (
   node: LearningNode,
-  direction: "top" | "bottom" | "left" | "right" | "center",
+  direction: "top" | "bottom" | "left" | "right" | "center"
 ): { x: number; y: number } => {
   const centerX = node.position.x;
   const centerY = node.position.y;
@@ -142,7 +143,7 @@ const getNodeAnchorPoint = (
 const getConnectionPoints = (
   currentNode: LearningNode,
   nextNode: LearningNode,
-  currentIndex: number,
+  currentIndex: number
 ): { start: { x: number; y: number }; end: { x: number; y: number } } => {
   const currentPos = getSmartPosition(currentIndex);
   const nextPos = getSmartPosition(currentIndex + 1);
@@ -174,7 +175,7 @@ const getConnectionPoints = (
 const createVerticalFlowPath = (
   startNode: LearningNode,
   endNode: LearningNode,
-  nodeIndex: number,
+  nodeIndex: number
 ): string => {
   const points = getConnectionPoints(startNode, endNode, nodeIndex);
   const start = points.start;
@@ -277,7 +278,7 @@ const LearningNodeComponent: React.FC<{
             duration: 1000,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       );
       pulse.start();
       return () => pulse.stop();
@@ -313,7 +314,7 @@ const LearningNodeComponent: React.FC<{
     }
   };
 
-  const getNodeColor = () => {
+  const getNodeColor = (): [ColorValue, ColorValue] => {
     switch (node.status) {
       case "completed":
         return ["#10b981", "#059669"];
@@ -322,7 +323,7 @@ const LearningNodeComponent: React.FC<{
       case "locked":
         return ["#6b7280", "#4b5563"];
       default:
-        return node.color;
+        return node.color as [ColorValue, ColorValue];
     }
   };
 
@@ -409,16 +410,16 @@ const LearningNodeComponent: React.FC<{
                     node.difficulty === "easy"
                       ? "#10b981"
                       : node.difficulty === "medium"
-                        ? "#f59e0b"
-                        : "#ef4444",
+                      ? "#f59e0b"
+                      : "#ef4444",
                 },
               ]}
             >
               {node.difficulty === "easy"
                 ? "E"
                 : node.difficulty === "medium"
-                  ? "M"
-                  : "H"}
+                ? "M"
+                : "H"}
             </Text>
           </View>
         )}
@@ -518,10 +519,7 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
             colors={["#8b5cf6", "#7c3aed"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={[
-              styles.progressBarFill,
-              { width: `${courseProgress}%` },
-            ]}
+            style={[styles.progressBarFill, { width: `${courseProgress}%` }]}
           />
         </View>
       </LinearGradient>
@@ -546,19 +544,24 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
         >
           {/* Dotted Grid Background */}
           <View style={styles.gridBackground}>
-            {Array.from({ length: Math.ceil(totalContentHeight / 40) }, (_, row) =>
-              Array.from({ length: Math.ceil(screenWidth / 40) }, (_, col) => (
-                <View
-                  key={`dot-${row}-${col}`}
-                  style={[
-                    styles.gridDot,
-                    {
-                      left: col * 40,
-                      top: row * 40,
-                    },
-                  ]}
-                />
-              ))
+            {Array.from(
+              { length: Math.ceil(totalContentHeight / 40) },
+              (_, row) =>
+                Array.from(
+                  { length: Math.ceil(screenWidth / 40) },
+                  (_, col) => (
+                    <View
+                      key={`dot-${row}-${col}`}
+                      style={[
+                        styles.gridDot,
+                        {
+                          left: col * 40,
+                          top: row * 40,
+                        },
+                      ]}
+                    />
+                  )
+                )
             )}
           </View>
 
@@ -600,19 +603,17 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
           <View>
             <Text style={styles.nextLabel}>
               Next:{" "}
-              {flowNodes.find(n => n.status === "current")?.title ||
+              {flowNodes.find((n) => n.status === "current")?.title ||
                 "Complete the course!"}
             </Text>
             <Text style={styles.completedLabel}>
-              {flowNodes.filter(n => n.status === "completed").length} of{" "}
+              {flowNodes.filter((n) => n.status === "completed").length} of{" "}
               {flowNodes.length} completed
             </Text>
           </View>
           <View style={styles.trophyContainer}>
             <Ionicons name="trophy" size={20} color="#fbbf24" />
-            <Text style={styles.trophyText}>
-              {Math.round(courseProgress)}%
-            </Text>
+            <Text style={styles.trophyText}>{Math.round(courseProgress)}%</Text>
           </View>
         </View>
       </View>

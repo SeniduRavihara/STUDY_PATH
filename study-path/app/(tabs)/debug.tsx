@@ -1,5 +1,4 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 import React from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
@@ -11,7 +10,6 @@ import {
 } from "../../utils/authUtils";
 
 export default function DebugScreen() {
-  const router = useRouter();
   const { user, session, loading } = useAuth();
 
   return (

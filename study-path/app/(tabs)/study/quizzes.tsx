@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import drizzleQuizService from "../../../lib/drizzleQuizService";
 import type { Quiz } from "../../../lib/schema";
@@ -12,7 +12,7 @@ export default function QuizzesScreen() {
   const parsedSubject = JSON.parse(subject as string);
   const parsedTopic = JSON.parse(topic as string);
 
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null);
+
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,24 +21,7 @@ export default function QuizzesScreen() {
     isImported: boolean | null;
   }
 
-  useEffect(() => {
-    loadQuizzes();
-  }, []);
-
-  // Debug: Log database info
-  useEffect(() => {
-    const logDbInfo = async () => {
-      try {
-        const stats = await drizzleQuizService.getDatabaseStats();
-        console.log("📊 Drizzle Database Stats:", stats);
-      } catch (error) {
-        console.error("Error logging database info:", error);
-      }
-    };
-    logDbInfo();
-  }, [quizzes]);
-
-  const loadQuizzes = async () => {
+  const loadQuizzes = useCallback(async () => {
     try {
       setLoading(true);
       const subjectQuizzes = await drizzleQuizService.getQuizzesBySubject(
@@ -74,20 +57,36 @@ export default function QuizzesScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [parsedSubject.name]);
+
+  useEffect(() => {
+    loadQuizzes();
+  }, [loadQuizzes]);
+
+  // Debug: Log database info
+  useEffect(() => {
+    const logDbInfo = async () => {
+      try {
+        const stats = await drizzleQuizService.getDatabaseStats();
+        console.log("📊 Drizzle Database Stats:", stats);
+      } catch (error) {
+        console.error("Error logging database info:", error);
+      }
+    };
+    logDbInfo();
+  }, [quizzes]);
 
   const handleQuizPress = (quiz: Quiz) => {
-    setSelectedQuiz(quiz);
     Alert.alert(
-      `Start ${quiz.title}`,
+    `Start ${quiz.title}`,
       `This quiz has ${quiz.questionCount} questions and a ${quiz.timeLimit} minute time limit. Are you ready to begin?`,
       [
-        {
-          text: "Cancel",
+      {
+        text: "Cancel",
           style: "cancel",
         },
         {
-          text: "Start Quiz",
+        text: "Start Quiz",
           onPress: () => startQuiz(quiz),
         },
       ],
@@ -460,11 +459,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   quizTitleRow: {
-    marginBottom: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   quizTitle: {
     color: "white",

@@ -1,17 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React, { useEffect, useState } from "react";
+import { PanGestureHandler, State } from "react-native-gesture-handler";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  Animated,
-  Dimensions,
-  Image,
-  Modal,
-  PanGestureHandler,
-  State,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+Animated,
+Dimensions,
+Image,
+Modal,
+StyleSheet,
+Text,
+TouchableOpacity,
+View,
 } from "react-native";
 import { Story } from "./StoryCard";
 
@@ -22,8 +21,6 @@ interface StoryViewerProps {
   onClose: () => void;
   onStoryComplete: (storyId: string) => void;
 }
-
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export const StoryViewer: React.FC<StoryViewerProps> = ({
   visible,
@@ -38,6 +35,15 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
   const translateX = new Animated.Value(0);
 
   const currentStory = stories[currentIndex];
+
+  const handleNextStory = useCallback(() => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setProgress(0);
+    } else {
+      onClose();
+    }
+  }, [currentIndex, stories.length, onClose]);
 
   useEffect(() => {
     if (!visible) return;
@@ -55,16 +61,7 @@ export const StoryViewer: React.FC<StoryViewerProps> = ({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [visible, isPaused, currentIndex]);
-
-  const handleNextStory = () => {
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setProgress(0);
-    } else {
-      onClose();
-    }
-  };
+  }, [visible, isPaused, currentIndex, handleNextStory]);
 
   const handlePreviousStory = () => {
     if (currentIndex > 0) {

@@ -2,7 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -18,14 +18,6 @@ import {
   Subject,
   SubscriptionService
 } from "../../superbase/services/subscriptionService";
-
-type LocalSubject = {
-  id: number;
-  name: string;
-  progress: number;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: [string, string];
-};
 
 type Activity = {
   id: number;
@@ -45,7 +37,7 @@ const HomeScreen: React.FC = () => {
   const [navigatingToFlow, setNavigatingToFlow] = useState<string | null>(null);
 
   // Load user's subscribed subjects
-  const loadSubscribedSubjects = async () => {
+  const loadSubscribedSubjects = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -56,7 +48,7 @@ const HomeScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Refresh data
   const onRefresh = async () => {
@@ -81,7 +73,7 @@ const HomeScreen: React.FC = () => {
   // Load subjects on component mount
   useEffect(() => {
     loadSubscribedSubjects();
-  }, [user?.id]);
+  }, [loadSubscribedSubjects]);
 
   const recentActivity: Activity[] = [
     {

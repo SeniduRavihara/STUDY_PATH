@@ -1,16 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  ColorValue,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -45,7 +46,7 @@ export default function SubscribeScreen() {
   };
 
   // Load available subjects
-  const loadAvailableSubjects = async () => {
+  const loadAvailableSubjects = useCallback(async () => {
     if (!user?.id) {
       console.log("No user ID available");
       setLoading(false);
@@ -63,7 +64,7 @@ export default function SubscribeScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Refresh data
   const onRefresh = async () => {
@@ -114,7 +115,7 @@ export default function SubscribeScreen() {
   // Load subjects on component mount
   useEffect(() => {
     loadAvailableSubjects();
-  }, [user?.id]);
+  }, [loadAvailableSubjects]);
 
   // Filter subjects based on search term
   const filteredSubjects = availableSubjects.filter(
@@ -192,8 +193,8 @@ export default function SubscribeScreen() {
               >
                 <View style={styles.subjectContent}>
                   <LinearGradient
-                    colors={subject.color || ['#3B82F6', '#3B82F6']}
-                    style={styles.subjectIcon}
+                  colors={(subject.color as [ColorValue, ColorValue]) || (['#3B82F6', '#3B82F6'] as [ColorValue, ColorValue])}
+                  style={styles.subjectIcon}
                   >
                     <Ionicons
                       name={getValidIcon(subject.icon)}

@@ -1,15 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
+  ColorValue,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+View,
 } from "react-native";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
@@ -41,22 +42,22 @@ export default function SubscribeScreen() {
   };
 
   // Load all subjects
-  const loadAllSubjects = async () => {
+  const loadAllSubjects = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
       return;
     }
-    
+
     try {
       const subjects = await SubscriptionService.getAvailableSubjects(user.id);
       setAllSubjects(subjects);
-    } catch (error) {
-      console.error("Error loading subjects:", error);
+    } catch {
+      console.error("Error loading subjects");
       Alert.alert("Error", "Failed to load subjects. Please try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Refresh data
   const onRefresh = async () => {
@@ -68,7 +69,7 @@ export default function SubscribeScreen() {
   // Load subjects on component mount
   useEffect(() => {
     loadAllSubjects();
-  }, [user?.id]);
+  }, [loadAllSubjects]);
 
   // Handle subscription
   const handleSubscribe = async (subject: Subject) => {
@@ -86,8 +87,8 @@ export default function SubscribeScreen() {
       } else {
         Alert.alert("Error", "Failed to subscribe to subject");
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to subscribe to subject");
+    } catch {
+    Alert.alert("Error", "Failed to subscribe to subject");
     }
   };
 
@@ -107,8 +108,8 @@ export default function SubscribeScreen() {
       } else {
         Alert.alert("Error", "Failed to unsubscribe from subject");
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to unsubscribe from subject");
+    } catch {
+    Alert.alert("Error", "Failed to unsubscribe from subject");
     }
   };
 
@@ -157,8 +158,8 @@ export default function SubscribeScreen() {
               >
                 <View style={styles.subjectContent}>
                   <LinearGradient
-                    colors={subject.color || ['#3B82F6', '#3B82F6']}
-                    style={styles.subjectIcon}
+                  colors={(subject.color as [ColorValue, ColorValue]) || (['#3B82F6', '#3B82F6'] as [ColorValue, ColorValue])}
+                  style={styles.subjectIcon}
                   >
                     <Ionicons
                       name={getValidIcon(subject.icon)}
@@ -187,38 +188,23 @@ export default function SubscribeScreen() {
                       <Text style={styles.subjectMeta}>
                         {subject.chapters} chapters
                       </Text>
-                      <View style={styles.xpContainer}>
-                        <Ionicons name="star" size={16} color="#FFD700" />
-                        <Text style={styles.xpText}>
-                          {subject.xp} XP
-                        </Text>
-                      </View>
                     </View>
 
-                    {subject.streak > 0 && (
-                      <View style={styles.streakContainer}>
-                        <Ionicons name="flame" size={16} color="#FF6B6B" />
-                        <Text style={styles.streakText}>
-                          {subject.streak} day streak
-                        </Text>
-                      </View>
-                    )}
-
                     <TouchableOpacity
-                      onPress={() =>
-                        subject.isSubscribed
+                    onPress={() =>
+                        subject.is_subscribed
                           ? handleUnsubscribe(subject)
                           : handleSubscribe(subject)
                       }
                       style={[
                         styles.subscribeButton,
-                        subject.isSubscribed
+                        subject.is_subscribed
                           ? styles.unsubscribeButton
                           : styles.subscribeButtonActive,
                       ]}
                     >
                       <Text style={styles.subscribeButtonText}>
-                        {subject.isSubscribed ? "Unsubscribe" : "Subscribe"}
+                        {subject.is_subscribed ? "Unsubscribe" : "Subscribe"}
                       </Text>
                     </TouchableOpacity>
                   </View>

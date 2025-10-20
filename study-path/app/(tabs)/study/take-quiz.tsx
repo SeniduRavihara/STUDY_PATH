@@ -30,11 +30,6 @@ export default function TakeQuizScreen() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load questions from database
-  useEffect(() => {
-    loadQuizQuestions();
-  }, [quizPackId]);
-
   const loadQuizQuestions = useCallback(async () => {
     if (!quizPackId || !user?.id) {
       setLoading(false);
@@ -83,6 +78,55 @@ export default function TakeQuizScreen() {
     }
   }, [quizPackId, user?.id]);
 
+  // Load questions from database
+  useEffect(() => {
+    loadQuizQuestions();
+  }, [quizPackId, loadQuizQuestions]);
+
+  const calculateResults = useCallback((): QuizResult => {
+    let correctAnswers = 0;
+    answers.forEach((answerIndex, questionIndex) => {
+      const question = questions[questionIndex];
+      // correct_answer is an index (0-based), not a letter
+      if (answerIndex === question.correct_answer) {
+        correctAnswers++;
+      }
+    });
+
+    return {
+      score: Math.round((correctAnswers / questions.length) * 100),
+      totalQuestions: questions.length,
+      timeTaken: 30 * 60 - timeLeft,
+      correctAnswers,
+      wrongAnswers: questions.length - correctAnswers,
+    };
+  }, [answers, questions, timeLeft]);
+
+  const completeQuiz = useCallback(async () => {
+    try {
+      const results = calculateResults();
+
+      // Save quiz attempt to database (you can create a quiz_attempts table later)
+      console.log("Quiz completed:", {
+        quizId: quizId,
+        quizPackId: quizPackId,
+        userId: user?.id,
+        score: results.score,
+        timeTaken: 30 * 60 - timeLeft,
+        answers: answers,
+        questions: questions.length
+      });
+
+      setIsQuizComplete(true);
+      setShowResults(true);
+    } catch (error) {
+      console.error("Error saving quiz attempt:", error);
+      // Still show results even if saving fails
+      setIsQuizComplete(true);
+      setShowResults(true);
+    }
+  }, [answers, quizId, quizPackId, user?.id, questions, timeLeft, calculateResults]);
+
   // Timer effect
   useEffect(() => {
     if (timeLeft > 0 && !isQuizComplete) {
@@ -126,49 +170,7 @@ export default function TakeQuizScreen() {
     }
   };
 
-  const completeQuiz = useCallback(async () => {
-    try {
-      const results = calculateResults();
-      
-      // Save quiz attempt to database (you can create a quiz_attempts table later)
-      console.log("Quiz completed:", {
-        quizId: quizId,
-        quizPackId: quizPackId,
-        userId: user?.id,
-        score: results.score,
-        timeTaken: 30 * 60 - timeLeft,
-        answers: answers,
-        questions: questions.length
-      });
 
-      setIsQuizComplete(true);
-      setShowResults(true);
-    } catch (error) {
-      console.error("Error saving quiz attempt:", error);
-      // Still show results even if saving fails
-      setIsQuizComplete(true);
-      setShowResults(true);
-    }
-  }, [answers, quizId, quizPackId, user?.id, questions, timeLeft]);
-
-  const calculateResults = (): QuizResult => {
-    let correctAnswers = 0;
-    answers.forEach((answerIndex, questionIndex) => {
-      const question = questions[questionIndex];
-      // correct_answer is an index (0-based), not a letter
-      if (answerIndex === question.correct_answer) {
-        correctAnswers++;
-      }
-    });
-
-    return {
-      score: Math.round((correctAnswers / questions.length) * 100),
-      totalQuestions: questions.length,
-      timeTaken: 30 * 60 - timeLeft,
-      correctAnswers,
-      wrongAnswers: questions.length - correctAnswers,
-    };
-  };
 
   if (showResults) {
     const results = calculateResults();
@@ -333,7 +335,7 @@ export default function TakeQuizScreen() {
               No Questions Available
             </Text>
             <Text style={styles.loadingSubtitle}>
-              This quiz doesn't have any questions yet
+              This quiz doesn&apos;t have any questions yet
             </Text>
           </View>
         </LinearGradient>
@@ -358,7 +360,7 @@ export default function TakeQuizScreen() {
           No Questions Available
         </Text>
         <Text style={styles.errorSubtitle}>
-          This quiz doesn't have any questions yet.
+          This quiz doesn&apos;t have any questions yet.
         </Text>
         <TouchableOpacity
           style={styles.goBackButton}
@@ -417,7 +419,7 @@ export default function TakeQuizScreen() {
 
         {/* Answer Options */}
         <View style={styles.optionsSection}>
-          {currentQuestion.options?.map((option, index) => (
+          {currentQuestion.options?.map((option: string, index: number) => (
             <TouchableOpacity
               key={index}
               style={[

@@ -1,7 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View, Dimensions } from "react-native";
+import {
+  Dimensions,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export interface Story {
   id: string;
@@ -10,7 +17,7 @@ export interface Story {
   userAvatar?: string;
   content: string;
   mediaUrl?: string;
-  mediaType: 'image' | 'video' | 'text';
+  mediaType: "image" | "video" | "text";
   timestamp: Date;
   isViewed?: boolean;
   isOwn?: boolean;
@@ -21,25 +28,27 @@ export interface Story {
 interface StoryCardProps {
   story: Story;
   onPress: (story: Story) => void;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
 }
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 const cardWidth = screenWidth * 0.35; // Narrower cards for horizontal scroll
 const cardHeight = cardWidth * 1.4; // 4:3 aspect ratio
 
-const StoryCard: React.FC<StoryCardProps> = ({ 
-  story, 
-  onPress, 
-  size = 'medium' 
+const StoryCard: React.FC<StoryCardProps> = ({
+  story,
+  onPress,
+  size = "medium",
 }) => {
   const isAddStory = story.isOwn;
 
   const formatTimeAgo = (timestamp: Date) => {
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - timestamp.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'now';
+    const diffInHours = Math.floor(
+      (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffInHours < 1) return "now";
     if (diffInHours < 24) return `${diffInHours}h`;
     return `${Math.floor(diffInHours / 24)}d`;
   };
@@ -54,7 +63,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
         {isAddStory ? (
           // Add Story Card
           <LinearGradient
-            colors={['#667eea', '#764ba2']}
+            colors={["#667eea", "#764ba2"]}
             style={styles.addStoryGradient}
           >
             <View style={styles.addStoryContent}>
@@ -68,7 +77,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
           // Regular Story Card
           <View style={styles.storyContent}>
             {/* Background Image/Video */}
-            {story.mediaUrl && story.mediaType === 'image' ? (
+            {story.mediaUrl && story.mediaType === "image" ? (
               <Image
                 source={{ uri: story.mediaUrl }}
                 style={styles.storyMedia}
@@ -76,14 +85,14 @@ const StoryCard: React.FC<StoryCardProps> = ({
               />
             ) : (
               <LinearGradient
-                colors={story.gradient || ['#667eea', '#764ba2']}
+                colors={story.gradient || ["#667eea", "#764ba2"]}
                 style={styles.storyMedia}
               />
             )}
 
             {/* Dark Overlay for better text readability */}
             <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.7)']}
+              colors={["transparent", "rgba(0,0,0,0.7)"]}
               style={styles.darkOverlay}
             />
 
@@ -126,7 +135,11 @@ const StoryCard: React.FC<StoryCardProps> = ({
                   </Text>
                   {story.viewCount && story.viewCount > 0 && (
                     <View style={styles.viewCount}>
-                      <Ionicons name="eye" size={12} color="rgba(255,255,255,0.6)" />
+                      <Ionicons
+                        name="eye"
+                        size={12}
+                        color="rgba(255,255,255,0.6)"
+                      />
                       <Text style={styles.viewCountText}>
                         {story.viewCount}
                       </Text>
@@ -137,7 +150,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
             </View>
 
             {/* Media Type Indicator */}
-            {story.mediaType === 'video' && (
+            {story.mediaType === "video" && (
               <View style={styles.videoIndicatorContainer}>
                 <View style={styles.videoIndicator}>
                   <Ionicons name="play" size={24} color="white" />
@@ -160,7 +173,7 @@ const styles = StyleSheet.create({
     height: cardHeight,
     borderRadius: 16,
     overflow: "hidden",
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -296,6 +309,6 @@ const styles = StyleSheet.create({
   },
 });
 
-StoryCard.displayName = 'StoryCard';
+StoryCard.displayName = "StoryCard";
 
 export { StoryCard };

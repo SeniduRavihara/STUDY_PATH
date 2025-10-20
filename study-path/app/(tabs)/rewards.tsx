@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useEffect, useState } from "react";

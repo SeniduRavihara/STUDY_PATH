@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Story, StoryCard } from "./StoryCard";
 
@@ -15,11 +15,11 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
 }) => {
   // Create "Add Story" item
   const addStoryItem: Story = {
-    id: 'add-story',
-    userId: 'current-user',
-    userName: 'Your Story',
-    content: 'Add a new story',
-    mediaType: 'text',
+    id: "add-story",
+    userId: "current-user",
+    userName: "Your Story",
+    content: "Add a new story",
+    mediaType: "text",
     timestamp: new Date(),
     isOwn: true,
   };
@@ -40,7 +40,7 @@ const StoriesSection: React.FC<StoriesSectionProps> = ({
       <View style={styles.header}>
         <Text style={styles.title}>Stories</Text>
       </View>
-      
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -83,6 +83,6 @@ const styles = StyleSheet.create({
   },
 });
 
-StoriesSection.displayName = 'StoriesSection';
+StoriesSection.displayName = "StoriesSection";
 
 export { StoriesSection };

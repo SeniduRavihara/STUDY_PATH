@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  ColorValue,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -17,18 +18,7 @@ import {
   SubscriptionService
 } from "../../../superbase/services/subscriptionService";
 
-// Define types for better type safety
-type LocalSubject = {
-  id: number;
-  name: string;
-  chapters: number;
-  completed: number;
-  icon: keyof typeof Ionicons.glyphMap;
-  color: [string, string];
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
-  xp: number;
-  streak: number;
-};
+
 
 export default function StudyScreen() {
   const router = useRouter();
@@ -42,7 +32,7 @@ export default function StudyScreen() {
   const [navigatingToFlow, setNavigatingToFlow] = useState<string | null>(null);
 
   // Load user's subscribed subjects
-  const loadSubscribedSubjects = async () => {
+  const loadSubscribedSubjects = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
       return;
@@ -56,7 +46,7 @@ export default function StudyScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Refresh data
   const onRefresh = async () => {
@@ -68,7 +58,7 @@ export default function StudyScreen() {
   // Load subjects on component mount
   useEffect(() => {
     loadSubscribedSubjects();
-  }, [user?.id]);
+  }, [loadSubscribedSubjects]);
 
   // Handle subscribing to new subjects
   const handleSubscribeToSubjects = () => {
@@ -181,7 +171,7 @@ export default function StudyScreen() {
                 )}
                 <View style={styles.subjectContent}>
                   <LinearGradient
-                    colors={subject.color || ["#3B82F6", "#3B82F6"]}
+                    colors={(subject.color as [ColorValue, ColorValue]) || (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])}
                     style={styles.iconContainer}
                   >
                     <Ionicons
@@ -205,34 +195,34 @@ export default function StudyScreen() {
 
                     <View style={styles.subjectStatsRow}>
                       <Text style={styles.chaptersText}>
-                        {subject.completed}/{subject.chapters} chapters
+                        {subject.user_progress?.completed_chapters || 0}/{subject.chapters} chapters
                         completed
                       </Text>
                       <View style={styles.xpContainer}>
                         <Ionicons name="star" size={16} color="#FFD700" />
                         <Text style={styles.xpText}>
-                          {subject.xp} XP
+                          {subject.user_progress?.total_xp || 0} XP
                         </Text>
                       </View>
                     </View>
 
                     <View style={styles.progressBarContainer}>
                       <LinearGradient
-                        colors={subject.color || ["#3B82F6", "#3B82F6"]}
-                        style={[
-                          styles.progressBar,
-                          {
-                            width: `${(subject.completed / subject.chapters) * 100}%`
-                          }
-                        ]}
+                      colors={(subject.color as [ColorValue, ColorValue]) || (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])}
+                      style={[
+                      styles.progressBar,
+                      {
+                      width: `${((subject.user_progress?.completed_chapters || 0) / subject.chapters) * 100}%`
+                      }
+                      ]}
                       />
                     </View>
 
-                    {subject.streak > 0 && (
+                    {(subject.user_progress?.streak || 0) > 0 && (
                       <View style={styles.streakContainer}>
                         <Ionicons name="flame" size={16} color="#FF6B6B" />
                         <Text style={styles.streakText}>
-                          {subject.streak} day streak
+                          {subject.user_progress?.streak || 0} day streak
                         </Text>
                       </View>
                     )}

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Redirect, router } from "expo-router";
@@ -13,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
-import { UserService } from "@/superbase/services/userService";
 
 type UserStats = {
   name: string;
@@ -41,13 +39,12 @@ type MenuItem = {
 export default function ProfileScreen() {
   const { user, signOut, loading } = useAuth();
 
-  
   // If no user, redirect to login immediately
   if (!loading && !user) {
     console.log("Profile Screen - NO USER, redirecting to login!"); // Debug log
     return <Redirect href="/auth/login" />;
   }
-  
+
   // If still loading, show loading state
   if (loading) {
     return (
@@ -56,7 +53,6 @@ export default function ProfileScreen() {
       </View>
     );
   }
-
 
   const userStats: UserStats = {
     name: user?.user_metadata?.name || "Student",
@@ -147,10 +143,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       {/* Profile Header */}
-      <LinearGradient
-        colors={["#0f0f23", "#1a1a2e"]}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#0f0f23", "#1a1a2e"]} style={styles.header}>
         <View style={styles.profileContainer}>
           <View style={styles.avatarWrapper}>
             <Image
@@ -163,9 +156,7 @@ export default function ProfileScreen() {
               <Ionicons name="camera" size={16} color="white" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.userName}>
-            {userStats.name}
-          </Text>
+          <Text style={styles.userName}>{userStats.name}</Text>
           <Text style={styles.userEmail}>{userStats.email}</Text>
           <View style={styles.levelBadge}>
             <Text style={styles.levelText}>{userStats.level}</Text>
@@ -186,25 +177,19 @@ export default function ProfileScreen() {
 
           <View style={styles.statCard}>
             <Ionicons name="flame" size={24} color="#ef4444" />
-            <Text style={styles.statValue}>
-              {userStats.streak}
-            </Text>
+            <Text style={styles.statValue}>{userStats.streak}</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
           </View>
 
           <View style={styles.statCard}>
             <Ionicons name="book" size={24} color="#10b981" />
-            <Text style={styles.statValue}>
-              {userStats.completedLessons}
-            </Text>
+            <Text style={styles.statValue}>{userStats.completedLessons}</Text>
             <Text style={styles.statLabel}>Lessons Done</Text>
           </View>
 
           <View style={styles.statCard}>
             <Ionicons name="time" size={24} color="#8b5cf6" />
-            <Text style={styles.statValue}>
-              {userStats.totalHours}h
-            </Text>
+            <Text style={styles.statValue}>{userStats.totalHours}h</Text>
             <Text style={styles.statLabel}>Study Time</Text>
           </View>
         </View>
@@ -212,9 +197,7 @@ export default function ProfileScreen() {
 
       {/* Recent Achievements */}
       <View style={styles.achievementsSection}>
-        <Text style={styles.sectionTitle}>
-          Recent Achievements
-        </Text>
+        <Text style={styles.sectionTitle}>Recent Achievements</Text>
         {recentAchievements.map((achievement, index) => (
           <View key={index} style={styles.achievementCard}>
             <View style={styles.achievementContent}>
@@ -222,12 +205,8 @@ export default function ProfileScreen() {
                 <Ionicons name={achievement.icon} size={20} color="black" />
               </View>
               <View style={styles.achievementInfo}>
-                <Text style={styles.achievementName}>
-                  {achievement.name}
-                </Text>
-                <Text style={styles.achievementDate}>
-                  {achievement.date}
-                </Text>
+                <Text style={styles.achievementName}>{achievement.name}</Text>
+                <Text style={styles.achievementDate}>{achievement.date}</Text>
               </View>
             </View>
           </View>
@@ -262,15 +241,10 @@ export default function ProfileScreen() {
 
       {/* Logout Button */}
       <View style={styles.logoutSection}>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <View style={styles.logoutContent}>
             <Ionicons name="log-out-outline" size={24} color="white" />
-            <Text style={styles.logoutText}>
-              Logout
-            </Text>
+            <Text style={styles.logoutText}>Logout</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -294,16 +268,16 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#0f172a",
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
   },
   header: {
@@ -312,10 +286,10 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   profileContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   avatarWrapper: {
-    position: 'relative',
+    position: "relative",
   },
   avatar: {
     width: 96,
@@ -323,58 +297,58 @@ const styles = StyleSheet.create({
     borderRadius: 48,
   },
   cameraButton: {
-    position: 'absolute',
+    position: "absolute",
     bottom: -8,
     right: -8,
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     padding: 8,
     borderRadius: 9999,
   },
   userName: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 16,
   },
   userEmail: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 16,
   },
   levelBadge: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
     marginTop: 12,
   },
   levelText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
   },
   statsSection: {
     paddingHorizontal: 24,
     marginTop: 24,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   statCard: {
-    width: '48%',
-    backgroundColor: '#1e293b',
+    width: "48%",
+    backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
   },
   statValue: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 8,
   },
   statLabel: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
   },
   achievementsSection: {
@@ -382,23 +356,23 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
   },
   achievementCard: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
   },
   achievementContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   achievementIconContainer: {
-    backgroundColor: '#eab308',
+    backgroundColor: "#eab308",
     padding: 12,
     borderRadius: 9999,
     marginRight: 16,
@@ -407,11 +381,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   achievementName: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
   },
   achievementDate: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
   },
   menuSection: {
@@ -419,14 +393,14 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   menuItem: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
   },
   menuItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   menuIcon: {
     marginRight: 16,
@@ -435,11 +409,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuTitle: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
   },
   menuSubtitle: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
   },
   logoutSection: {
@@ -448,27 +422,27 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   logoutButton: {
-    backgroundColor: '#dc2626',
+    backgroundColor: "#dc2626",
     padding: 16,
     borderRadius: 16,
   },
   logoutContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   logoutText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
     fontSize: 18,
     marginLeft: 8,
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 96,
     right: 24,
     borderRadius: 9999,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 4,

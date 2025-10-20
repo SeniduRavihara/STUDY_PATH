@@ -3,7 +3,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
   Alert,
-  Image,
   Modal,
   ScrollView,
   StyleSheet,
@@ -16,18 +15,22 @@ import {
 interface CreateStoryModalProps {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (content: string, mediaType: 'text' | 'image', gradient?: [string, string]) => void;
+  onSubmit: (
+    content: string,
+    mediaType: "text" | "image",
+    gradient?: [string, string]
+  ) => void;
 }
 
 const gradientOptions: { name: string; colors: [string, string] }[] = [
-  { name: 'Purple', colors: ['#667eea', '#764ba2'] },
-  { name: 'Pink', colors: ['#f093fb', '#f5576c'] },
-  { name: 'Blue', colors: ['#4facfe', '#00f2fe'] },
-  { name: 'Green', colors: ['#43e97b', '#38f9d7'] },
-  { name: 'Orange', colors: ['#fa709a', '#fee140'] },
-  { name: 'Red', colors: ['#ff6b6b', '#ee5a24'] },
-  { name: 'Yellow', colors: ['#f9ca24', '#f0932b'] },
-  { name: 'Indigo', colors: ['#a8edea', '#fed6e3'] },
+  { name: "Purple", colors: ["#667eea", "#764ba2"] },
+  { name: "Pink", colors: ["#f093fb", "#f5576c"] },
+  { name: "Blue", colors: ["#4facfe", "#00f2fe"] },
+  { name: "Green", colors: ["#43e97b", "#38f9d7"] },
+  { name: "Orange", colors: ["#fa709a", "#fee140"] },
+  { name: "Red", colors: ["#ff6b6b", "#ee5a24"] },
+  { name: "Yellow", colors: ["#f9ca24", "#f0932b"] },
+  { name: "Indigo", colors: ["#a8edea", "#fed6e3"] },
 ];
 
 export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
@@ -35,27 +38,29 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [content, setContent] = useState('');
-  const [selectedGradient, setSelectedGradient] = useState<[string, string]>(gradientOptions[0].colors);
-  const [mediaType, setMediaType] = useState<'text' | 'image'>('text');
+  const [content, setContent] = useState("");
+  const [selectedGradient, setSelectedGradient] = useState<[string, string]>(
+    gradientOptions[0].colors
+  );
+  const [mediaType, setMediaType] = useState<"text" | "image">("text");
 
   const handleSubmit = () => {
     if (!content.trim()) {
-      Alert.alert('Error', 'Please enter some content for your story');
+      Alert.alert("Error", "Please enter some content for your story");
       return;
     }
 
     onSubmit(content.trim(), mediaType, selectedGradient);
-    setContent('');
+    setContent("");
     setSelectedGradient(gradientOptions[0].colors);
-    setMediaType('text');
+    setMediaType("text");
     onClose();
   };
 
   const handleClose = () => {
-    setContent('');
+    setContent("");
     setSelectedGradient(gradientOptions[0].colors);
-    setMediaType('text');
+    setMediaType("text");
     onClose();
   };
 
@@ -80,12 +85,13 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+            >
               {/* Content Input */}
               <View style={styles.contentSection}>
-                <Text style={styles.sectionTitle}>
-                  What's on your mind?
-                </Text>
+                <Text style={styles.sectionTitle}>What&apos;s on your mind?</Text>
                 <TextInput
                   value={content}
                   onChangeText={setContent}
@@ -95,34 +101,32 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                   style={styles.textInput}
                   maxLength={200}
                 />
-                <Text style={styles.charCount}>
-                  {content.length}/200
-                </Text>
+                <Text style={styles.charCount}>{content.length}/200</Text>
               </View>
 
               {/* Media Type Selection */}
               <View style={styles.mediaTypeSection}>
-                <Text style={styles.sectionTitle}>
-                  Story Type
-                </Text>
+                <Text style={styles.sectionTitle}>Story Type</Text>
                 <View style={styles.mediaTypeRow}>
                   <TouchableOpacity
-                    onPress={() => setMediaType('text')}
+                    onPress={() => setMediaType("text")}
                     style={[
                       styles.mediaTypeButton,
-                      mediaType === 'text' && styles.mediaTypeButtonActive,
+                      mediaType === "text" && styles.mediaTypeButtonActive,
                     ]}
                   >
                     <View style={styles.mediaTypeContent}>
                       <Ionicons
                         name="text"
                         size={24}
-                        color={mediaType === 'text' ? 'white' : '#9ca3af'}
+                        color={mediaType === "text" ? "white" : "#9ca3af"}
                       />
                       <Text
                         style={[
                           styles.mediaTypeLabel,
-                          mediaType === 'text' ? styles.mediaTypeLabelActive : styles.mediaTypeLabelInactive,
+                          mediaType === "text"
+                            ? styles.mediaTypeLabelActive
+                            : styles.mediaTypeLabelInactive,
                         ]}
                       >
                         Text Story
@@ -130,22 +134,24 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                     </View>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={() => setMediaType('image')}
+                    onPress={() => setMediaType("image")}
                     style={[
                       styles.mediaTypeButton,
-                      mediaType === 'image' && styles.mediaTypeButtonActive,
+                      mediaType === "image" && styles.mediaTypeButtonActive,
                     ]}
                   >
                     <View style={styles.mediaTypeContent}>
                       <Ionicons
                         name="image"
                         size={24}
-                        color={mediaType === 'image' ? 'white' : '#9ca3af'}
+                        color={mediaType === "image" ? "white" : "#9ca3af"}
                       />
                       <Text
                         style={[
                           styles.mediaTypeLabel,
-                          mediaType === 'image' ? styles.mediaTypeLabelActive : styles.mediaTypeLabelInactive,
+                          mediaType === "image"
+                            ? styles.mediaTypeLabelActive
+                            : styles.mediaTypeLabelInactive,
                         ]}
                       >
                         Image Story
@@ -157,9 +163,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 
               {/* Gradient Selection */}
               <View style={styles.gradientSection}>
-                <Text style={styles.sectionTitle}>
-                  Background Color
-                </Text>
+                <Text style={styles.sectionTitle}>Background Color</Text>
                 <View style={styles.gradientGrid}>
                   {gradientOptions.map((option, index) => (
                     <TouchableOpacity
@@ -184,9 +188,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 
               {/* Preview */}
               <View style={styles.previewSection}>
-                <Text style={styles.sectionTitle}>
-                  Preview
-                </Text>
+                <Text style={styles.sectionTitle}>Preview</Text>
                 <View style={styles.previewContainer}>
                   <LinearGradient
                     colors={selectedGradient}
@@ -195,7 +197,7 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
                     style={styles.previewGradient}
                   >
                     <Text style={styles.previewText}>
-                      {content || 'Your story content will appear here...'}
+                      {content || "Your story content will appear here..."}
                     </Text>
                   </LinearGradient>
                 </View>
@@ -211,36 +213,36 @@ export const CreateStoryModal: React.FC<CreateStoryModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   containerWrapper: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   modalContainer: {
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingVertical: 24,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: "#334155",
   },
   headerTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   shareButton: {
-    color: '#3b82f6',
+    color: "#3b82f6",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
@@ -251,66 +253,66 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
   },
   textInput: {
-    backgroundColor: '#1e293b',
-    color: '#ffffff',
+    backgroundColor: "#1e293b",
+    color: "#ffffff",
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 16,
     fontSize: 16,
     minHeight: 128,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   charCount: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 14,
     marginTop: 8,
-    textAlign: 'right',
+    textAlign: "right",
   },
   mediaTypeSection: {
     marginBottom: 24,
     paddingHorizontal: 24,
   },
   mediaTypeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   mediaTypeButton: {
     flex: 1,
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 16,
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     marginHorizontal: 8,
   },
   mediaTypeButtonActive: {
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
   },
   mediaTypeContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   mediaTypeLabel: {
     marginTop: 8,
-    fontWeight: '500',
+    fontWeight: "500",
     fontSize: 14,
   },
   mediaTypeLabelActive: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   mediaTypeLabelInactive: {
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
   gradientSection: {
     marginBottom: 24,
     paddingHorizontal: 24,
   },
   gradientGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   gradientOption: {
     width: 64,
@@ -318,13 +320,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 12,
     marginBottom: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   gradientBox: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   previewSection: {
     marginBottom: 48,
@@ -333,19 +335,19 @@ const styles = StyleSheet.create({
   previewContainer: {
     height: 192,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   previewGradient: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 24,
   },
   previewText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
 });
 

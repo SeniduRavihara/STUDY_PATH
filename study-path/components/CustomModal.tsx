@@ -2,11 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
+ColorValue,
+Modal,
+StyleSheet,
+Text,
+TouchableOpacity,
+TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -50,7 +51,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
     }
   };
 
-  const getTypeColor = () => {
+  const getTypeColor = (): [ColorValue, ColorValue] => {
     switch (type) {
       case "lesson":
         return ["#667eea", "#764ba2"];
