@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import ContentBlockEditor, { type ContentBlock } from '../components/ContentBlockEditor';
+import { useState } from "react";
+import ContentBlockEditor, {
+  type ContentBlock,
+} from "../components/ContentBlockEditor";
 
 export default function TestContentBlocks() {
   const [blocks, setBlocks] = useState<ContentBlock[]>([
     {
-      id: 'test-1',
-      type: 'text',
+      id: "test-1",
+      type: "text",
       order: 0,
-      data: { content: 'This is a test text block' }
-    }
+      data: { content: "This is a test text block" },
+    },
   ]);
 
   return (
@@ -21,15 +23,15 @@ export default function TestContentBlocks() {
           <p className="text-dark-300 text-sm mb-6">
             Current blocks: {blocks.length}
           </p>
-          
-          <ContentBlockEditor 
-            blocks={blocks} 
+
+          <ContentBlockEditor
+            blocks={blocks}
             onChange={(newBlocks) => {
-              console.log('Blocks updated:', newBlocks);
+              console.log("Blocks updated:", newBlocks);
               setBlocks(newBlocks);
             }}
           />
-          
+
           <div className="mt-8 p-4 bg-dark-800 rounded">
             <h3 className="text-white font-medium mb-2">Debug Info:</h3>
             <pre className="text-dark-300 text-xs overflow-auto">

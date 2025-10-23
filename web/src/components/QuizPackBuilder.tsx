@@ -1,22 +1,22 @@
 import {
   BookOpen,
+  CheckCircle,
+  Clock,
   Edit,
+  Eye,
   HelpCircle,
   Layers,
   Plus,
   Search,
+  Target,
   Trash2,
   X,
-  CheckCircle,
-  Clock,
-  Target,
-  Eye,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DatabaseService } from "../lib/database";
-import type { TopicWithChildren, Subject } from "../lib/database";
 import { useAuth } from "../contexts/AuthContext";
+import type { Subject, TopicWithChildren } from "../lib/database";
+import { DatabaseService } from "../lib/database";
 
 interface MCQ {
   id: string;
@@ -53,8 +53,6 @@ interface QuizPackBuilderProps {
 const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   subject,
   topics,
-  onTopicsChange,
-  sidebarCollapsed,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -66,7 +64,10 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
-  const [selectedTopicForPack, setSelectedTopicForPack] = useState<TopicWithChildren | null>(null);
+  // @ts-expect-error - Variable is set but not read yet, planned for future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [selectedTopicForPack, setSelectedTopicForPack] =
+    useState<TopicWithChildren | null>(null);
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState<string>("");
   const [selectedTopicName, setSelectedTopicName] = useState<string>("");
@@ -81,7 +82,6 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     selectedMcqs: [] as string[],
   });
 
-
   useEffect(() => {
     fetchData();
   }, [subject.id]);
@@ -92,9 +92,11 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
       // Fetch MCQs for this subject
       const mcqsData = await DatabaseService.getMCQsBySubject(subject.id);
       setMcqs(mcqsData);
-      
+
       // Fetch quiz packs for this subject
-      const quizPacksData = await DatabaseService.getQuizPacksBySubject(subject.id);
+      const quizPacksData = await DatabaseService.getQuizPacksBySubject(
+        subject.id
+      );
       setQuizPacks(quizPacksData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -104,8 +106,12 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   };
 
   const handleCreatePack = async () => {
-    console.log("handleCreatePack called with:", { formData, selectedTopicId, selectedTopicName });
-    
+    console.log("handleCreatePack called with:", {
+      formData,
+      selectedTopicId,
+      selectedTopicName,
+    });
+
     if (!user?.id) {
       alert("You must be logged in to create quiz packs.");
       return;
@@ -122,7 +128,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
         mcq_ids: [],
         created_by: user.id,
       });
-      
+
       const newPack = await DatabaseService.createQuizPack({
         title: formData.title,
         description: formData.description,
@@ -132,7 +138,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
         mcq_ids: [], // Start with empty MCQs
         created_by: user.id, // Use actual user ID
       });
-      
+
       console.log("Quiz pack created successfully:", newPack);
       setQuizPacks([...quizPacks, newPack]);
       setShowCreateForm(false);
@@ -140,7 +146,9 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     } catch (error) {
       console.error("Error creating quiz pack:", error);
       console.error("Full error details:", JSON.stringify(error, null, 2));
-      alert(`Error creating quiz pack: ${error.message || 'Unknown error'}`);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      alert(`Error creating quiz pack: ${errorMessage}`);
     } finally {
       setIsCreating(false);
     }
@@ -148,7 +156,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
 
   const handleUpdatePack = async () => {
     if (!editingPack) return;
-    
+
     try {
       const updatedPack = await DatabaseService.updateQuizPack(editingPack.id, {
         title: formData.title,
@@ -157,10 +165,12 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
         difficulty: formData.difficulty,
         mcq_ids: formData.selectedMcqs,
       });
-      
-      setQuizPacks(quizPacks.map(pack => 
-        pack.id === editingPack.id ? updatedPack : pack
-      ));
+
+      setQuizPacks(
+        quizPacks.map((pack) =>
+          pack.id === editingPack.id ? updatedPack : pack
+        )
+      );
       setEditingPack(null);
       resetForm();
     } catch (error) {
@@ -173,7 +183,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     if (confirm("Are you sure you want to delete this quiz pack?")) {
       try {
         await DatabaseService.deleteQuizPack(packId);
-        setQuizPacks(quizPacks.filter(pack => pack.id !== packId));
+        setQuizPacks(quizPacks.filter((pack) => pack.id !== packId));
       } catch (error) {
         console.error("Error deleting quiz pack:", error);
         alert("Error deleting quiz pack. Please try again.");
@@ -199,7 +209,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     setSelectedTopicName(topicName);
     setFormData({ ...formData, topic_id: topicId });
     setShowTopicSelector(false);
-    
+
     // Find the topic object if it's a specific topic
     if (topicId) {
       const topic = findTopicById(topics, topicId);
@@ -208,7 +218,6 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
       setSelectedTopicForPack(null); // Entire subject
     }
   };
-
 
   const startEditing = (pack: QuizPack) => {
     setEditingPack(pack);
@@ -219,14 +228,17 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
       difficulty: pack.difficulty,
       selectedMcqs: pack.mcq_ids,
     });
-    
+
     // Find the topic for this pack
     const topic = findTopicById(topics, pack.topic_id);
     setSelectedTopicForPack(topic);
     setShowCreateForm(true);
   };
 
-  const findTopicById = (topics: TopicWithChildren[], topicId: string): TopicWithChildren | null => {
+  const findTopicById = (
+    topics: TopicWithChildren[],
+    topicId: string
+  ): TopicWithChildren | null => {
     for (const topic of topics) {
       if (topic.id === topicId) return topic;
       if (topic.children.length > 0) {
@@ -240,10 +252,10 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   const getTopicPath = (topicId: string): string => {
     const topic = findTopicById(topics, topicId);
     if (!topic) return "Unknown Topic";
-    
+
     const path = [topic.name];
     let current = topic;
-    
+
     // Build path from root to current topic
     while (current.parent_id) {
       const parent = findTopicById(topics, current.parent_id);
@@ -254,25 +266,31 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
         break;
       }
     }
-    
+
     return path.join(" → ");
   };
 
-  const filteredQuizPacks = quizPacks.filter(pack => {
-    const matchesSearch = pack.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         pack.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredQuizPacks = quizPacks.filter((pack) => {
+    const matchesSearch =
+      pack.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pack.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTopic = !selectedTopic || pack.topic_id === selectedTopic;
-    const matchesDifficulty = !selectedDifficulty || pack.difficulty === selectedDifficulty;
-    
+    const matchesDifficulty =
+      !selectedDifficulty || pack.difficulty === selectedDifficulty;
+
     return matchesSearch && matchesTopic && matchesDifficulty;
   });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "easy": return "text-green-400 bg-green-500/20";
-      case "medium": return "text-yellow-400 bg-yellow-500/20";
-      case "hard": return "text-red-400 bg-red-500/20";
-      default: return "text-gray-400 bg-gray-500/20";
+      case "easy":
+        return "text-green-400 bg-green-500/20";
+      case "medium":
+        return "text-yellow-400 bg-yellow-500/20";
+      case "hard":
+        return "text-red-400 bg-red-500/20";
+      default:
+        return "text-gray-400 bg-gray-500/20";
     }
   };
 
@@ -282,7 +300,9 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     onSelect: (topicId: string, topicName: string) => void;
     onClose: () => void;
   }> = ({ topics, onSelect, onClose }) => {
-    const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
+    const [expandedTopics, setExpandedTopics] = useState<Set<string>>(
+      new Set()
+    );
 
     const toggleExpanded = (topicId: string) => {
       const newExpanded = new Set(expandedTopics);
@@ -328,7 +348,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
           </div>
           {hasChildren && isExpanded && (
             <div>
-              {topic.children.map(child => renderTopicItem(child, level + 1))}
+              {topic.children.map((child) => renderTopicItem(child, level + 1))}
             </div>
           )}
         </div>
@@ -373,7 +393,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
             {/* Topic Hierarchy */}
             <div className="border-t border-dark-700 pt-4">
               <h4 className="text-white font-medium mb-3">Specific Topics</h4>
-              {topics.map(topic => renderTopicItem(topic))}
+              {topics.map((topic) => renderTopicItem(topic))}
             </div>
           </div>
         </div>
@@ -421,7 +441,9 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-dark-400 text-sm">Total Quiz Packs</p>
-              <p className="text-2xl font-bold text-white">{quizPacks.length}</p>
+              <p className="text-2xl font-bold text-white">
+                {quizPacks.length}
+              </p>
             </div>
             <HelpCircle className="w-8 h-8 text-primary-500" />
           </div>
@@ -506,20 +528,28 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
               No Quiz Packs Found
             </h3>
             <p className="text-dark-400">
-              {quizPacks.length === 0 
+              {quizPacks.length === 0
                 ? "Create your first quiz pack to get started."
-                : "Try adjusting your search filters."
-              }
+                : "Try adjusting your search filters."}
             </p>
           </div>
         ) : (
           filteredQuizPacks.map((pack) => (
-            <div key={pack.id} className="bg-dark-800 rounded-xl p-6 hover:bg-dark-700 transition-colors">
+            <div
+              key={pack.id}
+              className="bg-dark-800 rounded-xl p-6 hover:bg-dark-700 transition-colors"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="text-lg font-semibold text-white">{pack.title}</h4>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(pack.difficulty)}`}>
+                    <h4 className="text-lg font-semibold text-white">
+                      {pack.title}
+                    </h4>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                        pack.difficulty
+                      )}`}
+                    >
                       {pack.difficulty}
                     </span>
                   </div>
@@ -535,7 +565,9 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                     </div>
                     <div className="flex items-center space-x-1">
                       <Clock className="w-4 h-4" />
-                      <span>Updated {new Date(pack.updated_at).toLocaleDateString()}</span>
+                      <span>
+                        Updated {new Date(pack.updated_at).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -543,7 +575,10 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                   <button
                     onClick={() => {
                       console.log("Navigating to quiz pack:", pack.id);
-                      console.log("Navigation URL:", `/admin/quiz-pack/${pack.id}`);
+                      console.log(
+                        "Navigation URL:",
+                        `/admin/quiz-pack/${pack.id}`
+                      );
                       navigate(`/admin/quiz-pack/${pack.id}`);
                     }}
                     className="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm flex items-center space-x-1"
@@ -595,21 +630,29 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
 
             <div className="space-y-4">
               <div>
-                <label className="block text-white font-medium mb-2">Title *</label>
+                <label className="block text-white font-medium mb-2">
+                  Title *
+                </label>
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter quiz pack title"
                 />
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">Description</label>
+                <label className="block text-white font-medium mb-2">
+                  Description
+                </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none"
                   placeholder="Describe this quiz pack"
                 />
@@ -617,13 +660,19 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-white font-medium mb-2">Topic *</label>
+                  <label className="block text-white font-medium mb-2">
+                    Topic *
+                  </label>
                   <button
                     type="button"
                     onClick={() => setShowTopicSelector(true)}
                     className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 text-left flex items-center justify-between"
                   >
-                    <span className={selectedTopicName ? "text-white" : "text-dark-400"}>
+                    <span
+                      className={
+                        selectedTopicName ? "text-white" : "text-dark-400"
+                      }
+                    >
                       {selectedTopicName || "Select a topic"}
                     </span>
                     <span className="text-dark-400">▼</span>
@@ -631,10 +680,20 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-white font-medium mb-2">Difficulty *</label>
+                  <label className="block text-white font-medium mb-2">
+                    Difficulty *
+                  </label>
                   <select
                     value={formData.difficulty}
-                    onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as "easy" | "medium" | "hard" })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        difficulty: e.target.value as
+                          | "easy"
+                          | "medium"
+                          | "hard",
+                      })
+                    }
                     className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="easy">Easy</option>
@@ -643,7 +702,6 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                   </select>
                 </div>
               </div>
-
 
               <div className="flex items-center justify-end space-x-3 pt-4">
                 <button
@@ -658,7 +716,11 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                 </button>
                 <button
                   onClick={editingPack ? handleUpdatePack : handleCreatePack}
-                  disabled={!formData.title || (selectedTopicId === "" && selectedTopicName === "") || isCreating}
+                  disabled={
+                    !formData.title ||
+                    (selectedTopicId === "" && selectedTopicName === "") ||
+                    isCreating
+                  }
                   className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {isCreating ? (
@@ -687,7 +749,6 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
           onClose={() => setShowTopicSelector(false)}
         />
       )}
-
     </div>
   );
 };

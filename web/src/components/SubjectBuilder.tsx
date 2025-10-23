@@ -8,17 +8,24 @@ import {
   Save,
   Settings,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useSidebar } from "../contexts/SidebarContext";
-import FlowBuilder from "./FlowBuilder";
-import { DatabaseService } from "../lib/database";
-import type { TopicWithChildren, Subject, SubjectInsert } from "../lib/database";
 import { useAuth } from "../contexts/AuthContext";
+import { useSidebar } from "../contexts/SidebarContext";
+import type { Subject, TopicWithChildren } from "../lib/database";
+import { DatabaseService } from "../lib/database";
+import FlowBuilder from "./FlowBuilder";
 
 interface FlowNode {
   id: string;
-  type: "quiz" | "study" | "video" | "assignment" | "assessment" | "start" | "end";
+  type:
+    | "quiz"
+    | "study"
+    | "video"
+    | "assignment"
+    | "assessment"
+    | "start"
+    | "end";
   title: string;
   description: string;
   sort_order: number; // Use sort_order instead of position
@@ -40,25 +47,36 @@ interface TopicHierarchyItemProps {
   user: any; // Add user prop
 }
 
-const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate, allTopics, subjectId, user }) => {
+const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
+  topic,
+  onUpdate,
+  allTopics,
+  subjectId,
+  user,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [isAddingChildLoading, setIsAddingChildLoading] = useState(false);
   const [editName, setEditName] = useState(topic.name);
-  const [editDescription, setEditDescription] = useState(topic.description);
+  const [editDescription, setEditDescription] = useState(
+    topic.description || ""
+  );
   const [newChildName, setNewChildName] = useState("");
   const [newChildDescription, setNewChildDescription] = useState("");
   const [isExpanded, setIsExpanded] = useState(topic.isExpanded || false);
 
-  const updateTopic = async (topicId: string, updates: Partial<TopicWithChildren>) => {
+  const updateTopic = async (
+    topicId: string,
+    updates: Partial<TopicWithChildren>
+  ) => {
     try {
       await DatabaseService.updateTopic(topicId, updates);
       // Reload topics from database
       const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
       onUpdate(updatedTopics);
     } catch (error) {
-      console.error('Error updating topic:', error);
-      alert('Error updating topic. Please try again.');
+      console.error("Error updating topic:", error);
+      alert("Error updating topic. Please try again.");
     }
   };
 
@@ -79,33 +97,39 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
         sort_order: topic.children.length + 1,
         created_by: user.id,
       });
-      
+
       // Reload topics from database
       const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
       onUpdate(updatedTopics);
-      
+
       setIsAddingChild(false);
       setNewChildName("");
       setNewChildDescription("");
     } catch (error) {
-      console.error('Error creating topic:', error);
-      alert('Error creating topic. Please try again.');
+      console.error("Error creating topic:", error);
+      alert("Error creating topic. Please try again.");
     } finally {
       setIsAddingChildLoading(false);
     }
   };
 
   const deleteTopic = async (topicId: string) => {
-    if (confirm('Are you sure you want to delete this topic? This action cannot be undone.')) {
+    if (
+      confirm(
+        "Are you sure you want to delete this topic? This action cannot be undone."
+      )
+    ) {
       try {
         await DatabaseService.deleteTopic(topicId);
-        
+
         // Reload topics from database
-        const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
+        const updatedTopics = await DatabaseService.getTopicsBySubject(
+          subjectId
+        );
         onUpdate(updatedTopics);
       } catch (error) {
-        console.error('Error deleting topic:', error);
-        alert('Error deleting topic. Please try again.');
+        console.error("Error deleting topic:", error);
+        alert("Error deleting topic. Please try again.");
       }
     }
   };
@@ -115,24 +139,24 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
   };
 
   const saveEdit = () => {
-    updateTopic(topic.id, { 
-      name: editName, 
-      description: editDescription 
+    updateTopic(topic.id, {
+      name: editName,
+      description: editDescription,
     });
     setIsEditing(false);
   };
 
   const cancelEdit = () => {
     setEditName(topic.name);
-    setEditDescription(topic.description);
+    setEditDescription(topic.description || "");
     setIsEditing(false);
   };
 
   const getIndentStyle = () => {
     return {
       marginLeft: `${topic.level * 24}px`,
-      borderLeft: topic.level > 0 ? `2px solid #374151` : 'none',
-      paddingLeft: topic.level > 0 ? '16px' : '0'
+      borderLeft: topic.level > 0 ? `2px solid #374151` : "none",
+      paddingLeft: topic.level > 0 ? "16px" : "0",
     };
   };
 
@@ -148,15 +172,19 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
                 onClick={toggleExpanded}
                 className="text-dark-400 hover:text-white transition-colors"
               >
-                {isExpanded ? '▼' : '▶'}
+                {isExpanded ? "▼" : "▶"}
               </button>
             )}
-            
+
             {/* Topic Icon */}
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-              topic.hasFlow ? 'bg-green-500/20 text-green-400' : 'bg-dark-600 text-dark-400'
-            }`}>
-              {topic.hasFlow ? '✓' : '○'}
+            <div
+              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                topic.has_flow
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-dark-600 text-dark-400"
+              }`}
+            >
+              {topic.has_flow ? "✓" : "○"}
             </div>
 
             {/* Topic Content */}
@@ -183,8 +211,10 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
                   <h4 className="text-white font-medium">{topic.name}</h4>
                   <p className="text-dark-400 text-sm">{topic.description}</p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs text-dark-500">Level {topic.level}</span>
-                    {topic.hasFlow && (
+                    <span className="text-xs text-dark-500">
+                      Level {topic.level}
+                    </span>
+                    {topic.has_flow && (
                       <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
                         Has Flow
                       </span>
@@ -272,7 +302,9 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({ topic, onUpdate
                   {isAddingChildLoading && (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   )}
-                  <span>{isAddingChildLoading ? 'Adding...' : 'Add Subtopic'}</span>
+                  <span>
+                    {isAddingChildLoading ? "Adding..." : "Add Subtopic"}
+                  </span>
                 </button>
                 <button
                   onClick={() => {
@@ -315,7 +347,9 @@ const SubjectBuilder: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { sidebarCollapsed } = useSidebar();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "overview"
+  );
   const [currentStep, setCurrentStep] = useState(1);
   const [viewMode, setViewMode] = useState<"tabs" | "stepper">("tabs");
   const [subject, setSubject] = useState<Subject | null>(null);
@@ -328,13 +362,12 @@ const SubjectBuilder: React.FC = () => {
   const [newTopicName, setNewTopicName] = useState("");
   const [newTopicDescription, setNewTopicDescription] = useState("");
 
-
   // Sync activeTab with URL parameter
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");
     if (tabFromUrl && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
-      const tab = tabs.find(t => t.id === tabFromUrl);
+      const tab = tabs.find((t) => t.id === tabFromUrl);
       if (tab) {
         setCurrentStep(tab.stepId);
       }
@@ -347,11 +380,14 @@ const SubjectBuilder: React.FC = () => {
       try {
         setIsLoading(true);
 
-    if (subjectId) {
+        if (subjectId) {
           // Check if subjectId is a valid UUID format
-          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          const uuidRegex =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (!uuidRegex.test(subjectId)) {
-            console.log('Invalid subject ID format, loading available subjects');
+            console.log(
+              "Invalid subject ID format, loading available subjects"
+            );
             // Load all available subjects instead
             const allSubjects = await DatabaseService.getSubjects();
             setAvailableSubjects(allSubjects);
@@ -362,7 +398,7 @@ const SubjectBuilder: React.FC = () => {
           }
 
           // Save this subject as the currently working one
-          localStorage.setItem('lastSelectedSubject', subjectId);
+          localStorage.setItem("lastSelectedSubject", subjectId);
 
           // Load subject data
           const subjectData = await DatabaseService.getSubjectById(subjectId);
@@ -370,7 +406,9 @@ const SubjectBuilder: React.FC = () => {
             setSubject(subjectData);
 
             // Load topics for this subject
-            const topicsData = await DatabaseService.getTopicsBySubject(subjectId);
+            const topicsData = await DatabaseService.getTopicsBySubject(
+              subjectId
+            );
             setTopics(topicsData);
           }
         } else {
@@ -379,8 +417,11 @@ const SubjectBuilder: React.FC = () => {
           setAvailableSubjects(allSubjects);
 
           // Check if we have a last selected subject
-          const lastSubjectId = localStorage.getItem('lastSelectedSubject');
-          if (lastSubjectId && allSubjects.some(s => s.id === lastSubjectId)) {
+          const lastSubjectId = localStorage.getItem("lastSelectedSubject");
+          if (
+            lastSubjectId &&
+            allSubjects.some((s) => s.id === lastSubjectId)
+          ) {
             // Automatically navigate to the last selected subject
             navigate(`/admin/subject-builder/${lastSubjectId}`);
             return;
@@ -390,9 +431,9 @@ const SubjectBuilder: React.FC = () => {
           setTopics([]);
         }
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error("Error loading data:", error);
       } finally {
-    setIsLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -418,11 +459,11 @@ const SubjectBuilder: React.FC = () => {
   // Synchronize tab and step navigation
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    const tab = tabs.find(t => t.id === tabId);
+    const tab = tabs.find((t) => t.id === tabId);
     if (tab) {
       setCurrentStep(tab.stepId);
     }
-    
+
     // Update URL with tab parameter
     const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.set("tab", tabId);
@@ -431,7 +472,7 @@ const SubjectBuilder: React.FC = () => {
 
   const handleStepChange = (stepId: number) => {
     setCurrentStep(stepId);
-    const step = steps.find(s => s.id === stepId);
+    const step = steps.find((s) => s.id === stepId);
     if (step) {
       setActiveTab(step.tabId);
       // Update URL with tab parameter
@@ -443,7 +484,7 @@ const SubjectBuilder: React.FC = () => {
 
   const handleSave = async () => {
     if (!subject) return;
-    
+
     setIsSaving(true);
     try {
       if (subjectId) {
@@ -468,7 +509,7 @@ const SubjectBuilder: React.FC = () => {
       }
       alert("Subject saved successfully!");
     } catch (error) {
-      console.error('Error saving subject:', error);
+      console.error("Error saving subject:", error);
       alert("Error saving subject. Please try again.");
     } finally {
       setIsSaving(false);
@@ -480,7 +521,7 @@ const SubjectBuilder: React.FC = () => {
       alert("Please create at least one learning node before publishing.");
       return;
     }
-    
+
     setIsSaving(true);
     // Simulate publish operation
     setTimeout(() => {
@@ -492,12 +533,12 @@ const SubjectBuilder: React.FC = () => {
 
   const addNewTopic = async () => {
     if (!subject || !newTopicName.trim()) return;
-    
+
     if (!user) {
       alert("You must be logged in to create topics.");
       return;
     }
-    
+
     try {
       await DatabaseService.createTopic({
         subject_id: subject.id,
@@ -507,17 +548,19 @@ const SubjectBuilder: React.FC = () => {
         sort_order: topics.length + 1,
         created_by: user.id,
       });
-      
+
       // Reload topics from database
-      const updatedTopics = await DatabaseService.getTopicsBySubject(subject.id);
+      const updatedTopics = await DatabaseService.getTopicsBySubject(
+        subject.id
+      );
       setTopics(updatedTopics);
-      
+
       setIsAddingTopic(false);
       setNewTopicName("");
       setNewTopicDescription("");
     } catch (error) {
-      console.error('Error creating topic:', error);
-      alert('Error creating topic. Please try again.');
+      console.error("Error creating topic:", error);
+      alert("Error creating topic. Please try again.");
     }
   };
 
@@ -528,8 +571,10 @@ const SubjectBuilder: React.FC = () => {
           <div className="space-y-8">
             {/* Basic Information */}
             <div className="bg-dark-800 rounded-2xl p-6">
-              <h3 className="text-xl font-semibold text-white mb-6">Basic Information</h3>
-              
+              <h3 className="text-xl font-semibold text-white mb-6">
+                Basic Information
+              </h3>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-white font-medium mb-2">
@@ -537,45 +582,25 @@ const SubjectBuilder: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    value={subject.name}
+                    value={subject?.name || ""}
                     onChange={(e) =>
+                      subject &&
                       setSubject({ ...subject, name: e.target.value })
                     }
                     className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="Enter subject name"
                   />
                 </div>
-                <div>
-                  <label className="block text-white font-medium mb-2">
-                    Category *
-                  </label>
-                  <select
-                    value={subject.category}
-                    onChange={(e) =>
-                      setSubject({ ...subject, category: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Select category</option>
-                    <option value="programming">Programming</option>
-                    <option value="mathematics">Mathematics</option>
-                    <option value="science">Science</option>
-                    <option value="language">Language</option>
-                    <option value="business">Business</option>
-                    <option value="design">Design</option>
-                    <option value="marketing">Marketing</option>
-                    <option value="data-science">Data Science</option>
-                  </select>
-                </div>
               </div>
 
               <div className="mt-6">
                 <label className="block text-white font-medium mb-2">
-                  Description *
+                  Description
                 </label>
                 <textarea
-                  value={subject.description}
+                  value={subject?.description || ""}
                   onChange={(e) =>
+                    subject &&
                     setSubject({ ...subject, description: e.target.value })
                   }
                   className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-32 resize-none"
@@ -586,36 +611,26 @@ const SubjectBuilder: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                 <div>
                   <label className="block text-white font-medium mb-2">
-                    Difficulty Level *
-                  </label>
-                  <select
-                    value={subject.difficulty}
-                    onChange={(e) =>
-                      setSubject({ ...subject, difficulty: e.target.value })
-                    }
-                    className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-white font-medium mb-2">
                     Subject Icon
                   </label>
                   <div className="flex space-x-2">
-                    {["📚", "💻", "🧮", "🔬", "🌍", "🎨", "📊", "🚀"].map((icon) => (
-                      <button
-                        key={icon}
-                        onClick={() => setSubject({ ...subject, icon })}
-                        className={`w-12 h-12 text-2xl rounded-lg border-2 ${
-                          subject.icon === icon ? "border-primary-500 bg-primary-500/20" : "border-dark-600 hover:border-dark-500"
-                        }`}
-                      >
-                        {icon}
-                      </button>
-                    ))}
+                    {["📚", "💻", "🧮", "🔬", "🌍", "🎨", "📊", "🚀"].map(
+                      (icon) => (
+                        <button
+                          key={icon}
+                          onClick={() =>
+                            subject && setSubject({ ...subject, icon })
+                          }
+                          className={`w-12 h-12 text-2xl rounded-lg border-2 ${
+                            subject?.icon === icon
+                              ? "border-primary-500 bg-primary-500/20"
+                              : "border-dark-600 hover:border-dark-500"
+                          }`}
+                        >
+                          {icon}
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -623,33 +638,39 @@ const SubjectBuilder: React.FC = () => {
 
             {/* Visual Branding */}
             <div className="bg-dark-800 rounded-2xl p-6">
-              <h3 className="text-xl font-semibold text-white mb-6">Visual Branding</h3>
-              
+              <h3 className="text-xl font-semibold text-white mb-6">
+                Visual Branding
+              </h3>
+
               <div>
                 <label className="block text-white font-medium mb-4">
                   Subject Color Theme *
                 </label>
                 <div className="grid grid-cols-5 gap-3">
                   {[
-                    ["#667eea", "#764ba2"],
-                    ["#f093fb", "#f5576c"],
-                    ["#4ecdc4", "#44a08d"],
-                    ["#ff6b6b", "#ee5a24"],
-                    ["#45b7d1", "#96ceb4"],
-                    ["#f7df1e", "#000000"],
-                    ["#61dafb", "#282c34"],
-                    ["#339933", "#ffffff"],
-                    ["#ff6b35", "#f7931e"],
-                    ["#667eea", "#f093fb"],
+                    "#667eea",
+                    "#f093fb",
+                    "#4ecdc4",
+                    "#ff6b6b",
+                    "#45b7d1",
+                    "#f7df1e",
+                    "#61dafb",
+                    "#339933",
+                    "#ff6b35",
+                    "#764ba2",
                   ].map((color, index) => (
                     <button
                       key={index}
-                      onClick={() => setSubject({ ...subject, color })}
+                      onClick={() =>
+                        subject && setSubject({ ...subject, color })
+                      }
                       className={`w-16 h-16 rounded-xl border-2 ${
-                        subject.color[0] === color[0] ? "border-white scale-110" : "border-dark-600 hover:border-dark-500"
+                        subject?.color === color
+                          ? "border-white scale-110"
+                          : "border-dark-600 hover:border-dark-500"
                       } transition-all duration-200`}
                       style={{
-                        background: `linear-gradient(135deg, ${color[0]}, ${color[1]})`,
+                        background: color,
                       }}
                     />
                   ))}
@@ -660,30 +681,25 @@ const SubjectBuilder: React.FC = () => {
             {/* Preview */}
             <div className="bg-dark-800 rounded-2xl p-6">
               <h3 className="text-xl font-semibold text-white mb-6">Preview</h3>
-              
+
               <div className="max-w-md">
                 <div
                   className="p-6 rounded-2xl text-white"
                   style={{
-                    background: `linear-gradient(135deg, ${subject.color[0]}, ${subject.color[1]})`,
+                    background: subject?.color || "#667eea",
                   }}
                 >
                   <div className="flex items-center space-x-3 mb-3">
-                    <span className="text-2xl">{subject.icon}</span>
+                    <span className="text-2xl">{subject?.icon || "📚"}</span>
                     <div>
-                      <h4 className="text-lg font-semibold">{subject.name}</h4>
-                      <p className="text-white/80 text-sm">{subject.category}</p>
+                      <h4 className="text-lg font-semibold">
+                        {subject?.name || "Subject Name"}
+                      </h4>
                     </div>
                   </div>
-                  <p className="text-white/90 text-sm mb-3">{subject.description}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">
-                      {subject.difficulty}
-                    </span>
-                    <span className="text-xs text-white/70">
-                      {flowNodes.length} learning nodes
-                    </span>
-                  </div>
+                  <p className="text-white/90 text-sm mb-3">
+                    {subject?.description || "Subject description"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -696,12 +712,15 @@ const SubjectBuilder: React.FC = () => {
             <div className="bg-dark-800 rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">Topic Hierarchy</h3>
+                  <h3 className="text-xl font-semibold text-white">
+                    Topic Hierarchy
+                  </h3>
                   <p className="text-dark-400 mt-1">
-                    Organize your subject into topics, subtopics, and sub-subtopics with unlimited depth
+                    Organize your subject into topics, subtopics, and
+                    sub-subtopics with unlimited depth
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsAddingTopic(true)}
                   className="btn-primary flex items-center space-x-2"
                 >
@@ -709,7 +728,7 @@ const SubjectBuilder: React.FC = () => {
                   <span>Add Topic</span>
                 </button>
               </div>
-              
+
               {/* Add New Topic Form */}
               {isAddingTopic && (
                 <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
@@ -751,12 +770,12 @@ const SubjectBuilder: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="space-y-4">
                 {topics.map((topic) => (
-                  <TopicHierarchyItem 
-                    key={topic.id} 
-                    topic={topic} 
+                  <TopicHierarchyItem
+                    key={topic.id}
+                    topic={topic}
                     onUpdate={setTopics}
                     allTopics={topics}
                     subjectId={subject?.id || ""}
@@ -842,13 +861,17 @@ const SubjectBuilder: React.FC = () => {
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-white">Select a Subject</h1>
-                <p className="text-dark-400">Choose a subject to edit or create a new one</p>
+                <h1 className="text-2xl font-bold text-white">
+                  Select a Subject
+                </h1>
+                <p className="text-dark-400">
+                  Choose a subject to edit or create a new one
+                </p>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableSubjects.map((subj) => (
@@ -858,14 +881,16 @@ const SubjectBuilder: React.FC = () => {
                 className="bg-dark-800 rounded-xl p-6 cursor-pointer hover:bg-dark-700 transition-colors border border-dark-700 hover:border-primary-500"
               >
                 <div className="flex items-center space-x-4 mb-4">
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
                     style={{ backgroundColor: subj.color }}
                   >
                     {subj.icon || "📚"}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{subj.name}</h3>
+                    <h3 className="text-lg font-semibold text-white">
+                      {subj.name}
+                    </h3>
                     <p className="text-dark-400 text-sm">{subj.description}</p>
                   </div>
                 </div>
@@ -879,7 +904,7 @@ const SubjectBuilder: React.FC = () => {
                 </div>
               </div>
             ))}
-            
+
             {/* Create New Subject Card */}
             <div
               onClick={() => navigate("/admin/subject-builder")}
@@ -887,8 +912,12 @@ const SubjectBuilder: React.FC = () => {
             >
               <div className="text-center">
                 <Plus className="w-8 h-8 text-dark-400 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold text-white mb-1">Create New Subject</h3>
-                <p className="text-dark-400 text-sm">Start building a new learning path</p>
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  Create New Subject
+                </h3>
+                <p className="text-dark-400 text-sm">
+                  Start building a new learning path
+                </p>
               </div>
             </div>
           </div>
@@ -925,8 +954,8 @@ const SubjectBuilder: React.FC = () => {
                 <button
                   onClick={() => setViewMode("tabs")}
                   className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    viewMode === "tabs" 
-                      ? "bg-primary-500 text-white" 
+                    viewMode === "tabs"
+                      ? "bg-primary-500 text-white"
                       : "text-dark-400 hover:text-white"
                   }`}
                 >
@@ -935,15 +964,15 @@ const SubjectBuilder: React.FC = () => {
                 <button
                   onClick={() => setViewMode("stepper")}
                   className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    viewMode === "stepper" 
-                      ? "bg-primary-500 text-white" 
+                    viewMode === "stepper"
+                      ? "bg-primary-500 text-white"
                       : "text-dark-400 hover:text-white"
                   }`}
                 >
                   Stepper
                 </button>
               </div>
-              
+
               <button
                 onClick={handleSave}
                 disabled={isSaving}
@@ -982,7 +1011,7 @@ const SubjectBuilder: React.FC = () => {
                 const Icon = step.icon;
                 const isActive = currentStep === step.id;
                 const isCompleted = currentStep > step.id;
-                
+
                 return (
                   <div key={step.id} className="flex items-center">
                     <button
@@ -1038,9 +1067,7 @@ const SubjectBuilder: React.FC = () => {
 
       {/* Content */}
       <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          {renderTabContent()}
-        </div>
+        <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
       </div>
 
       {/* Stepper Navigation - Only show when in stepper mode */}
@@ -1066,7 +1093,7 @@ const SubjectBuilder: React.FC = () => {
                   Step {currentStep} of {steps.length}
                 </p>
                 <p className="text-dark-400 text-sm">
-                  {steps.find(s => s.id === currentStep)?.name}
+                  {steps.find((s) => s.id === currentStep)?.name}
                 </p>
               </div>
 

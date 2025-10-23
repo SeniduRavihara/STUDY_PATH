@@ -1,5 +1,6 @@
 import { Layers, Maximize2, Minimize2, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import type { TopicWithChildren } from "../lib/database";
 import ContentBlockEditor, { type ContentBlock } from "./ContentBlockEditor";
 
 interface FlowNode {
@@ -27,26 +28,17 @@ interface FlowNode {
   content_blocks?: ContentBlock[]; // NEW: Content blocks array
 }
 
-interface Topic {
-  id: string;
-  name: string;
-  description: string;
-  parentId?: string;
-  level: number;
-  hasFlow: boolean;
-  flowId?: string;
-  children: Topic[];
-  isExpanded?: boolean;
-}
-
 interface NodePropertiesPanelProps {
   selectedNode: FlowNode | null;
   updateNode: (nodeId: string, updates: Partial<FlowNode>) => void;
   deleteNode: (nodeId: string) => void;
   quizPacks: any[];
   loadingQuizPacks: boolean;
-  topics: Topic[];
-  findTopicById: (topics: Topic[], topicId: string) => Topic | null;
+  topics: TopicWithChildren[];
+  findTopicById: (
+    topics: TopicWithChildren[],
+    topicId: string
+  ) => TopicWithChildren | null;
   getNodeColor: (type: string) => string[];
 }
 
