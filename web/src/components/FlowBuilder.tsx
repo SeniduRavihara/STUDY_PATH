@@ -17,8 +17,8 @@ import {
 import React, { useState, useRef, useEffect } from "react";
 import { DatabaseService } from "../lib/database";
 import TopicHierarchySelector from "./TopicHierarchySelector";
-import NodeCreatorModal from "./NodeCreatorModal";
 import NodePropertiesPanel from "./NodePropertiesPanel";
+import { type ContentBlock } from "./ContentBlockEditor";
 
 interface FlowNode {
   id: string;
@@ -34,6 +34,7 @@ interface FlowNode {
   icon: string;
   color: [string, string];
   estimatedTime?: string;
+  content_blocks?: ContentBlock[]; // ⭐ NEW: Flexible content blocks
 }
 
 interface Topic {
@@ -299,7 +300,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   // Debug: Log received props
   console.log("FlowBuilder received topics:", topics);
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
-  const [showNodeCreator, setShowNodeCreator] = useState(false);
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState("");
   const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
@@ -308,6 +308,38 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [quizPacks, setQuizPacks] = useState<any[]>([]);
   const [loadingQuizPacks, setLoadingQuizPacks] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to check if topic exists in the hierarchy
+  const topicExistsInHierarchy = (topics: Topic[], targetId: string): boolean => {
+    for (const topic of topics) {
+      if (topic.id === targetId) return true;
+      if (topic.children && topic.children.length > 0) {
+        if (topicExistsInHierarchy(topic.children, targetId)) return true;
+      }
+    }
+    return false;
+  };
+
+  // Load last selected topic from localStorage on mount
+  useEffect(() => {
+    const storedTopicId = localStorage.getItem(`lastSelectedTopic_${subjectId}`);
+    if (storedTopicId && topics.length > 0) {
+      // Check if the stored topic still exists in the hierarchy
+      if (topicExistsInHierarchy(topics, storedTopicId)) {
+        setCurrentTopicId(storedTopicId);
+      } else {
+        // Remove invalid stored topic
+        localStorage.removeItem(`lastSelectedTopic_${subjectId}`);
+      }
+    }
+  }, [subjectId, topics]);
+
+  // Save selected topic to localStorage when it changes
+  useEffect(() => {
+    if (currentTopicId) {
+      localStorage.setItem(`lastSelectedTopic_${subjectId}`, currentTopicId);
+    }
+  }, [currentTopicId, subjectId]);
 
   // Load quiz packs hierarchically when topic is selected
   useEffect(() => {
@@ -542,18 +574,28 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       icon: nodeType.icon.name,
       color: nodeType.color as [string, string],
       estimatedTime: "5 min",
+      content_blocks: [], // 🎯 START WITH EMPTY BLOCKS - user adds content manually
     };
 
     console.log(`NEW NODE CREATED:`, newNode);
     onNodesChange([...nodes, newNode]);
-    setShowNodeCreator(false);
   };
 
   const updateNode = (nodeId: string, updates: Partial<FlowNode>) => {
+    console.log('🔧 FlowBuilder updateNode called:', nodeId, updates);
     const updatedNodes = nodes.map(node =>
       node.id === nodeId ? { ...node, ...updates } : node
     );
+    console.log('🔧 Updated nodes array:', updatedNodes);
     onNodesChange(updatedNodes);
+    
+    // 🎯 UPDATE selectedNode with fresh reference
+    if (selectedNode && selectedNode.id === nodeId) {
+      const freshNode = updatedNodes.find(n => n.id === nodeId);
+      if (freshNode) {
+        setSelectedNode(freshNode);
+      }
+    }
   };
 
   const deleteNode = (nodeId: string) => {
@@ -774,7 +816,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             </span>
           </button>
         <button
-          onClick={() => setShowNodeCreator(true)}
+          onClick={() => addNode('study')}
           className="btn-primary flex items-center space-x-2"
         >
           <Plus className="w-5 h-5" />
@@ -1065,7 +1107,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                     Add nodes to create an interactive learning path
                   </p>
                   <button
-                    onClick={() => setShowNodeCreator(true)}
+                    onClick={() => addNode('study')}
                     className="btn-primary"
                   >
                     Add Your First Node
@@ -1125,14 +1167,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
           </div>
         )}
       </div>
-
-      {/* Node Creator Modal */}
-      <NodeCreatorModal
-        showNodeCreator={showNodeCreator}
-        setShowNodeCreator={setShowNodeCreator}
-        addNode={addNode}
-        nodeTypes={nodeTypes}
-      />
 
       {/* Old Node Properties Panel - Removed */}
       {false && selectedNode && (

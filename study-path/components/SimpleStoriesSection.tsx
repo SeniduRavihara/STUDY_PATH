@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Image, Dimensions, Modal } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Image, Dimensions, Modal, Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler';
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const cardWidth = screenWidth * 0.35;
 const cardHeight = cardWidth * 1.4;
 
-// Story interface
 interface Story {
   id: string;
   isOwn?: boolean;
@@ -20,7 +20,6 @@ interface Story {
   isViewed?: boolean;
 }
 
-// Mock data
 const mockStories: Story[] = [
   {
     id: 'add-story',
@@ -66,23 +65,125 @@ const mockStories: Story[] = [
   },
 ];
 
+const STORY_DURATION = 5000; // 5 seconds per story
+
 const SimpleStoriesSection = () => {
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [currentStoryProgress, setCurrentStoryProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+  const pauseTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const storiesWithoutOwn = mockStories.filter(s => !s.isOwn);
+
+  useEffect(() => {
+    if (modalVisible && selectedStoryIndex !== null && !isPaused) {
+      startProgress();
+    } else {
+      stopProgress();
+    }
+
+    return () => {
+      stopProgress();
+    };
+  }, [modalVisible, selectedStoryIndex, isPaused]);
+
+  const startProgress = () => {
+    stopProgress();
+    setCurrentStoryProgress(0);
+    
+    const interval = setInterval(() => {
+      setCurrentStoryProgress(prev => {
+        if (prev >= 100) {
+          goToNextStory();
+          return 0;
+        }
+        return prev + (100 / (STORY_DURATION / 50));
+      });
+    }, 50);
+    
+    progressInterval.current = interval;
+  };
+
+  const stopProgress = () => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+      progressInterval.current = null;
+    }
+  };
+
+  const goToNextStory = () => {
+    if (selectedStoryIndex !== null && selectedStoryIndex < storiesWithoutOwn.length - 1) {
+      setSelectedStoryIndex(selectedStoryIndex + 1);
+      setCurrentStoryProgress(0);
+    } else {
+      handleCloseModal();
+    }
+  };
+
+  const goToPreviousStory = () => {
+    if (selectedStoryIndex !== null && selectedStoryIndex > 0) {
+      setSelectedStoryIndex(selectedStoryIndex - 1);
+      setCurrentStoryProgress(0);
+    }
+  };
 
   const handleStoryPress = (story: Story) => {
     if (story.isOwn) {
       console.log('Create story pressed');
     } else {
-      setSelectedStory(story);
+      const index = storiesWithoutOwn.findIndex(s => s.id === story.id);
+      setSelectedStoryIndex(index);
       setModalVisible(true);
+      setCurrentStoryProgress(0);
     }
   };
 
   const handleCloseModal = () => {
     setModalVisible(false);
-    setSelectedStory(null);
+    setSelectedStoryIndex(null);
+    setCurrentStoryProgress(0);
+    stopProgress();
   };
+
+  const handleScreenTap = (x: number) => {
+    const screenMiddle = screenWidth / 2;
+    if (x < screenMiddle) {
+      goToPreviousStory();
+    } else {
+      goToNextStory();
+    }
+  };
+
+  const handleLongPressIn = () => {
+    setIsPaused(true);
+    if (pauseTimeout.current) {
+      clearTimeout(pauseTimeout.current);
+    }
+  };
+
+  const handleLongPressOut = () => {
+    pauseTimeout.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 100);
+  };
+
+  const onSwipe = ({ nativeEvent }: any) => {
+    const { translationX, velocityX } = nativeEvent;
+    
+    if (Math.abs(velocityX) > 500) {
+      if (velocityX > 0) {
+        // Swipe right - previous story
+        goToPreviousStory();
+      } else {
+        // Swipe left - next story
+        goToNextStory();
+      }
+    }
+  };
+
+  const currentStory = selectedStoryIndex !== null ? storiesWithoutOwn[selectedStoryIndex] : null;
 
   return (
     <View style={styles.container}>
@@ -104,7 +205,6 @@ const SimpleStoriesSection = () => {
           >
             <View style={styles.card}>
               {story.isOwn ? (
-                // Add Story Card
                 <LinearGradient
                   colors={['#667eea', '#764ba2']}
                   style={styles.addStoryGradient}
@@ -117,24 +217,18 @@ const SimpleStoriesSection = () => {
                   </View>
                 </LinearGradient>
               ) : (
-                // Regular Story Card
                 <View style={styles.storyCard}>
-                  {/* Background Image */}
                   <Image
                     source={{ uri: story.mediaUrl }}
                     style={styles.backgroundImage}
                     resizeMode="cover"
                   />
-
-                  {/* Dark Overlay */}
                   <LinearGradient
                     colors={['transparent', 'rgba(0,0,0,0.7)']}
                     style={styles.darkOverlay}
                   />
-
-                  {/* Profile Picture */}
                   <View style={styles.profileContainer}>
-                    <View style={styles.profilePicture}>
+                    <View style={[styles.profilePicture, story.isViewed && styles.viewedBorder]}>
                       <Image
                         source={{ uri: story.userAvatar }}
                         style={styles.profileImage}
@@ -142,15 +236,6 @@ const SimpleStoriesSection = () => {
                       />
                     </View>
                   </View>
-
-                  {/* Viewed Indicator */}
-                  {story.isViewed && (
-                    <View style={styles.viewedIndicator}>
-                      <Ionicons name="checkmark-done" size={16} color="#9ca3af" />
-                    </View>
-                  )}
-
-                  {/* Bottom Content */}
                   <View style={styles.bottomContent}>
                     <Text style={styles.userName} numberOfLines={1}>
                       {story.userName}
@@ -160,14 +245,10 @@ const SimpleStoriesSection = () => {
                         {story.content}
                       </Text>
                       <View style={styles.metaContainer}>
-                        <Text style={styles.timestamp}>
-                          {story.timestamp}
-                        </Text>
+                        <Text style={styles.timestamp}>{story.timestamp}</Text>
                         <View style={styles.viewCountContainer}>
                           <Ionicons name="eye" size={12} color="rgba(255,255,255,0.6)" />
-                          <Text style={styles.viewCount}>
-                            {story.viewCount}
-                          </Text>
+                          <Text style={styles.viewCount}>{story.viewCount}</Text>
                         </View>
                       </View>
                     </View>
@@ -179,78 +260,104 @@ const SimpleStoriesSection = () => {
         ))}
       </ScrollView>
 
-      {/* Story Viewer Modal */}
       <Modal
         visible={modalVisible}
         transparent
         animationType="fade"
         statusBarTranslucent
       >
-        <View style={styles.modalContainer}>
-          {/* Progress Bar */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBarBg}>
-              <View style={styles.progressBar} />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={styles.modalContainer}>
+            {/* Progress Bars */}
+            <View style={styles.progressContainer}>
+              {storiesWithoutOwn.map((_, index) => (
+                <View key={index} style={styles.progressBarBg}>
+                  <View 
+                    style={[
+                      styles.progressBar,
+                      {
+                        width: index < (selectedStoryIndex || 0) 
+                          ? '100%' 
+                          : index === selectedStoryIndex 
+                            ? `${currentStoryProgress}%` 
+                            : '0%'
+                      }
+                    ]} 
+                  />
+                </View>
+              ))}
             </View>
-          </View>
 
-          {/* Story Content */}
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={handleCloseModal}
-            style={styles.modalContent}
-          >
-            {selectedStory?.mediaUrl ? (
-              <Image
-                source={{ uri: selectedStory.mediaUrl }}
-                style={styles.modalImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <LinearGradient
-                colors={['#667eea', '#764ba2']}
-                style={styles.modalGradient}
-              >
-                <Text style={styles.modalText}>
-                  {selectedStory?.content}
-                </Text>
-              </LinearGradient>
-            )}
-
-            {/* Story Info Overlay */}
-            <View style={styles.infoOverlay}>
-              <View style={styles.infoRow}>
-                <View style={styles.avatarContainer}>
-                  {selectedStory?.userAvatar ? (
+            <PanGestureHandler onGestureEvent={onSwipe} onEnded={onSwipe}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPressIn={handleLongPressIn}
+                  onPressOut={handleLongPressOut}
+                  onPress={(e) => handleScreenTap(e.nativeEvent.locationX)}
+                  style={styles.touchableArea}
+                >
+                  {currentStory?.mediaUrl ? (
                     <Image
-                      source={{ uri: selectedStory.userAvatar }}
-                      style={styles.avatar}
+                      source={{ uri: currentStory.mediaUrl }}
+                      style={styles.modalImage}
                       resizeMode="cover"
                     />
                   ) : (
-                    <Ionicons name="person" size={20} color="#9ca3af" />
+                    <LinearGradient
+                      colors={['#667eea', '#764ba2']}
+                      style={styles.modalGradient}
+                    >
+                      <Text style={styles.modalText}>
+                        {currentStory?.content}
+                      </Text>
+                    </LinearGradient>
                   )}
-                </View>
-                <View style={styles.userInfo}>
-                  <Text style={styles.modalUserName}>
-                    {selectedStory?.userName}
-                  </Text>
-                  <Text style={styles.modalTimestamp}>
-                    {selectedStory?.timestamp}
-                  </Text>
-                </View>
-              </View>
-            </View>
 
-            {/* Close Button */}
-            <TouchableOpacity
-              onPress={handleCloseModal}
-              style={styles.closeButton}
-            >
-              <Ionicons name="close" size={24} color="white" />
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
+                  {/* Story Info Overlay */}
+                  <View style={styles.infoOverlay}>
+                    <View style={styles.infoRow}>
+                      <View style={styles.avatarContainer}>
+                        {currentStory?.userAvatar ? (
+                          <Image
+                            source={{ uri: currentStory.userAvatar }}
+                            style={styles.avatar}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <Ionicons name="person" size={20} color="#9ca3af" />
+                        )}
+                      </View>
+                      <View style={styles.userInfo}>
+                        <Text style={styles.modalUserName}>
+                          {currentStory?.userName}
+                        </Text>
+                        <Text style={styles.modalTimestamp}>
+                          {currentStory?.timestamp}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Pause Indicator */}
+                  {isPaused && (
+                    <View style={styles.pauseIndicator}>
+                      <Ionicons name="pause" size={32} color="white" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+
+                {/* Close Button */}
+                <TouchableOpacity
+                  onPress={handleCloseModal}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+            </PanGestureHandler>
+          </View>
+        </GestureHandlerRootView>
       </Modal>
     </View>
   );
@@ -335,20 +442,15 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'white',
+    borderWidth: 3,
+    borderColor: '#06b6d4',
+  },
+  viewedBorder: {
+    borderColor: '#4b5563',
   },
   profileImage: {
     width: '100%',
     height: '100%',
-  },
-  viewedIndicator: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 12,
-    padding: 4,
   },
   bottomContent: {
     position: 'absolute',
@@ -401,24 +503,26 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     paddingTop: 48,
     paddingBottom: 8,
+    gap: 4,
   },
   progressBarBg: {
     flex: 1,
-    height: 4,
+    height: 3,
     backgroundColor: 'rgba(255,255,255,0.3)',
     borderRadius: 2,
-    marginRight: 4,
   },
   progressBar: {
-    height: 4,
+    height: 3,
     backgroundColor: 'white',
     borderRadius: 2,
-    width: '30%',
   },
   modalContent: {
+    flex: 1,
+  },
+  touchableArea: {
     flex: 1,
   },
   modalImage: {
@@ -454,6 +558,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    overflow: 'hidden',
   },
   avatar: {
     width: 40,
@@ -480,6 +585,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pauseIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: [{ translateX: -24 }, { translateY: -24 }],
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',

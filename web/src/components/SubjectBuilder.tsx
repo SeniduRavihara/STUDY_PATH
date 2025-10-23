@@ -4,7 +4,6 @@ import {
   CheckCircle,
   Eye,
   FileText,
-  Play,
   Plus,
   Save,
   Settings,
@@ -13,7 +12,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSidebar } from "../contexts/SidebarContext";
 import FlowBuilder from "./FlowBuilder";
-import QuizPackBuilder from "./QuizPackBuilder";
 import { DatabaseService } from "../lib/database";
 import type { TopicWithChildren, Subject, SubjectInsert } from "../lib/database";
 import { useAuth } from "../contexts/AuthContext";
@@ -348,7 +346,7 @@ const SubjectBuilder: React.FC = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        
+
     if (subjectId) {
           // Check if subjectId is a valid UUID format
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -362,12 +360,15 @@ const SubjectBuilder: React.FC = () => {
             setIsLoading(false);
             return;
           }
-          
+
+          // Save this subject as the currently working one
+          localStorage.setItem('lastSelectedSubject', subjectId);
+
           // Load subject data
           const subjectData = await DatabaseService.getSubjectById(subjectId);
           if (subjectData) {
             setSubject(subjectData);
-            
+
             // Load topics for this subject
             const topicsData = await DatabaseService.getTopicsBySubject(subjectId);
             setTopics(topicsData);
@@ -376,6 +377,15 @@ const SubjectBuilder: React.FC = () => {
           // Load all available subjects for selection
           const allSubjects = await DatabaseService.getSubjects();
           setAvailableSubjects(allSubjects);
+
+          // Check if we have a last selected subject
+          const lastSubjectId = localStorage.getItem('lastSelectedSubject');
+          if (lastSubjectId && allSubjects.some(s => s.id === lastSubjectId)) {
+            // Automatically navigate to the last selected subject
+            navigate(`/admin/subject-builder/${lastSubjectId}`);
+            return;
+          }
+
           setSubject(null);
           setTopics([]);
         }
@@ -392,21 +402,17 @@ const SubjectBuilder: React.FC = () => {
   const steps = [
     { id: 1, name: "Subject Basics", icon: BookOpen, tabId: "overview" },
     { id: 2, name: "Topic Structure", icon: FileText, tabId: "topics" },
-    { id: 3, name: "Quiz Packs", icon: CheckCircle, tabId: "quiz-packs" },
-    { id: 4, name: "Flow Structure", icon: FileText, tabId: "flow" },
-    { id: 5, name: "Content Creation", icon: Play, tabId: "content" },
-    { id: 6, name: "Testing & Preview", icon: Eye, tabId: "preview" },
-    { id: 7, name: "Publish", icon: CheckCircle, tabId: "settings" },
+    { id: 3, name: "Flow Structure", icon: FileText, tabId: "flow" },
+    { id: 4, name: "Testing & Preview", icon: Eye, tabId: "preview" },
+    { id: 5, name: "Publish", icon: CheckCircle, tabId: "settings" },
   ];
 
   const tabs = [
     { id: "overview", name: "Overview", icon: BookOpen, stepId: 1 },
     { id: "topics", name: "Topics", icon: FileText, stepId: 2 },
-    { id: "quiz-packs", name: "Quiz Packs", icon: CheckCircle, stepId: 3 },
-    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 4 },
-    { id: "content", name: "Content Library", icon: Play, stepId: 5 },
-    { id: "settings", name: "Settings", icon: Settings, stepId: 7 },
-    { id: "preview", name: "Preview", icon: Eye, stepId: 6 },
+    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 3 },
+    { id: "preview", name: "Preview", icon: Eye, stepId: 4 },
+    { id: "settings", name: "Settings", icon: Settings, stepId: 5 },
   ];
 
   // Synchronize tab and step navigation
@@ -762,16 +768,6 @@ const SubjectBuilder: React.FC = () => {
           </div>
         );
 
-      case "quiz-packs":
-        return (
-          <QuizPackBuilder
-            subject={subject}
-            topics={topics}
-            onTopicsChange={setTopics}
-            sidebarCollapsed={sidebarCollapsed}
-          />
-        );
-
       case "flow":
         return (
           <FlowBuilder
@@ -788,19 +784,6 @@ const SubjectBuilder: React.FC = () => {
             }}
             currentFlowId={undefined} // Will be set when flow is created
           />
-        );
-
-      case "content":
-        return (
-          <div className="text-center py-12">
-            <FileText className="w-16 h-16 text-dark-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Content Library
-            </h3>
-            <p className="text-dark-400">
-              Manage reusable content assets, media files, and templates.
-            </p>
-          </div>
         );
 
       case "settings":

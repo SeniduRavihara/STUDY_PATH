@@ -17,6 +17,7 @@ import Settings from "./components/Settings";
 import StudyPackManager from "./components/StudyPackManager";
 import SubjectBuilder from "./components/SubjectBuilder";
 import SubjectManager from "./components/SubjectManager";
+import TestContentBlocks from "./pages/TestContentBlocks";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import "./index.css";
@@ -75,6 +76,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="/subject-builder/:subjectId" element={<SubjectBuilder />} />
           <Route path="/database" element={<DatabaseOverview />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/test-blocks" element={<TestContentBlocks />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AdminLayout>
