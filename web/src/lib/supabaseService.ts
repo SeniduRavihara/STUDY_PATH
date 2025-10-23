@@ -2,9 +2,44 @@ import type { Database } from "./supabase";
 import { supabase } from "./supabase";
 
 type Subject = Database["public"]["Tables"]["subjects"]["Row"];
-type Chapter = Database["public"]["Tables"]["chapters"]["Row"];
-type MCQ = Database["public"]["Tables"]["mcqs"]["Row"];
-type Lesson = Database["public"]["Tables"]["lessons"]["Row"];
+
+// Placeholder types for tables not yet defined in schema
+// TODO: Add proper table definitions to schema when implementing these features
+interface Chapter {
+  id: string;
+  subject_id: string;
+  title: string;
+  description: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Lesson {
+  id: string;
+  chapter_id: string;
+  title: string;
+  content: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface MCQ {
+  id: string;
+  subject_id: string;
+  chapter_id?: string;
+  quiz_pack_id?: string;
+  question: string;
+  options: string[];
+  correct_answer: number;
+  correctAnswer?: number; // Alias for compatibility
+  explanation?: string;
+  difficulty?: "easy" | "medium" | "hard";
+  created_at: string;
+  updated_at: string;
+}
+
 // Feed posts types removed - table not in current schema
 
 export class SupabaseService {
@@ -40,7 +75,7 @@ export class SupabaseService {
   }
 
   static async createSubject(
-    subject: Omit<Subject, "id" | "created_at" | "updated_at">,
+    subject: Omit<Subject, "id" | "created_at" | "updated_at">
   ) {
     const { data, error } = await supabase
       .from("subjects")
@@ -77,7 +112,7 @@ export class SupabaseService {
           name,
           color
         )
-      `,
+      `
       )
       .order("order_index", { ascending: true });
 
@@ -90,7 +125,7 @@ export class SupabaseService {
   }
 
   static async createChapter(
-    chapter: Omit<Chapter, "id" | "created_at" | "updated_at">,
+    chapter: Omit<Chapter, "id" | "created_at" | "updated_at">
   ) {
     const { data, error } = await supabase
       .from("chapters")
@@ -131,7 +166,7 @@ export class SupabaseService {
             color
           )
         )
-      `,
+      `
       )
       .order("order_index", { ascending: true });
 
@@ -144,7 +179,7 @@ export class SupabaseService {
   }
 
   static async createLesson(
-    lesson: Omit<Lesson, "id" | "created_at" | "updated_at">,
+    lesson: Omit<Lesson, "id" | "created_at" | "updated_at">
   ) {
     const { data, error } = await supabase
       .from("lessons")
@@ -185,7 +220,7 @@ export class SupabaseService {
             color
           )
         )
-      `,
+      `
       )
       .order("created_at", { ascending: false });
 
@@ -223,7 +258,7 @@ export class SupabaseService {
 
   // Bulk operations
   static async bulkCreateMCQs(
-    mcqs: Omit<MCQ, "id" | "created_at" | "updated_at">[],
+    mcqs: Omit<MCQ, "id" | "created_at" | "updated_at">[]
   ) {
     const { data, error } = await supabase.from("mcqs").insert(mcqs).select();
     return { data, error };
@@ -310,7 +345,7 @@ export class SupabaseService {
           email,
           name
         )
-      `,
+      `
       )
       .order("created_at", { ascending: false });
     return { data, error };
@@ -339,7 +374,7 @@ export class SupabaseService {
           email,
           name
         )
-      `,
+      `
       )
       .single();
     return { data, error };
@@ -358,7 +393,7 @@ export class SupabaseService {
           email,
           name
         )
-      `,
+      `
       )
       .single();
     return { data, error };

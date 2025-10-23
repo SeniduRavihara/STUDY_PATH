@@ -1,15 +1,10 @@
 import {
-  Activity,
-  BookOpen,
-  Database,
-  FileText,
-  HelpCircle,
-  Layers,
-  MessageSquare,
-  Package,
-  Settings,
-  TrendingUp,
-  Users,
+Activity,
+BookOpen,
+MessageSquare,
+Settings,
+TrendingUp,
+Users,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -17,9 +12,6 @@ import { SupabaseService } from "../lib/supabaseService";
 
 interface Stats {
   subjects: number;
-  chapters: number;
-  lessons: number;
-  mcqs: number;
   feedPosts: number;
 }
 
@@ -27,9 +19,6 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState<Stats>({
     subjects: 0,
-    chapters: 0,
-    lessons: 0,
-    mcqs: 0,
     feedPosts: 0,
   });
   const [loading, setLoading] = useState(true);
@@ -59,44 +48,20 @@ const Dashboard: React.FC = () => {
       textColor: "text-blue-500",
     },
     {
-      name: "Total Chapters",
-      value: stats.chapters,
-      icon: Layers,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-500/10",
-      textColor: "text-purple-500",
-    },
-    {
-      name: "Total Lessons",
-      value: stats.lessons,
-      icon: FileText,
+      name: "Feed Posts",
+      value: stats.feedPosts,
+      icon: MessageSquare,
       color: "from-green-500 to-green-600",
       bgColor: "bg-green-500/10",
       textColor: "text-green-500",
     },
-    {
-      name: "Total MCQs",
-      value: stats.mcqs,
-      icon: HelpCircle,
-      color: "from-orange-500 to-orange-600",
-      bgColor: "bg-orange-500/10",
-      textColor: "text-orange-500",
-    },
-    {
-      name: "Study Packs",
-      value: stats.feedPosts,
-      icon: Package,
-      color: "from-purple-500 to-purple-600",
-      bgColor: "bg-purple-500/10",
-      textColor: "text-purple-500",
-    },
   ];
 
   const recentActivities = [
-    { action: "New MCQ added", subject: "Physics", time: "2 hours ago" },
-    { action: "Chapter updated", subject: "Chemistry", time: "4 hours ago" },
-    { action: "New lesson created", subject: "Mathematics", time: "1 day ago" },
-    { action: "Subject created", subject: "Biology", time: "2 days ago" },
+    { action: "Subject published", subject: "Mathematics", time: "2 hours ago" },
+    { action: "New feed post", subject: "Physics Updates", time: "4 hours ago" },
+    { action: "Subject created", subject: "Chemistry", time: "1 day ago" },
+    { action: "Subject updated", subject: "Biology", time: "2 days ago" },
   ];
 
   if (loading) {
@@ -154,69 +119,27 @@ const Dashboard: React.FC = () => {
             Quick Actions
           </h3>
           <div className="space-y-3">
-            <button 
-              onClick={() => navigate("/admin/subjects")}
-              className="w-full btn-primary text-left flex items-center space-x-3"
-            >
-              <BookOpen className="w-5 h-5" />
-              <span>Create New Subject</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/chapters")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <Layers className="w-5 h-5" />
-              <span>Add New Chapter</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/lessons")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <FileText className="w-5 h-5" />
-              <span>Create New Lesson</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/mcqs")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span>Add New MCQ</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/feed-posts")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <MessageSquare className="w-5 h-5" />
-              <span>Create Feed Post</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/quiz-packs")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <Package className="w-5 h-5" />
-              <span>Create Quiz Pack</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/study-packs")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <Package className="w-5 h-5" />
-              <span>Create Study Pack</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/database")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <Database className="w-5 h-5" />
-              <span>View Database</span>
-            </button>
-            <button 
-              onClick={() => navigate("/admin/settings")}
-              className="w-full btn-secondary text-left flex items-center space-x-3"
-            >
-              <Settings className="w-5 h-5" />
-              <span>Configure Settings</span>
-            </button>
+          <button
+          onClick={() => navigate("/admin/subjects")}
+          className="w-full btn-primary text-left flex items-center space-x-3"
+          >
+          <BookOpen className="w-5 h-5" />
+          <span>Create New Subject</span>
+          </button>
+          <button
+          onClick={() => navigate("/admin/feed-posts")}
+          className="w-full btn-secondary text-left flex items-center space-x-3"
+          >
+          <MessageSquare className="w-5 h-5" />
+          <span>Create Feed Post</span>
+          </button>
+          <button
+          onClick={() => navigate("/admin/settings")}
+          className="w-full btn-secondary text-left flex items-center space-x-3"
+          >
+          <Settings className="w-5 h-5" />
+          <span>Configure Settings</span>
+          </button>
           </div>
         </div>
 
@@ -276,11 +199,11 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="text-center p-4 bg-dark-700 rounded-lg">
-            <div className="w-16 h-16 mx-auto mb-3 bg-purple-500/20 rounded-full flex items-center justify-center">
-              <HelpCircle className="w-8 h-8 text-purple-500" />
-            </div>
-            <p className="text-2xl font-bold text-white">+15%</p>
-            <p className="text-dark-400 text-sm">Quiz Completion</p>
+          <div className="w-16 h-16 mx-auto mb-3 bg-purple-500/20 rounded-full flex items-center justify-center">
+          <MessageSquare className="w-8 h-8 text-purple-500" />
+          </div>
+          <p className="text-2xl font-bold text-white">+15%</p>
+          <p className="text-dark-400 text-sm">Feed Engagement</p>
           </div>
         </div>
       </div>

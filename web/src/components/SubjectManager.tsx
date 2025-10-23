@@ -1,9 +1,9 @@
-import { Edit, Plus, Trash2, X, Eye, CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, Edit, Eye, Plus, Trash2, X, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DatabaseService } from "../lib/database";
-import type { Subject } from "../lib/database";
 import { useAuth } from "../contexts/AuthContext";
+import type { Subject } from "../lib/database";
+import { DatabaseService } from "../lib/database";
 
 const SubjectManager: React.FC = () => {
   const navigate = useNavigate();
@@ -131,7 +131,7 @@ const SubjectManager: React.FC = () => {
   const handleDeleteSubject = async (id: string) => {
     if (
       !confirm(
-        "Are you sure you want to delete this subject? This will also delete all associated topics and flows.",
+        "Are you sure you want to delete this subject? This will also delete all associated topics and flows."
       )
     )
       return;
@@ -191,7 +191,6 @@ const SubjectManager: React.FC = () => {
     setEditingSubject(null);
   };
 
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -221,7 +220,7 @@ const SubjectManager: React.FC = () => {
 
       {/* Subjects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {subjects.map(subject => (
+        {subjects.map((subject) => (
           <div
             key={subject.id}
             className="card group hover:scale-105 transition-transform duration-200"
@@ -244,7 +243,8 @@ const SubjectManager: React.FC = () => {
                     {subject.description || "No description"}
                   </p>
                   <p className="text-dark-500 text-xs mt-1">
-                    Created by: {subject.created_by === user?.id ? "You" : "Other User"}
+                    Created by:{" "}
+                    {subject.created_by === user?.id ? "You" : "Other User"}
                   </p>
                 </div>
               </div>
@@ -257,18 +257,18 @@ const SubjectManager: React.FC = () => {
                 >
                   <Eye className="w-4 h-4" />
                 </button>
-                
+
                 {/* Owner-only buttons */}
                 {subject.created_by === user?.id && (
                   <>
-                <button
-                  onClick={() => handleEditSubject(subject)}
-                  className="text-dark-400 hover:text-white transition-colors"
-                  title="Edit"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                    
+                    <button
+                      onClick={() => handleEditSubject(subject)}
+                      className="text-dark-400 hover:text-white transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+
                     {/* Publish/Unpublish buttons */}
                     {subject.is_active ? (
                       <button
@@ -287,14 +287,14 @@ const SubjectManager: React.FC = () => {
                         <CheckCircle className="w-4 h-4" />
                       </button>
                     )}
-                    
-                <button
-                  onClick={() => handleDeleteSubject(subject.id)}
-                  className="text-red-400 hover:text-red-300 transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+
+                    <button
+                      onClick={() => handleDeleteSubject(subject.id)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </>
                 )}
               </div>
@@ -308,15 +308,15 @@ const SubjectManager: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-              <span
+                <span
                   className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                    subject.is_active 
-                      ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                    subject.is_active
+                      ? "bg-green-500/10 text-green-500 border-green-500/20"
                       : "bg-gray-500/10 text-gray-500 border-gray-500/20"
                   }`}
                 >
                   {subject.is_active ? "Published" : "Draft"}
-              </span>
+                </span>
               </div>
               <span className="text-dark-400 text-sm">
                 {new Date(subject.created_at).toLocaleDateString()}
@@ -359,8 +359,8 @@ const SubjectManager: React.FC = () => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, name: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter subject name"
@@ -375,8 +375,8 @@ const SubjectManager: React.FC = () => {
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       description: e.target.value,
                     }))
@@ -392,11 +392,11 @@ const SubjectManager: React.FC = () => {
                   Icon
                 </label>
                 <div className="grid grid-cols-8 gap-2 p-4 bg-dark-800 border border-dark-700 rounded-lg">
-                  {iconPresets.map(icon => (
+                  {iconPresets.map((icon) => (
                     <button
                       key={icon}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, icon }))}
+                      onClick={() => setFormData((prev) => ({ ...prev, icon }))}
                       className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-colors ${
                         formData.icon === icon
                           ? "bg-primary-500 text-white"
@@ -419,7 +419,9 @@ const SubjectManager: React.FC = () => {
                     <button
                       key={index}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, color }))}
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, color }))
+                      }
                       className={`w-12 h-12 rounded-lg transition-transform ${
                         formData.color === color
                           ? "scale-110 ring-2 ring-white"
@@ -431,30 +433,6 @@ const SubjectManager: React.FC = () => {
                     />
                   ))}
                 </div>
-              </div>
-
-              {/* Difficulty */}
-              <div>
-                <label className="block text-white font-medium mb-2">
-                  Difficulty Level
-                </label>
-                <select
-                  value={formData.difficulty}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      difficulty: e.target.value as
-                        | "Beginner"
-                        | "Intermediate"
-                        | "Advanced",
-                    }))
-                  }
-                  className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
               </div>
 
               {/* Preview */}
@@ -476,11 +454,6 @@ const SubjectManager: React.FC = () => {
                       <h4 className="text-white font-semibold">
                         {formData.name || "Subject Name"}
                       </h4>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(formData.difficulty)}`}
-                      >
-                        {formData.difficulty}
-                      </span>
                     </div>
                   </div>
                 </div>

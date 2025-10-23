@@ -1,40 +1,35 @@
+import type { DragEndEvent } from "@dnd-kit/core";
 import {
-  ArrowLeft,
-  Edit,
-  Plus,
-  Trash2,
-  X,
-  CheckCircle,
-  Clock,
-  Target,
-  Upload,
-  Eye,
-  Save,
-  GripVertical,
-} from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { DatabaseService } from "../lib/database";
-import { useAuth } from "../contexts/AuthContext";
-import {
-  DndContext,
   closestCenter,
+  DndContext,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-} from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
   useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
+  ArrowLeft,
+  Edit,
+  GripVertical,
+  Plus,
+  Save,
+  Target,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { DatabaseService } from "../lib/database";
 
 interface MCQ {
   id: string;
@@ -115,7 +110,7 @@ const SortableMCQItem: React.FC<SortableMCQItemProps> = ({
       ref={setNodeRef}
       style={style}
       className={`bg-dark-800 rounded-xl p-6 hover:bg-dark-700 transition-colors ${
-        isDragging ? 'shadow-2xl' : ''
+        isDragging ? "shadow-2xl" : ""
       }`}
     >
       <div className="flex items-start justify-between">
@@ -129,11 +124,15 @@ const SortableMCQItem: React.FC<SortableMCQItemProps> = ({
           >
             <GripVertical className="w-5 h-5 text-dark-400 hover:text-white" />
           </div>
-          
+
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-3">
               <span className="text-primary-500 font-medium">#{index + 1}</span>
-              <span className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(mcq.difficulty)}`}>
+              <span
+                className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(
+                  mcq.difficulty
+                )}`}
+              >
                 {mcq.difficulty}
               </span>
             </div>
@@ -141,16 +140,22 @@ const SortableMCQItem: React.FC<SortableMCQItemProps> = ({
             <div className="space-y-2 mb-4">
               {mcq.options.map((option, optionIndex) => (
                 <div key={optionIndex} className="flex items-center space-x-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    optionIndex === mcq.correct_answer 
-                      ? 'bg-green-500 text-white' 
-                      : 'bg-dark-600 text-dark-400'
-                  }`}>
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                      optionIndex === mcq.correct_answer
+                        ? "bg-green-500 text-white"
+                        : "bg-dark-600 text-dark-400"
+                    }`}
+                  >
                     {String.fromCharCode(65 + optionIndex)}
                   </div>
-                  <span className={`text-sm ${
-                    optionIndex === mcq.correct_answer ? 'text-green-400' : 'text-dark-300'
-                  }`}>
+                  <span
+                    className={`text-sm ${
+                      optionIndex === mcq.correct_answer
+                        ? "text-green-400"
+                        : "text-dark-300"
+                    }`}
+                  >
                     {option}
                   </span>
                 </div>
@@ -159,13 +164,14 @@ const SortableMCQItem: React.FC<SortableMCQItemProps> = ({
             {mcq.explanation && (
               <div className="bg-dark-700 rounded-lg p-3">
                 <p className="text-dark-300 text-sm">
-                  <span className="font-medium text-white">Explanation:</span> {mcq.explanation}
+                  <span className="font-medium text-white">Explanation:</span>{" "}
+                  {mcq.explanation}
                 </p>
               </div>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2 ml-4">
           <button
             onClick={() => onEdit(mcq)}
@@ -191,9 +197,9 @@ const QuizPackDetail: React.FC = () => {
   const navigate = useNavigate();
   const { quizPackId } = useParams();
   const { user } = useAuth();
-  
+
   console.log("QuizPackDetail loaded with quizPackId:", quizPackId);
-  
+
   const [quizPack, setQuizPack] = useState<QuizPack | null>(null);
   const [mcqs, setMcqs] = useState<MCQ[]>([]);
   const [topic, setTopic] = useState<Topic | null>(null);
@@ -229,52 +235,55 @@ const QuizPackDetail: React.FC = () => {
   const loadQuizPackData = async () => {
     try {
       setLoading(true);
-      
+
       // Load quiz pack
-      const { data: packData, error: packError } = await DatabaseService.supabase
-        .from('quiz_packs')
-        .select('*')
-        .eq('id', quizPackId)
-        .single();
-      
+      const { data: packData, error: packError } =
+        await DatabaseService.supabase
+          .from("quiz_packs")
+          .select("*")
+          .eq("id", quizPackId)
+          .single();
+
       if (packError) throw packError;
       setQuizPack(packData);
 
       // Load MCQs for this quiz pack
       if (packData.mcq_ids && packData.mcq_ids.length > 0) {
-        const { data: mcqsData, error: mcqsError } = await DatabaseService.supabase
-          .from('mcqs')
-          .select('*')
-          .in('id', packData.mcq_ids)
-          .order('created_at', { ascending: true });
-        
+        const { data: mcqsData, error: mcqsError } =
+          await DatabaseService.supabase
+            .from("mcqs")
+            .select("*")
+            .in("id", packData.mcq_ids)
+            .order("created_at", { ascending: true });
+
         if (mcqsError) throw mcqsError;
         setMcqs(mcqsData || []);
       }
 
       // Load topic
-      const { data: topicData, error: topicError } = await DatabaseService.supabase
-        .from('topics')
-        .select('*')
-        .eq('id', packData.topic_id)
-        .single();
-      
+      const { data: topicData, error: topicError } =
+        await DatabaseService.supabase
+          .from("topics")
+          .select("*")
+          .eq("id", packData.topic_id)
+          .single();
+
       if (topicError) throw topicError;
       setTopic(topicData);
 
       // Load subject
-      const { data: subjectData, error: subjectError } = await DatabaseService.supabase
-        .from('subjects')
-        .select('*')
-        .eq('id', packData.subject_id)
-        .single();
-      
+      const { data: subjectData, error: subjectError } =
+        await DatabaseService.supabase
+          .from("subjects")
+          .select("*")
+          .eq("id", packData.subject_id)
+          .single();
+
       if (subjectError) throw subjectError;
       setSubject(subjectData);
-
     } catch (error) {
-      console.error('Error loading quiz pack data:', error);
-      alert('Error loading quiz pack. Please try again.');
+      console.error("Error loading quiz pack data:", error);
+      alert("Error loading quiz pack. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -305,7 +314,7 @@ const QuizPackDetail: React.FC = () => {
 
   const handleCreateMCQ = async () => {
     if (!quizPack || !user?.id) return;
-    
+
     try {
       const newMCQ = await DatabaseService.createMCQ({
         question: mcqFormData.question,
@@ -317,12 +326,12 @@ const QuizPackDetail: React.FC = () => {
         subject_id: quizPack.subject_id,
         created_by: user.id,
       });
-      
+
       // Add MCQ to the quiz pack
       const updatedPack = await DatabaseService.updateQuizPack(quizPack.id, {
         mcq_ids: [...quizPack.mcq_ids, newMCQ.id],
       });
-      
+
       setQuizPack(updatedPack);
       setMcqs([...mcqs, newMCQ]);
       setShowMCQForm(false);
@@ -335,10 +344,10 @@ const QuizPackDetail: React.FC = () => {
 
   const handleUpdateMCQ = async () => {
     if (!editingMCQ || !user?.id) return;
-    
+
     try {
       const { data, error } = await DatabaseService.supabase
-        .from('mcqs')
+        .from("mcqs")
         .update({
           question: mcqFormData.question,
           options: mcqFormData.options,
@@ -347,13 +356,13 @@ const QuizPackDetail: React.FC = () => {
           difficulty: mcqFormData.difficulty,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', editingMCQ.id)
+        .eq("id", editingMCQ.id)
         .select()
         .single();
-      
+
       if (error) throw error;
-      
-      setMcqs(mcqs.map(mcq => mcq.id === editingMCQ.id ? data : mcq));
+
+      setMcqs(mcqs.map((mcq) => (mcq.id === editingMCQ.id ? data : mcq)));
       setShowMCQForm(false);
       resetMCQForm();
     } catch (error) {
@@ -366,19 +375,23 @@ const QuizPackDetail: React.FC = () => {
     if (confirm("Are you sure you want to delete this MCQ?")) {
       try {
         // Remove MCQ from quiz pack
-        const updatedMcqIds = quizPack!.mcq_ids.filter(id => id !== mcqId);
+        const updatedMcqIds = quizPack!.mcq_ids.filter((id) => id !== mcqId);
         await DatabaseService.updateQuizPack(quizPack!.id, {
           mcq_ids: updatedMcqIds,
         });
-        
+
         // Delete MCQ from database
         await DatabaseService.supabase
-          .from('mcqs')
+          .from("mcqs")
           .update({ is_active: false })
-          .eq('id', mcqId);
-        
-        setMcqs(mcqs.filter(mcq => mcq.id !== mcqId));
-        setQuizPack({ ...quizPack!, mcq_ids: updatedMcqIds, mcq_count: updatedMcqIds.length });
+          .eq("id", mcqId);
+
+        setMcqs(mcqs.filter((mcq) => mcq.id !== mcqId));
+        setQuizPack({
+          ...quizPack!,
+          mcq_ids: updatedMcqIds,
+          mcq_count: updatedMcqIds.length,
+        });
       } catch (error) {
         console.error("Error deleting MCQ:", error);
         alert("Error deleting MCQ. Please try again.");
@@ -388,10 +401,14 @@ const QuizPackDetail: React.FC = () => {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case "easy": return "text-green-400 bg-green-500/20";
-      case "medium": return "text-yellow-400 bg-yellow-500/20";
-      case "hard": return "text-red-400 bg-red-500/20";
-      default: return "text-gray-400 bg-gray-500/20";
+      case "easy":
+        return "text-green-400 bg-green-500/20";
+      case "medium":
+        return "text-yellow-400 bg-yellow-500/20";
+      case "hard":
+        return "text-red-400 bg-red-500/20";
+      default:
+        return "text-gray-400 bg-gray-500/20";
     }
   };
 
@@ -403,8 +420,8 @@ const QuizPackDetail: React.FC = () => {
       return;
     }
 
-    const oldIndex = mcqs.findIndex(mcq => mcq.id === active.id);
-    const newIndex = mcqs.findIndex(mcq => mcq.id === over.id);
+    const oldIndex = mcqs.findIndex((mcq) => mcq.id === active.id);
+    const newIndex = mcqs.findIndex((mcq) => mcq.id === over.id);
 
     if (oldIndex === -1 || newIndex === -1) {
       return;
@@ -415,14 +432,14 @@ const QuizPackDetail: React.FC = () => {
     setMcqs(reorderedMcqs);
 
     // Update the mcq_ids array in the quiz pack
-    const newMcqIds = reorderedMcqs.map(mcq => mcq.id);
-    
+    const newMcqIds = reorderedMcqs.map((mcq) => mcq.id);
+
     try {
       // Update the quiz pack with new order
       const updatedPack = await DatabaseService.updateQuizPack(quizPack.id, {
         mcq_ids: newMcqIds,
       });
-      
+
       setQuizPack(updatedPack);
       console.log("MCQ order updated successfully");
     } catch (error) {
@@ -436,10 +453,10 @@ const QuizPackDetail: React.FC = () => {
   // Get MCQs in the correct order based on mcq_ids array
   const getOrderedMcqs = () => {
     if (!quizPack || !mcqs.length) return [];
-    
-    return quizPack.mcq_ids.map(id => 
-      mcqs.find(mcq => mcq.id === id)
-    ).filter(Boolean) as MCQ[];
+
+    return quizPack.mcq_ids
+      .map((id) => mcqs.find((mcq) => mcq.id === id))
+      .filter(Boolean) as MCQ[];
   };
 
   if (loading) {
@@ -457,11 +474,10 @@ const QuizPackDetail: React.FC = () => {
     return (
       <div className="min-h-screen bg-dark-950 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">Quiz Pack Not Found</h1>
-          <button
-            onClick={() => navigate(-1)}
-            className="btn-primary"
-          >
+          <h1 className="text-2xl font-bold text-white mb-4">
+            Quiz Pack Not Found
+          </h1>
+          <button onClick={() => navigate(-1)} className="btn-primary">
             Go Back
           </button>
         </div>
@@ -483,7 +499,9 @@ const QuizPackDetail: React.FC = () => {
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-white">{quizPack.title}</h1>
+                <h1 className="text-2xl font-bold text-white">
+                  {quizPack.title}
+                </h1>
                 <p className="text-dark-400">
                   {subject?.name} • {topic?.name} • {mcqs.length} MCQs
                 </p>
@@ -519,15 +537,23 @@ const QuizPackDetail: React.FC = () => {
           <div className="bg-dark-800 rounded-xl p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-xl font-semibold text-white mb-2">{quizPack.title}</h2>
+                <h2 className="text-xl font-semibold text-white mb-2">
+                  {quizPack.title}
+                </h2>
                 <p className="text-dark-400">{quizPack.description}</p>
               </div>
               <div className="flex items-center space-x-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(quizPack.difficulty)}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${getDifficultyColor(
+                    quizPack.difficulty
+                  )}`}
+                >
                   {quizPack.difficulty}
                 </span>
                 <div className="text-right">
-                  <p className="text-white font-medium">{mcqs.length} Questions</p>
+                  <p className="text-white font-medium">
+                    {mcqs.length} Questions
+                  </p>
                   <p className="text-dark-400 text-sm">
                     Updated {new Date(quizPack.updated_at).toLocaleDateString()}
                   </p>
@@ -541,8 +567,12 @@ const QuizPackDetail: React.FC = () => {
             {mcqs.length === 0 ? (
               <div className="text-center py-12">
                 <Target className="w-16 h-16 text-dark-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">No MCQs Yet</h3>
-                <p className="text-dark-400 mb-4">Start building your quiz pack by adding MCQs</p>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  No MCQs Yet
+                </h3>
+                <p className="text-dark-400 mb-4">
+                  Start building your quiz pack by adding MCQs
+                </p>
                 <button
                   onClick={() => {
                     setShowMCQForm(true);
@@ -561,7 +591,7 @@ const QuizPackDetail: React.FC = () => {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={getOrderedMcqs().map(mcq => mcq.id)}
+                  items={getOrderedMcqs().map((mcq) => mcq.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {getOrderedMcqs().map((mcq, index) => (
@@ -602,17 +632,23 @@ const QuizPackDetail: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-white font-medium mb-2">Question *</label>
+                <label className="block text-white font-medium mb-2">
+                  Question *
+                </label>
                 <textarea
                   value={mcqFormData.question}
-                  onChange={(e) => setMcqFormData({ ...mcqFormData, question: e.target.value })}
+                  onChange={(e) =>
+                    setMcqFormData({ ...mcqFormData, question: e.target.value })
+                  }
                   className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none"
                   placeholder="Enter the question"
                 />
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">Answer Options *</label>
+                <label className="block text-white font-medium mb-2">
+                  Answer Options *
+                </label>
                 <div className="space-y-2">
                   {mcqFormData.options.map((option, index) => (
                     <div key={index} className="flex items-center space-x-3">
@@ -620,7 +656,12 @@ const QuizPackDetail: React.FC = () => {
                         type="radio"
                         name="correct_answer"
                         checked={mcqFormData.correct_answer === index}
-                        onChange={() => setMcqFormData({ ...mcqFormData, correct_answer: index })}
+                        onChange={() =>
+                          setMcqFormData({
+                            ...mcqFormData,
+                            correct_answer: index,
+                          })
+                        }
                         className="w-4 h-4 text-primary-500 bg-dark-700 border-dark-600 focus:ring-primary-500"
                       />
                       <input
@@ -629,7 +670,10 @@ const QuizPackDetail: React.FC = () => {
                         onChange={(e) => {
                           const newOptions = [...mcqFormData.options];
                           newOptions[index] = e.target.value;
-                          setMcqFormData({ ...mcqFormData, options: newOptions });
+                          setMcqFormData({
+                            ...mcqFormData,
+                            options: newOptions,
+                          });
                         }}
                         className="flex-1 px-3 py-2 bg-dark-700 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
                         placeholder={`Option ${index + 1}`}
@@ -640,20 +684,34 @@ const QuizPackDetail: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">Explanation</label>
+                <label className="block text-white font-medium mb-2">
+                  Explanation
+                </label>
                 <textarea
                   value={mcqFormData.explanation}
-                  onChange={(e) => setMcqFormData({ ...mcqFormData, explanation: e.target.value })}
+                  onChange={(e) =>
+                    setMcqFormData({
+                      ...mcqFormData,
+                      explanation: e.target.value,
+                    })
+                  }
                   className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-20 resize-none"
                   placeholder="Explain why this is the correct answer"
                 />
               </div>
 
               <div>
-                <label className="block text-white font-medium mb-2">Difficulty *</label>
+                <label className="block text-white font-medium mb-2">
+                  Difficulty *
+                </label>
                 <select
                   value={mcqFormData.difficulty}
-                  onChange={(e) => setMcqFormData({ ...mcqFormData, difficulty: e.target.value as "easy" | "medium" | "hard" })}
+                  onChange={(e) =>
+                    setMcqFormData({
+                      ...mcqFormData,
+                      difficulty: e.target.value as "easy" | "medium" | "hard",
+                    })
+                  }
                   className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="easy">Easy</option>
@@ -674,7 +732,10 @@ const QuizPackDetail: React.FC = () => {
                 </button>
                 <button
                   onClick={editingMCQ ? handleUpdateMCQ : handleCreateMCQ}
-                  disabled={!mcqFormData.question || mcqFormData.options.some(opt => !opt.trim())}
+                  disabled={
+                    !mcqFormData.question ||
+                    mcqFormData.options.some((opt) => !opt.trim())
+                  }
                   className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   <Save className="w-4 h-4" />
@@ -702,9 +763,12 @@ const QuizPackDetail: React.FC = () => {
 
             <div className="text-center py-8">
               <Upload className="w-16 h-16 text-dark-600 mx-auto mb-4" />
-              <h4 className="text-lg font-semibold text-white mb-2">Import Feature Coming Soon</h4>
+              <h4 className="text-lg font-semibold text-white mb-2">
+                Import Feature Coming Soon
+              </h4>
               <p className="text-dark-400 mb-6">
-                You'll be able to import MCQs from CSV, JSON, or other quiz formats.
+                You'll be able to import MCQs from CSV, JSON, or other quiz
+                formats.
               </p>
               <button
                 onClick={() => setShowImportModal(false)}
