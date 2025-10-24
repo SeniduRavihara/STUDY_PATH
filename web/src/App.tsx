@@ -11,16 +11,17 @@ import DatabaseOverview from "./components/DatabaseOverview";
 import FeedPostManager from "./components/FeedPostManager";
 import Login from "./components/Login";
 import MCQManager from "./components/MCQManager";
-import QuizPackManager from "./components/QuizPackManager";
 import QuizPackDetail from "./components/QuizPackDetail";
+import QuizPackManager from "./components/QuizPackManager";
 import Settings from "./components/Settings";
+import Signup from "./components/Signup";
 import StudyPackManager from "./components/StudyPackManager";
 import SubjectBuilder from "./components/SubjectBuilder";
 import SubjectManager from "./components/SubjectManager";
-import TestContentBlocks from "./pages/TestContentBlocks";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import "./index.css";
+import TestContentBlocks from "./pages/TestContentBlocks";
 import "./utils/sessionDebug"; // Import debug utility
 
 // Protected Route Component
@@ -73,7 +74,10 @@ const AdminRoutes: React.FC = () => {
           <Route path="/quiz-packs" element={<QuizPackManager />} />
           <Route path="/quiz-pack/:quizPackId" element={<QuizPackDetail />} />
           <Route path="/study-packs" element={<StudyPackManager />} />
-          <Route path="/subject-builder/:subjectId" element={<SubjectBuilder />} />
+          <Route
+            path="/subject-builder/:subjectId"
+            element={<SubjectBuilder />}
+          />
           <Route path="/database" element={<DatabaseOverview />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/test-blocks" element={<TestContentBlocks />} />
@@ -102,6 +106,10 @@ const AppContent: React.FC = () => {
         <Route
           path="/login"
           element={user ? <Navigate to="/admin" replace /> : <Login />}
+        />
+        <Route
+          path="/signup"
+          element={user ? <Navigate to="/admin" replace /> : <Signup />}
         />
         <Route
           path="/admin/*"

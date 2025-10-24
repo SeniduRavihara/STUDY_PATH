@@ -62,12 +62,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div
         className={`fixed inset-y-0 left-0 z-50 bg-dark-900 border-r border-dark-800 transform transition-all duration-300 ease-in-out lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } ${
-          sidebarCollapsed ? "w-16" : "w-64"
-        }`}
+        } ${sidebarCollapsed ? "w-16" : "w-64"}`}
       >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-dark-800">
-          <div className="flex items-center space-x-3">
+        <div
+          className={`flex items-center justify-between h-16 border-b border-dark-800 ${
+            sidebarCollapsed ? "px-2" : "px-6"
+          }`}
+        >
+          <div
+            className={`flex items-center ${
+              sidebarCollapsed ? "gap-2" : "space-x-3"
+            }`}
+          >
             <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-purple rounded-lg flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </div>
@@ -75,7 +81,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <span className="text-xl font-bold text-white">StudyPath</span>
             )}
           </div>
-          <div className="flex items-center space-x-2">
+          <div
+            className={`flex items-center ${
+              sidebarCollapsed ? "gap-1" : "space-x-2"
+            }`}
+          >
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="hidden lg:block text-dark-400 hover:text-white transition-colors"
@@ -98,7 +108,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         <nav className="mt-6 px-3">
           <div className="space-y-1">
-            {navigation.map(item => {
+            {navigation.map((item) => {
               const Icon = item.icon;
               const isActive =
                 location.pathname === item.path ||
@@ -116,7 +126,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   }`}
                   title={sidebarCollapsed ? item.name : undefined}
                 >
-                  <Icon className={`w-5 h-5 ${sidebarCollapsed ? "" : "mr-3"}`} />
+                  <Icon
+                    className={`w-5 h-5 ${sidebarCollapsed ? "" : "mr-3"}`}
+                  />
                   {!sidebarCollapsed && (
                     <>
                       {item.name}
@@ -137,11 +149,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </nav>
 
         {/* User section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-dark-800">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-dark-300" />
-            </div>
+        <div
+          className={`absolute bottom-0 left-0 right-0 border-t border-dark-800 ${
+            sidebarCollapsed ? "p-2" : "p-4"
+          }`}
+        >
+          <div
+            className={`flex items-center ${
+              sidebarCollapsed ? "justify-center" : "space-x-3"
+            }`}
+          >
+            {!sidebarCollapsed && (
+              <div className="w-8 h-8 bg-dark-700 rounded-full flex items-center justify-center">
+                <User className="w-4 h-4 text-dark-300" />
+              </div>
+            )}
+
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
@@ -150,19 +173,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <p className="text-xs text-dark-400">Administrator</p>
               </div>
             )}
-            <button
-              onClick={handleSignOut}
-              className="text-dark-400 hover:text-white transition-colors"
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+
+            <div className="flex-shrink-0">
+              <button
+                onClick={handleSignOut}
+                className="text-dark-400 hover:text-white transition-colors"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"}`}>
+      <div
+        className={`transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
+        }`}
+      >
         {/* Top header */}
         <div className="sticky top-0 z-30 bg-dark-900 border-b border-dark-800">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -178,9 +208,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 {(() => {
                   if (location.pathname === "/admin") return "Dashboard";
                   const currentNav = navigation.find(
-                    item =>
+                    (item) =>
                       item.path !== "/admin" &&
-                      location.pathname.startsWith(item.path),
+                      location.pathname.startsWith(item.path)
                   );
                   return currentNav ? currentNav.name : "Admin Dashboard";
                 })()}

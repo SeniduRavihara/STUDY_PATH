@@ -227,22 +227,28 @@ const SubjectManager: React.FC = () => {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center space-x-3">
+                {/* small color accent bar instead of large icon for a cleaner, professional look */}
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
+                  className="w-1.5 h-10 rounded-md"
                   style={{
                     backgroundColor: subject.color,
                   }}
-                >
-                  {subject.icon}
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold text-lg">
+                />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold text-lg truncate">
                     {subject.name}
                   </h3>
-                  <p className="text-dark-400 text-sm">
+                  <p
+                    className="text-dark-400 text-sm break-words overflow-hidden"
+                    style={{
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                    }}
+                  >
                     {subject.description || "No description"}
                   </p>
-                  <p className="text-dark-500 text-xs mt-1">
+                  <p className="text-dark-500 text-xs mt-1 truncate">
                     Created by:{" "}
                     {subject.created_by === user?.id ? "You" : "Other User"}
                   </p>
@@ -300,11 +306,7 @@ const SubjectManager: React.FC = () => {
               </div>
             </div>
 
-            {subject.description && (
-              <p className="text-dark-300 text-sm mb-4 line-clamp-3">
-                {subject.description}
-              </p>
-            )}
+            {/* description is shown above as a single-line summary; keep cards compact */}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">

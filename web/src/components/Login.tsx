@@ -1,5 +1,6 @@
 import { BookOpen, Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login: React.FC = () => {
@@ -22,6 +23,7 @@ const Login: React.FC = () => {
         setError(error.message);
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -64,7 +66,7 @@ const Login: React.FC = () => {
                 id="email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 className="input-field w-full"
                 placeholder="admin@studypath.com"
                 required
@@ -83,7 +85,7 @@ const Login: React.FC = () => {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="input-field w-full pr-12"
                   placeholder="Enter your password"
                   required
@@ -114,6 +116,14 @@ const Login: React.FC = () => {
           <div className="mt-6 text-center">
             <p className="text-sm text-dark-400">
               Demo Credentials: admin@studypath.com / admin123
+            </p>
+          </div>
+          <div className="mt-4 text-center">
+            <p className="text-sm text-dark-400">
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary-400 hover:underline">
+                Sign up
+              </Link>
             </p>
           </div>
         </div>
