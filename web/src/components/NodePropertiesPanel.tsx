@@ -1,23 +1,16 @@
 import {
-  Code,
-  FileText,
-  HelpCircle,
-  Image as ImageIcon,
   Layers,
   Maximize2,
-  MessageSquare,
   Minimize2,
   Plus,
-  Settings,
-  Sparkles,
   Trash2,
-  Type,
-  Video,
 } from "lucide-react";
 import React, { useState } from "react";
 import type { TopicWithChildren } from "../lib/database";
 import ContentBlockEditor, { type ContentBlock } from "./ContentBlockEditor";
 import MCQPackEditorModal from "./MCQPackEditorModal";
+import BlockTypeSelector from "./block-editors/BlockTypeSelector";
+import SingleBlockEditor from "./block-editors/SingleBlockEditor";
 
 interface FlowNode {
   id: string;
@@ -58,45 +51,7 @@ interface NodePropertiesPanelProps {
   getNodeColor: (type: string) => string[];
 }
 
-// Single Block Editor Component
-const SingleBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (block: ContentBlock) => void;
-  onEditMCQPack: (blockId: string, data: any) => void;
-}> = ({ block, onChange, onEditMCQPack }) => {
-  const updateBlock = (_id: string, data: any) => {
-    onChange({ ...block, data });
-  };
 
-  switch (block.type) {
-    case "text":
-      return <TextBlockEditor block={block} onChange={updateBlock} />;
-    case "note":
-      return <NoteBlockEditor block={block} onChange={updateBlock} />;
-    case "mcq":
-      return <MCQBlockEditor block={block} onChange={updateBlock} />;
-    case "mcq_pack":
-      return (
-        <MCQPackBlockPreview
-          block={block}
-          onChange={updateBlock}
-          onEdit={() => onEditMCQPack(block.id, block.data)}
-        />
-      );
-    case "poll":
-      return <PollBlockEditor block={block} onChange={updateBlock} />;
-    case "video":
-      return <VideoBlockEditor block={block} onChange={updateBlock} />;
-    case "image":
-      return <ImageBlockEditor block={block} onChange={updateBlock} />;
-    case "meme":
-      return <MemeBlockEditor block={block} onChange={updateBlock} />;
-    case "code":
-      return <CodeBlockEditor block={block} onChange={updateBlock} />;
-    default:
-      return <div>Unknown block type</div>;
-  }
-};
 
 const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   selectedNode,
@@ -145,19 +100,6 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     addNewContentBlock(type);
     setShowBlockTypeSelector(false);
   };
-
-  // Block types configuration (copied from ContentBlockEditor)
-  const blockTypes = [
-    { type: "text" as const, label: "Text", icon: Type, color: "bg-blue-500" },
-    { type: "note" as const, label: "Note", icon: FileText, color: "bg-yellow-500" },
-    { type: "mcq" as const, label: "MCQ", icon: HelpCircle, color: "bg-green-500" },
-    { type: "mcq_pack" as const, label: "MCQ Pack", icon: Settings, color: "bg-purple-500" },
-    { type: "poll" as const, label: "Poll", icon: MessageSquare, color: "bg-pink-500" },
-    { type: "video" as const, label: "Video", icon: Video, color: "bg-red-500" },
-    { type: "image" as const, label: "Image", icon: ImageIcon, color: "bg-indigo-500" },
-    { type: "meme" as const, label: "Meme", icon: Sparkles, color: "bg-orange-500" },
-    { type: "code" as const, label: "Code", icon: Code, color: "bg-gray-500" },
-  ];
 
   const getDefaultDataForType = (type: ContentBlock["type"]): any => {
     switch (type) {
@@ -470,39 +412,10 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
 
         {/* Block Type Selector Modal */}
         {showBlockTypeSelector && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-dark-800 rounded-2xl p-6 w-full max-w-md mx-4">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">Choose Block Type</h3>
-                <button
-                  onClick={() => setShowBlockTypeSelector(false)}
-                  className="text-dark-400 hover:text-white transition-colors"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                {blockTypes.map((blockType) => {
-                  const Icon = blockType.icon;
-                  return (
-                    <button
-                      key={blockType.type}
-                      onClick={() => handleBlockTypeSelect(blockType.type)}
-                      className="flex flex-col items-center space-y-2 p-4 rounded-lg hover:bg-dark-700 transition-colors group"
-                    >
-                      <div className={`${blockType.color} p-3 rounded-lg group-hover:scale-110 transition-transform`}>
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <span className="text-xs text-dark-300 group-hover:text-white text-center">
-                        {blockType.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          <BlockTypeSelector
+            onSelect={handleBlockTypeSelect}
+            onClose={() => setShowBlockTypeSelector(false)}
+          />
         )}
 
         {/* MCQ Pack Editor Modal */}
@@ -741,246 +654,6 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   );
 };
 
-// Block Editor Components
-const TextBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <textarea
-    value={block.data.content || ""}
-    onChange={(e) => onChange(block.id, { content: e.target.value })}
-    placeholder="Enter text content..."
-    className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[200px]"
-  />
-);
 
-const NoteBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <input
-      type="text"
-      value={block.data.title || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, title: e.target.value })}
-      placeholder="Note title..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-    <textarea
-      value={block.data.content || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, content: e.target.value })}
-      placeholder="Note content..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[100px]"
-    />
-    <select
-      value={block.data.style || "info"}
-      onChange={(e) => onChange(block.id, { ...block.data, style: e.target.value })}
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    >
-      <option value="info">💡 Info</option>
-      <option value="warning">⚠️ Warning</option>
-      <option value="success">✅ Success</option>
-      <option value="error">❌ Error</option>
-    </select>
-  </div>
-);
-
-// Enhanced block editors
-const MCQBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-4">
-    <div>
-      <label className="block text-white font-medium mb-2">Question</label>
-      <input
-        type="text"
-        value={block.data.question || ""}
-        onChange={(e) => onChange(block.id, { ...block.data, question: e.target.value })}
-        placeholder="Enter your question..."
-        className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-      />
-    </div>
-
-    <div>
-      <label className="block text-white font-medium mb-2">Options</label>
-      <div className="space-y-2">
-        {(block.data.options || []).map((option: string, index: number) => (
-          <div key={index} className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name={`correct-${block.id}`}
-              checked={block.data.correctAnswer === index}
-              onChange={() => onChange(block.id, { ...block.data, correctAnswer: index })}
-              className="text-primary-500 focus:ring-primary-500"
-            />
-            <input
-              type="text"
-              value={option}
-              onChange={(e) => {
-                const newOptions = [...(block.data.options || [])];
-                newOptions[index] = e.target.value;
-                onChange(block.id, { ...block.data, options: newOptions });
-              }}
-              placeholder={`Option ${index + 1}...`}
-              className="flex-1 px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-
-    <div>
-      <label className="block text-white font-medium mb-2">Explanation</label>
-      <textarea
-        value={block.data.explanation || ""}
-        onChange={(e) => onChange(block.id, { ...block.data, explanation: e.target.value })}
-        placeholder="Explain why this is the correct answer..."
-        className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[80px]"
-      />
-    </div>
-  </div>
-);
-
-const MCQPackBlockPreview: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-  onEdit: () => void;
-}> = ({ block, onEdit }) => (
-  <div className="p-4 bg-dark-700 rounded">
-    <div className="flex items-center justify-between mb-3">
-      <h4 className="text-white font-medium">{block.data.title}</h4>
-      <button
-        onClick={onEdit}
-        className="px-3 py-1 bg-primary-500 text-white text-sm rounded hover:bg-primary-600 transition-colors"
-      >
-        Edit MCQs
-      </button>
-    </div>
-    <p className="text-dark-400 text-sm">{block.data.description}</p>
-    <p className="text-dark-400 text-xs mt-2">MCQ Pack with {block.data.mcqs?.length || 0} questions</p>
-  </div>
-);
-
-const PollBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <input
-      type="text"
-      value={block.data.question || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, question: e.target.value })}
-      placeholder="Poll question..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-    {(block.data.options || []).map((option: string, index: number) => (
-      <input
-        key={index}
-        type="text"
-        value={option}
-        onChange={(e) => {
-          const newOptions = [...(block.data.options || [])];
-          newOptions[index] = e.target.value;
-          onChange(block.id, { ...block.data, options: newOptions });
-        }}
-        placeholder={`Option ${index + 1}...`}
-        className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-      />
-    ))}
-  </div>
-);
-
-const VideoBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <input
-      type="text"
-      value={block.data.url || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, url: e.target.value })}
-      placeholder="Video URL..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-    <input
-      type="text"
-      value={block.data.title || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, title: e.target.value })}
-      placeholder="Video title..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-  </div>
-);
-
-const ImageBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <input
-      type="text"
-      value={block.data.url || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, url: e.target.value })}
-      placeholder="Image URL..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-    <input
-      type="text"
-      value={block.data.caption || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, caption: e.target.value })}
-      placeholder="Image caption..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-  </div>
-);
-
-const MemeBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <input
-      type="text"
-      value={block.data.url || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, url: e.target.value })}
-      placeholder="Meme URL..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-    <input
-      type="text"
-      value={block.data.caption || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, caption: e.target.value })}
-      placeholder="Meme caption..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-  </div>
-);
-
-const CodeBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <select
-      value={block.data.language || "javascript"}
-      onChange={(e) => onChange(block.id, { ...block.data, language: e.target.value })}
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    >
-      <option value="javascript">JavaScript</option>
-      <option value="python">Python</option>
-      <option value="java">Java</option>
-      <option value="cpp">C++</option>
-      <option value="html">HTML</option>
-      <option value="css">CSS</option>
-    </select>
-    <textarea
-      value={block.data.code || ""}
-      onChange={(e) => onChange(block.id, { ...block.data, code: e.target.value })}
-      placeholder="Enter code..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[150px] font-mono"
-    />
-  </div>
-);
 
 export default NodePropertiesPanel;
