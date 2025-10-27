@@ -8,7 +8,6 @@ import {
 import React, { useState } from "react";
 import type { TopicWithChildren } from "../lib/database";
 import ContentBlockEditor, { type ContentBlock } from "./ContentBlockEditor";
-import MCQPackEditorModal from "./MCQPackEditorModal";
 import BlockTypeSelector from "./block-editors/BlockTypeSelector";
 import SingleBlockEditor from "./block-editors/SingleBlockEditor";
 
@@ -66,10 +65,6 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   const [activeTab, setActiveTab] = useState<string>("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
-  const [editingMCQPack, setEditingMCQPack] = useState<{
-    blockId: string;
-    data: any;
-  } | null>(null);
 
   if (!selectedNode) return null;
 
@@ -400,7 +395,6 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                           );
                           updateNode(selectedNode.id, { content_blocks: updatedBlocks });
                         }}
-                        onEditMCQPack={(blockId, data) => setEditingMCQPack({ blockId, data })}
                       />
                     </div>
                   );
@@ -418,22 +412,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
           />
         )}
 
-        {/* MCQ Pack Editor Modal */}
-        {editingMCQPack && (
-          <MCQPackEditorModal
-            isOpen={true}
-            onClose={() => setEditingMCQPack(null)}
-            data={editingMCQPack.data}
-            onSave={(updatedData) => {
-              const currentBlocks = selectedNode.content_blocks || [];
-              const updatedBlocks = currentBlocks.map(b =>
-                b.id === editingMCQPack.blockId ? { ...b, data: updatedData } : b
-              );
-              updateNode(selectedNode.id, { content_blocks: updatedBlocks });
-              setEditingMCQPack(null);
-            }}
-          />
-        )}
+
       </div>
     );
   }

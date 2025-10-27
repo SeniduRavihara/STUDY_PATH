@@ -13,13 +13,11 @@ import CodeBlockEditor from "./CodeBlockEditor";
 interface SingleBlockEditorProps {
   block: ContentBlock;
   onChange: (block: ContentBlock) => void;
-  onEditMCQPack: (blockId: string, data: any) => void;
 }
 
 const SingleBlockEditor: React.FC<SingleBlockEditorProps> = ({
   block,
-  onChange,
-  onEditMCQPack
+  onChange
 }) => {
   const updateBlock = (_id: string, data: any) => {
     onChange({ ...block, data });
@@ -33,13 +31,7 @@ const SingleBlockEditor: React.FC<SingleBlockEditorProps> = ({
     case "mcq":
       return <MCQBlockEditor block={block} onChange={updateBlock} />;
     case "mcq_pack":
-      return (
-        <MCQPackBlockEditor
-          block={block}
-          onChange={updateBlock}
-          onEdit={() => onEditMCQPack(block.id, block.data)}
-        />
-      );
+      return <MCQPackBlockEditor block={block} onChange={updateBlock} />;
     case "poll":
       return <PollBlockEditor block={block} onChange={updateBlock} />;
     case "video":
