@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Check, ChevronDown, ChevronRight, Circle } from "lucide-react";
 import type { TopicWithChildren } from "../lib/database";
 
 interface TopicHierarchySelectorProps {
@@ -56,7 +57,7 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
                 }}
                 className="text-dark-400 hover:text-white transition-colors"
               >
-                {isExpanded ? "▼" : "▶"}
+                {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
               </button>
             )}
 
@@ -70,7 +71,7 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
                   : "bg-dark-600 text-dark-400"
               }`}
             >
-              {topic.has_flow ? "✓" : isLeafTopic ? "●" : "○"}
+              {topic.has_flow ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
             </div>
 
             {/* Topic Content */}
@@ -78,14 +79,18 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
               <div className="flex items-center space-x-2">
                 <h4 className="font-semibold">{topic.name}</h4>
                 {topic.has_flow && (
-                  <span className="text-green-400 text-xs">✓ Has Flow</span>
+                  <span className="text-green-400 text-xs flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Has Flow
+                  </span>
                 )}
                 {isLeafTopic && !topic.has_flow && (
-                  <span className="text-blue-400 text-xs">● Selectable</span>
+                  <span className="text-blue-400 text-xs flex items-center gap-1">
+                    <Circle className="w-3 h-3" /> Selectable
+                  </span>
                 )}
                 {!isLeafTopic && (
-                  <span className="text-dark-500 text-xs">
-                    ○ Not Selectable
+                  <span className="text-dark-500 text-xs flex items-center gap-1">
+                    <Circle className="w-3 h-3" /> Not Selectable
                   </span>
                 )}
               </div>

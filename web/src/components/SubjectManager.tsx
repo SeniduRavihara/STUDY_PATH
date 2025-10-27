@@ -35,22 +35,22 @@ const SubjectManager: React.FC = () => {
   ];
 
   const iconPresets = [
-    "📚",
-    "📐",
-    "⚡",
-    "🧪",
-    "🧬",
-    "🌍",
-    "🔬",
-    "💻",
-    "🎨",
-    "🎵",
-    "🏛️",
-    "📖",
-    "✏️",
-    "🔢",
-    "📊",
-    "🎯",
+    "Book",
+    "Math",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Geography",
+    "Science",
+    "Computer",
+    "Art",
+    "Music",
+    "History",
+    "Literature",
+    "Writing",
+    "Math",
+    "Data",
+    "Target",
   ];
 
   useEffect(() => {

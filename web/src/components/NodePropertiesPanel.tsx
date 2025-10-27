@@ -350,7 +350,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                     </select>
                     {quizPacks.length === 0 && !loadingQuizPacks && (
                       <p className="text-dark-400 text-sm mt-2">
-                        💡 Use Content Blocks tab to add MCQs directly to this
+                        Tip: Use Content Blocks tab to add MCQs directly to this
                         node!
                       </p>
                     )}
@@ -593,7 +593,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
               </select>
               {quizPacks.length === 0 && !loadingQuizPacks && (
                 <p className="text-dark-400 text-sm mt-2">
-                  💡 Use Content Blocks tab to add MCQs directly to this node!
+                  Tip: Use Content Blocks tab to add MCQs directly to this node!
                 </p>
               )}
             </div>

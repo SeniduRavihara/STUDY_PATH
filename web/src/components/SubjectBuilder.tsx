@@ -1,12 +1,19 @@
 import {
   ArrowLeft,
   BookOpen,
+  Check,
   CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  Edit,
   Eye,
   FileText,
   Plus,
   Save,
   Settings,
+  Trash2,
+  X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -172,7 +179,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                 onClick={toggleExpanded}
                 className="text-dark-400 hover:text-white transition-colors"
               >
-                {isExpanded ? "▼" : "▶"}
+                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </button>
             )}
 
@@ -184,7 +191,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   : "bg-dark-600 text-dark-400"
               }`}
             >
-              {topic.has_flow ? "✓" : "○"}
+              {topic.has_flow ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
             </div>
 
             {/* Topic Content */}
@@ -238,13 +245,13 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   onClick={saveEdit}
                   className="text-green-400 hover:text-green-300 transition-colors"
                 >
-                  ✓
+                  <Check className="w-4 h-4" />
                 </button>
                 <button
                   onClick={cancelEdit}
                   className="text-red-400 hover:text-red-300 transition-colors"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </>
             ) : (
@@ -254,21 +261,21 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   className="text-blue-400 hover:text-blue-300 transition-colors"
                   title="Edit topic"
                 >
-                  ✏️
+                  <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsAddingChild(true)}
                   className="text-primary-400 hover:text-primary-300 transition-colors"
                   title="Add subtopic"
                 >
-                  ➕
+                  <Plus className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => deleteTopic(topic.id)}
                   className="text-red-400 hover:text-red-300 transition-colors"
                   title="Delete topic"
                 >
-                  🗑️
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </>
             )}

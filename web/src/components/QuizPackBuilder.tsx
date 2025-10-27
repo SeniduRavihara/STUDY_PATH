@@ -1,6 +1,8 @@
 import {
   BookOpen,
   CheckCircle,
+  ChevronDown,
+  ChevronRight,
   Clock,
   Edit,
   Eye,
@@ -334,7 +336,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                 }}
                 className="mr-2 text-dark-400 hover:text-white transition-colors"
               >
-                {isExpanded ? "▼" : "▶"}
+                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </button>
             ) : (
               <div className="w-6 mr-2" />
@@ -675,7 +677,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
                     >
                       {selectedTopicName || "Select a topic"}
                     </span>
-                    <span className="text-dark-400">▼</span>
+                    <ChevronDown className="w-4 h-4 text-dark-400" />
                   </button>
                 </div>
 

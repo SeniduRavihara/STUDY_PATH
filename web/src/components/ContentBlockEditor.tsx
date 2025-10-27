@@ -129,7 +129,7 @@ const ContentBlockEditor: React.FC<ContentBlockEditorProps> = ({
     const targetIndex = direction === "up" ? index - 1 : index + 1;
 
     if (targetIndex < 0 || targetIndex >= blocks.length) {
-      console.log("❌ Cannot move - out of bounds");
+      console.log("Cannot move - out of bounds");
       return;
     }
 
@@ -145,7 +145,7 @@ const ContentBlockEditor: React.FC<ContentBlockEditorProps> = ({
     });
 
     console.log(
-      "✅ Blocks reordered:",
+      "Blocks reordered:",
       newBlocks.map((b) => `${b.type}(${b.order})`).join(", ")
     );
     onChange(newBlocks);
@@ -386,10 +386,10 @@ const NoteBlockEditor: React.FC<{
       onChange={(e) => onChange(block.id, { style: e.target.value })}
       className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
     >
-      <option value="info">💡 Info</option>
-      <option value="warning">⚠️ Warning</option>
-      <option value="success">✅ Success</option>
-      <option value="error">❌ Error</option>
+      <option value="info">Info</option>
+      <option value="warning">Warning</option>
+      <option value="success">Success</option>
+      <option value="error">Error</option>
     </select>
   </div>
 );
