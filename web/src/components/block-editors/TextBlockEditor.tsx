@@ -7,8 +7,11 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { FORMAT_TEXT_COMMAND } from 'lexical';
-import { Bold, Italic, Underline } from 'lucide-react';
+import { FORMAT_TEXT_COMMAND, $getSelection, $isRangeSelection } from 'lexical';
+import { HeadingNode, QuoteNode, $createHeadingNode } from '@lexical/rich-text';
+import { ListNode, ListItemNode, $insertList } from '@lexical/list';
+import { $setBlocksType } from '@lexical/selection';
+import { Bold, Italic, Underline, Heading1, Heading2, List, ListOrdered } from 'lucide-react';
 
 interface TextBlockEditorProps {
   block: ContentBlock;
@@ -20,6 +23,14 @@ const theme = {
     bold: 'font-bold',
     italic: 'italic',
     underline: 'underline',
+  },
+  heading: {
+    h1: 'text-2xl font-bold mb-2',
+    h2: 'text-xl font-semibold mb-2',
+  },
+  list: {
+    ul: 'list-disc list-inside',
+    ol: 'list-decimal list-inside',
   },
 };
 
@@ -40,6 +51,36 @@ const Toolbar = () => {
 
   const formatUnderline = () => {
     editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+  };
+
+  const formatHeading1 = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createHeadingNode('h1'));
+      }
+    });
+  };
+
+  const formatHeading2 = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createHeadingNode('h2'));
+      }
+    });
+  };
+
+  const insertBulletList = () => {
+    editor.update(() => {
+      $insertList('bullet');
+    });
+  };
+
+  const insertNumberedList = () => {
+    editor.update(() => {
+      $insertList('number');
+    });
   };
 
   return (
@@ -65,6 +106,34 @@ const Toolbar = () => {
       >
         <Underline size={16} />
       </button>
+      <button
+        onClick={formatHeading1}
+        className="p-1 rounded hover:bg-dark-700 text-white"
+        title="Heading 1"
+      >
+        <Heading1 size={16} />
+      </button>
+      <button
+        onClick={formatHeading2}
+        className="p-1 rounded hover:bg-dark-700 text-white"
+        title="Heading 2"
+      >
+        <Heading2 size={16} />
+      </button>
+      <button
+        onClick={insertBulletList}
+        className="p-1 rounded hover:bg-dark-700 text-white"
+        title="Bullet List"
+      >
+        <List size={16} />
+      </button>
+      <button
+        onClick={insertNumberedList}
+        className="p-1 rounded hover:bg-dark-700 text-white"
+        title="Numbered List"
+      >
+        <ListOrdered size={16} />
+      </button>
     </div>
   );
 };
@@ -74,6 +143,7 @@ const TextBlockEditor: React.FC<TextBlockEditorProps> = ({ block, onChange }) =>
     namespace: 'TextBlockEditor',
     theme,
     onError,
+    nodes: [HeadingNode, ListNode, ListItemNode, QuoteNode],
     editorState: block.data.content || undefined,
   };
 
@@ -82,25 +152,27 @@ const TextBlockEditor: React.FC<TextBlockEditorProps> = ({ block, onChange }) =>
   };
 
   return (
-    <LexicalComposer initialConfig={initialConfig}>
-      <Toolbar />
-      <RichTextPlugin
-        contentEditable={
-          <ContentEditable
-            className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[200px] outline-none"
-            aria-placeholder="Enter text content..."
-            placeholder={
-              <div className="absolute top-2 left-3 text-gray-400 text-sm pointer-events-none">
-                Enter text content...
-              </div>
-            }
-          />
-        }
-        ErrorBoundary={LexicalErrorBoundary}
-      />
-      <HistoryPlugin />
-      <OnChangePlugin onChange={handleChange} />
-    </LexicalComposer>
+    <div className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus-within:outline-none focus-within:ring-1 focus-within:ring-primary-500 min-h-[200px]">
+      <LexicalComposer initialConfig={initialConfig}>
+        <Toolbar />
+        <RichTextPlugin
+          contentEditable={
+            <ContentEditable
+              className="w-full outline-none min-h-[180px] px-1 py-1"
+              aria-placeholder="Enter text content..."
+              placeholder={
+                <div className="text-gray-400 text-sm pointer-events-none">
+                  Enter text content...
+                </div>
+              }
+            />
+          }
+          ErrorBoundary={LexicalErrorBoundary}
+        />
+        <HistoryPlugin />
+        <OnChangePlugin onChange={handleChange} />
+      </LexicalComposer>
+    </div>
   );
 };
 
