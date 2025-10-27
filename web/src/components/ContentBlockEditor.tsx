@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import MCQPackEditorModal from "./MCQPackEditorModal";
+import TextBlockEditor from "./block-editors/TextBlockEditor";
+import NoteBlockEditor from "./block-editors/NoteBlockEditor";
 
 export interface ContentBlock {
   id: string;
@@ -350,49 +352,7 @@ const ContentBlockEditor: React.FC<ContentBlockEditorProps> = ({
   );
 };
 
-// Individual Block Editors
-const TextBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <textarea
-    value={block.data.content || ""}
-    onChange={(e) => onChange(block.id, { content: e.target.value })}
-    placeholder="Enter text content..."
-    className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[100px]"
-  />
-);
-
-const NoteBlockEditor: React.FC<{
-  block: ContentBlock;
-  onChange: (id: string, data: any) => void;
-}> = ({ block, onChange }) => (
-  <div className="space-y-3">
-    <input
-      type="text"
-      value={block.data.title || ""}
-      onChange={(e) => onChange(block.id, { title: e.target.value })}
-      placeholder="Note title..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    />
-    <textarea
-      value={block.data.content || ""}
-      onChange={(e) => onChange(block.id, { content: e.target.value })}
-      placeholder="Note content..."
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500 min-h-[80px]"
-    />
-    <select
-      value={block.data.style || "info"}
-      onChange={(e) => onChange(block.id, { style: e.target.value })}
-      className="w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded text-white text-sm focus:outline-none focus:ring-1 focus:ring-primary-500"
-    >
-      <option value="info">Info</option>
-      <option value="warning">Warning</option>
-      <option value="success">Success</option>
-      <option value="error">Error</option>
-    </select>
-  </div>
-);
+// Individual Block Editors - Now using the imported rich text editors
 
 const MCQBlockEditor: React.FC<{
   block: ContentBlock;
