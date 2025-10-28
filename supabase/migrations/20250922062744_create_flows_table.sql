@@ -35,13 +35,7 @@ CREATE POLICY "Flows are manageable by creators" ON public.flows
 
 -- Admins can manage all flows
 CREATE POLICY "Admins can manage all flows" ON public.flows
-        FOR ALL USING (
-            EXISTS (
-                SELECT 1 FROM public.users u
-                WHERE u.id = auth.uid()::uuid
-                AND u.role = 'admin'
-            )
-        );
+        FOR ALL USING ( public.is_admin() );
 
 -- 4) Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_flows_topic_id ON public.flows(topic_id);

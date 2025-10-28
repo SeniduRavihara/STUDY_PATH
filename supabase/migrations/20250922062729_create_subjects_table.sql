@@ -59,13 +59,7 @@ USING (auth.uid()::uuid = created_by);
 CREATE POLICY "Admins can manage all subjects"
 ON public.subjects
 FOR ALL
-USING (
-  EXISTS (
-    SELECT 1 FROM public.users u
-    WHERE u.id = auth.uid()::uuid
-    AND u.role = 'admin'
-  )
-);
+USING ( public.is_admin() );
 
 -- 4) Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_subjects_created_by ON public.subjects(created_by);

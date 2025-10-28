@@ -31,7 +31,13 @@ const Signup: React.FC = () => {
 
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      // include the provided name in the auth signup metadata so the DB trigger
+      // can copy it into the public.users row created by the auth trigger
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name } },
+      });
 
       if (error) {
         setError(error.message || "Signup failed");

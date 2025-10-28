@@ -37,6 +37,29 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- 3) Enable Row-Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
+-- Helper functions to avoid RLS recursion when checking roles
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.users WHERE id = auth.uid()::uuid AND role = 'admin'
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role FROM public.users WHERE id = auth.uid()::uuid;
+$$;
+
 -- 4) Policies
 DROP POLICY IF EXISTS "Users can read own profile" ON public.users;
 DROP POLICY IF EXISTS "Users can manage own profile" ON public.users;
@@ -56,7 +79,7 @@ FOR UPDATE
 USING (auth.uid()::uuid = id)
 WITH CHECK (
   auth.uid()::uuid = id 
-  AND role = (SELECT role FROM public.users WHERE id = auth.uid()::uuid) -- prevent role self-elevation
+  AND role = public.get_user_role() -- prevent role self-elevation
 );
 
 -- Users can insert their own profile during signup
@@ -69,13 +92,7 @@ WITH CHECK (auth.uid()::uuid = id);
 CREATE POLICY "Admins can manage all users"
 ON public.users
 FOR ALL
-USING (
-  EXISTS (
-    SELECT 1 FROM public.users u
-    WHERE u.id = auth.uid()::uuid
-    AND u.role = 'admin'
-  )
-);
+USING ( public.is_admin() );
 
 -- 5) Trigger function (SECURITY DEFINER + safe)
 CREATE OR REPLACE FUNCTION public.handle_new_user()

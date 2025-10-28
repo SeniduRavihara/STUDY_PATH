@@ -28,7 +28,7 @@ import "./utils/sessionDebug"; // Import debug utility
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -40,6 +40,22 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Only allow users with the admin role to access admin routes
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark-950">
+        <div className="text-center p-6 bg-gray-900 rounded-lg">
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Access denied
+          </h2>
+          <p className="text-sm text-dark-300 mb-4">
+            You need admin privileges to access this area.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return <>{children}</>;
