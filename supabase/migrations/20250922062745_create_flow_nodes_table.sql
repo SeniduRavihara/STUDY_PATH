@@ -6,7 +6,6 @@
 CREATE TABLE IF NOT EXISTS public.flow_nodes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     flow_id UUID REFERENCES public.flows(id) ON DELETE CASCADE NOT NULL,
-    node_type TEXT CHECK (node_type IN ('start', 'study', 'quiz', 'video', 'assignment', 'assessment', 'end')) NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
     
@@ -23,8 +22,7 @@ CREATE TABLE IF NOT EXISTS public.flow_nodes (
     estimated_time INTEGER DEFAULT 0, -- in minutes
     
     -- Node content
-    content_url TEXT, -- URL to external content
-    content_data JSONB DEFAULT '{}', -- Store inline content (quiz questions, etc.)
+    content_blocks JSONB DEFAULT '[]', -- Array of content blocks for this node
     
     -- Node connections (which nodes this connects to)
     connections UUID[] DEFAULT '{}', -- Array of node IDs this node connects to
@@ -61,7 +59,6 @@ CREATE POLICY "Flow nodes are manageable by flow creators" ON public.flow_nodes
 
 -- 4) Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_flow_nodes_flow_id ON public.flow_nodes(flow_id);
-CREATE INDEX IF NOT EXISTS idx_flow_nodes_type ON public.flow_nodes(node_type);
 CREATE INDEX IF NOT EXISTS idx_flow_nodes_status ON public.flow_nodes(status);
 CREATE INDEX IF NOT EXISTS idx_flow_nodes_sort_order ON public.flow_nodes(flow_id, sort_order);
 
