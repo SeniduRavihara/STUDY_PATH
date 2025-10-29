@@ -21,6 +21,7 @@ import OverviewTab from "./OverviewTab";
 import PreviewTab from "./PreviewTab";
 import SettingsTab from "./SettingsTab";
 import TopicsTab from "./TopicsTab";
+import { useModal } from "../../contexts/ModalContext";
 
 const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const SubjectBuilder: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { sidebarCollapsed } = useSidebar();
   const { user } = useAuth();
+  const modal = useModal();
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview"
   );
@@ -120,10 +122,10 @@ const SubjectBuilder: React.FC = () => {
         icon: subject.icon,
         color: subject.color,
       });
-      alert("Subject saved successfully!");
+      await modal.alert("Subject saved successfully!");
     } catch (error) {
       console.error("Error saving subject:", error);
-      alert("Error saving subject. Please try again.");
+      await modal.alert("Error saving subject. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -133,7 +135,7 @@ const SubjectBuilder: React.FC = () => {
     if (!subject || !subjectId) return;
 
     if (flowNodes.length === 0) {
-      alert("Please create at least one learning node before publishing.");
+      await modal.alert("Please create at least one learning node before publishing.");
       return;
     }
 
@@ -157,7 +159,7 @@ const SubjectBuilder: React.FC = () => {
     if (!subject || !newTopicName.trim()) return;
 
     if (!user) {
-      alert("You must be logged in to create topics.");
+      await modal.alert("You must be logged in to create topics.");
       return;
     }
 
@@ -180,7 +182,7 @@ const SubjectBuilder: React.FC = () => {
       setNewTopicDescription("");
     } catch (error) {
       console.error("Error creating topic:", error);
-      alert("Error creating topic. Please try again.");
+      await modal.alert("Error creating topic. Please try again.");
     }
   };
 

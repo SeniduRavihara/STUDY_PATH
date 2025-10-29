@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { TopicService } from "../../services";
+import { useModal } from "../../contexts/ModalContext";
 import type { TopicWithChildren } from "../../types/database";
 
 interface TopicHierarchyItemProps {
@@ -27,6 +28,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
   subjectId,
   user,
 }) => {
+  const modal = useModal();
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingChild, setIsAddingChild] = useState(false);
   const [isAddingChildLoading, setIsAddingChildLoading] = useState(false);
@@ -49,13 +51,13 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
       onUpdate(updatedTopics);
     } catch (error) {
       console.error("Error updating topic:", error);
-      alert("Error updating topic. Please try again.");
+      await modal.alert("Error updating topic. Please try again.");
     }
   };
 
   const addChildTopic = async (parentId: string) => {
     if (!user) {
-      alert("You must be logged in to create topics.");
+      await modal.alert("You must be logged in to create topics.");
       return;
     }
 
@@ -80,18 +82,19 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
       setNewChildDescription("");
     } catch (error) {
       console.error("Error creating topic:", error);
-      alert("Error creating topic. Please try again.");
+      await modal.alert("Error creating topic. Please try again.");
     } finally {
       setIsAddingChildLoading(false);
     }
   };
 
   const deleteTopic = async (topicId: string) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this topic? This action cannot be undone."
-      )
-    ) {
+    const confirmed = await modal.confirm(
+      "Are you sure you want to delete this topic? This action cannot be undone.",
+      "Delete",
+      "Cancel"
+    );
+    if (confirmed) {
       try {
         await TopicService.deleteTopic(topicId);
 
@@ -100,7 +103,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
         onUpdate(updatedTopics);
       } catch (error) {
         console.error("Error deleting topic:", error);
-        alert("Error deleting topic. Please try again.");
+        await modal.alert("Error deleting topic. Please try again.");
       }
     }
   };

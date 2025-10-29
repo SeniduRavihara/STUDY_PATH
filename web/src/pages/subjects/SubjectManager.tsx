@@ -2,12 +2,14 @@ import { CheckCircle, Edit, Eye, Plus, Trash2, X, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useModal } from "../../contexts/ModalContext";
 import type { Subject } from "../../types/database";
 import { SubjectService } from "../../services/subjectService";
 
 const SubjectManager: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const modal = useModal();
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -73,7 +75,7 @@ const SubjectManager: React.FC = () => {
     e.preventDefault();
 
     if (!user) {
-      alert("You must be logged in to create subjects.");
+      await modal.alert("You must be logged in to create subjects.");
       return;
     }
 
@@ -96,7 +98,7 @@ const SubjectManager: React.FC = () => {
       navigate(`/admin/subject-builder/${newSubject.id}`);
     } catch (error) {
       console.error("Error creating subject:", error);
-      alert("Error creating subject. Please try again.");
+      await modal.alert("Error creating subject. Please try again.");
     }
   };
 
@@ -120,20 +122,21 @@ const SubjectManager: React.FC = () => {
       setEditingSubject(null);
       resetForm();
 
-      alert("Subject updated successfully!");
+      await modal.alert("Subject updated successfully!");
     } catch (error) {
       console.error("Error updating subject:", error);
-      alert("Error updating subject. Please try again.");
+      await modal.alert("Error updating subject. Please try again.");
     }
   };
 
   const handleDeleteSubject = async (id: string) => {
-    if (
-      !confirm(
-        "Are you sure you want to delete this subject? This will also delete all associated topics and flows."
-      )
-    )
-      return;
+    const confirmed = await modal.confirm(
+      "Are you sure you want to delete this subject? This will also delete all associated topics and flows.",
+      "Delete",
+      "Cancel"
+    );
+
+    if (!confirmed) return;
 
     try {
       // Delete subject from database
@@ -141,10 +144,10 @@ const SubjectManager: React.FC = () => {
 
       // Refresh subjects list
       await fetchSubjects();
-      alert("Subject deleted successfully!");
+      await modal.alert("Subject deleted successfully!");
     } catch (error) {
       console.error("Error deleting subject:", error);
-      alert("Error deleting subject. Please try again.");
+      await modal.alert("Error deleting subject. Please try again.");
     }
   };
 
@@ -162,10 +165,10 @@ const SubjectManager: React.FC = () => {
     try {
       await SubjectService.updateSubject(subjectId, { status: "published" });
       await fetchSubjects();
-      alert("Subject published successfully!");
+      await modal.alert("Subject published successfully!");
     } catch (error) {
       console.error("Error publishing subject:", error);
-      alert("Error publishing subject. Please try again.");
+      await modal.alert("Error publishing subject. Please try again.");
     }
   };
 
@@ -173,10 +176,10 @@ const SubjectManager: React.FC = () => {
     try {
       await SubjectService.updateSubject(subjectId, { status: "draft" });
       await fetchSubjects();
-      alert("Subject unpublished successfully!");
+      await modal.alert("Subject unpublished successfully!");
     } catch (error) {
       console.error("Error unpublishing subject:", error);
-      alert("Error unpublishing subject. Please try again.");
+      await modal.alert("Error unpublishing subject. Please try again.");
     }
   };
 

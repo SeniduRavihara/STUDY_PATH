@@ -20,6 +20,7 @@ import SubjectBuilder from "./pages/subjects/SubjectBuilder";
 import SubjectManager from "./pages/subjects/SubjectManager";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
+import { ModalProvider } from "./contexts/ModalContext";
 import "./index.css";
 import TestContentBlocks from "./pages/TestContentBlocks";
 import "./utils/sessionDebug"; // Import debug utility
@@ -144,9 +145,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ModalProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ModalProvider>
   );
 };
 
