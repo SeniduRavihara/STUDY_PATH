@@ -1,13 +1,13 @@
-import type { Database } from '../lib/supabase';
+import type { Database } from "../lib/supabase";
 
 // Explicitly define and export all types
-export type Subject = Database['public']['Tables']['subjects']['Row'];
-export type SubjectInsert = Database['public']['Tables']['subjects']['Insert'];
-export type SubjectUpdate = Database['public']['Tables']['subjects']['Update'];
+export type Subject = Database["public"]["Tables"]["subjects"]["Row"];
+export type SubjectInsert = Database["public"]["Tables"]["subjects"]["Insert"];
+export type SubjectUpdate = Database["public"]["Tables"]["subjects"]["Update"];
 
-export type Topic = Database['public']['Tables']['topics']['Row'];
-export type TopicInsert = Database['public']['Tables']['topics']['Insert'];
-export type TopicUpdate = Database['public']['Tables']['topics']['Update'];
+export type Topic = Database["public"]["Tables"]["topics"]["Row"];
+export type TopicInsert = Database["public"]["Tables"]["topics"]["Insert"];
+export type TopicUpdate = Database["public"]["Tables"]["topics"]["Update"];
 
 // Extended Topic interface for hierarchical display
 export interface TopicWithChildren extends Topic {
@@ -16,28 +16,26 @@ export interface TopicWithChildren extends Topic {
 }
 
 // Flow/Node types
-export interface FlowNode {
-  id: string;
-  type: 'quiz' | 'study' | 'video' | 'assignment' | 'assessment' | 'start' | 'end';
-  title: string;
-  description: string;
-  sort_order: number;
-  config: any;
-  connections: string[];
-  status: 'locked' | 'available' | 'completed' | 'current';
-  difficulty: 'easy' | 'medium' | 'hard';
-  xp: number;
-  icon: string;
-  color: [string, string];
-  estimatedTime?: string;
-  position?: { x: number; y: number };
-  content_blocks?: ContentBlock[];
+export type FlowNodeDb = Database["public"]["Tables"]["flow_nodes"]["Row"];
+
+export interface FlowNode extends Omit<FlowNodeDb, "content_blocks"> {
+  content_blocks: ContentBlock[];
 }
 
 // Content Block types
 export interface ContentBlock {
   id: string;
-  type: 'text' | 'note' | 'mcq' | 'mcq_pack' | 'poll' | 'video' | 'image' | 'meme' | 'code';
+  type:
+    | "text"
+    | "note"
+    | "mcq"
+    | "mcq_pack"
+    | "poll"
+    | "video"
+    | "image"
+    | "meme"
+    | "code";
   order: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any;
 }

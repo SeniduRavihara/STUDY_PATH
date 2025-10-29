@@ -1,14 +1,13 @@
 import {
-Activity,
-BookOpen,
-MessageSquare,
-Settings,
-TrendingUp,
-Users,
+  Activity,
+  BookOpen,
+  MessageSquare,
+  Settings,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface Stats {
   subjects: number;
@@ -26,8 +25,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const statsData = await SupabaseService.getStats();
-        setStats(statsData);
+        // TODO: Replace with new StatsService or equivalent
+        // const statsData = await StatsService.getStats();
+        // setStats(statsData); // TODO: update with new stats source
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -58,8 +58,16 @@ const Dashboard: React.FC = () => {
   ];
 
   const recentActivities = [
-    { action: "Subject published", subject: "Mathematics", time: "2 hours ago" },
-    { action: "New feed post", subject: "Physics Updates", time: "4 hours ago" },
+    {
+      action: "Subject published",
+      subject: "Mathematics",
+      time: "2 hours ago",
+    },
+    {
+      action: "New feed post",
+      subject: "Physics Updates",
+      time: "4 hours ago",
+    },
     { action: "Subject created", subject: "Chemistry", time: "1 day ago" },
     { action: "Subject updated", subject: "Biology", time: "2 days ago" },
   ];
@@ -85,7 +93,7 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map(stat => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
@@ -119,27 +127,27 @@ const Dashboard: React.FC = () => {
             Quick Actions
           </h3>
           <div className="space-y-3">
-          <button
-          onClick={() => navigate("/admin/subjects")}
-          className="w-full btn-primary text-left flex items-center space-x-3"
-          >
-          <BookOpen className="w-5 h-5" />
-          <span>Create New Subject</span>
-          </button>
-          <button
-          onClick={() => navigate("/admin/feed-posts")}
-          className="w-full btn-secondary text-left flex items-center space-x-3"
-          >
-          <MessageSquare className="w-5 h-5" />
-          <span>Create Feed Post</span>
-          </button>
-          <button
-          onClick={() => navigate("/admin/settings")}
-          className="w-full btn-secondary text-left flex items-center space-x-3"
-          >
-          <Settings className="w-5 h-5" />
-          <span>Configure Settings</span>
-          </button>
+            <button
+              onClick={() => navigate("/admin/subjects")}
+              className="w-full btn-primary text-left flex items-center space-x-3"
+            >
+              <BookOpen className="w-5 h-5" />
+              <span>Create New Subject</span>
+            </button>
+            <button
+              onClick={() => navigate("/admin/feed-posts")}
+              className="w-full btn-secondary text-left flex items-center space-x-3"
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span>Create Feed Post</span>
+            </button>
+            <button
+              onClick={() => navigate("/admin/settings")}
+              className="w-full btn-secondary text-left flex items-center space-x-3"
+            >
+              <Settings className="w-5 h-5" />
+              <span>Configure Settings</span>
+            </button>
           </div>
         </div>
 
@@ -199,11 +207,11 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="text-center p-4 bg-dark-700 rounded-lg">
-          <div className="w-16 h-16 mx-auto mb-3 bg-purple-500/20 rounded-full flex items-center justify-center">
-          <MessageSquare className="w-8 h-8 text-purple-500" />
-          </div>
-          <p className="text-2xl font-bold text-white">+15%</p>
-          <p className="text-dark-400 text-sm">Feed Engagement</p>
+            <div className="w-16 h-16 mx-auto mb-3 bg-purple-500/20 rounded-full flex items-center justify-center">
+              <MessageSquare className="w-8 h-8 text-purple-500" />
+            </div>
+            <p className="text-2xl font-bold text-white">+15%</p>
+            <p className="text-dark-400 text-sm">Feed Engagement</p>
           </div>
         </div>
       </div>

@@ -9,7 +9,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface FeedPost {
   id: string;
@@ -83,16 +82,17 @@ const StudyPackManager: React.FC = () => {
   const fetchData = async () => {
     try {
       const [feedPostsRes, subjectsRes, mcqsRes] = await Promise.all([
-        SupabaseService.getFeedPosts(),
-        SupabaseService.getSubjects(),
-        SupabaseService.getMCQs(),
+        // TODO: Replace with new FeedPostService, SubjectService, MCQService
+        // FeedPostService.getFeedPosts(),
+        // SubjectService.getSubjects(),
+        // MCQService.getMCQs(),
       ]);
 
       if (feedPostsRes.data) {
         setFeedPosts(
           feedPostsRes.data.filter(
-            post => post.type === "quiz_pack" || post.type === "lesson_pack",
-          ),
+            (post) => post.type === "quiz_pack" || post.type === "lesson_pack"
+          )
         );
       }
       if (subjectsRes.data) setSubjects(subjectsRes.data);
@@ -111,7 +111,8 @@ const StudyPackManager: React.FC = () => {
     e.preventDefault();
 
     try {
-      const { user } = await SupabaseService.getCurrentUser();
+      // TODO: Replace with new AuthService
+      // const { user } = await AuthService.getCurrentUser();
       if (!user) throw new Error("User not authenticated");
 
       // Feed post creation disabled - table not in current schema
@@ -225,7 +226,7 @@ const StudyPackManager: React.FC = () => {
 
       {/* Study Packs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {feedPosts.map(post => (
+        {feedPosts.map((post) => (
           <div
             key={post.id}
             className="card group hover:scale-105 transition-transform duration-200"
@@ -276,7 +277,9 @@ const StudyPackManager: React.FC = () => {
                 </span>
               </div>
               <span
-                className={`px-2 py-1 rounded-full text-xs font-medium border ${getPostTypeColor(post.type)}`}
+                className={`px-2 py-1 rounded-full text-xs font-medium border ${getPostTypeColor(
+                  post.type
+                )}`}
               >
                 {post.type.replace("_", " ")}
               </span>
@@ -323,8 +326,8 @@ const StudyPackManager: React.FC = () => {
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, title: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter study pack title"
@@ -339,8 +342,11 @@ const StudyPackManager: React.FC = () => {
                 </label>
                 <textarea
                   value={formData.content}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, content: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      content: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none"
                   placeholder="Describe what this study pack contains"
@@ -355,8 +361,8 @@ const StudyPackManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.type}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       type: e.target.value as "quiz_pack" | "lesson_pack",
                     }))
@@ -375,14 +381,17 @@ const StudyPackManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.subject}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, subject: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      subject: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   required
                 >
                   <option value="">Select a subject</option>
-                  {subjects.map(subject => (
+                  {subjects.map((subject) => (
                     <option key={subject.id} value={subject.name}>
                       {subject.name}
                     </option>
@@ -404,7 +413,7 @@ const StudyPackManager: React.FC = () => {
                     </p>
                   ) : (
                     <div className="space-y-2">
-                      {filteredMcqs.map(mcq => (
+                      {filteredMcqs.map((mcq) => (
                         <label
                           key={mcq.id}
                           className="flex items-start space-x-3 cursor-pointer"
@@ -412,17 +421,17 @@ const StudyPackManager: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={formData.selectedMcqs.includes(mcq.id)}
-                            onChange={e => {
+                            onChange={(e) => {
                               if (e.target.checked) {
-                                setFormData(prev => ({
+                                setFormData((prev) => ({
                                   ...prev,
                                   selectedMcqs: [...prev.selectedMcqs, mcq.id],
                                 }));
                               } else {
-                                setFormData(prev => ({
+                                setFormData((prev) => ({
                                   ...prev,
                                   selectedMcqs: prev.selectedMcqs.filter(
-                                    id => id !== mcq.id,
+                                    (id) => id !== mcq.id
                                   ),
                                 }));
                               }

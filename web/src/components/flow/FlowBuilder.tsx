@@ -16,36 +16,9 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { AuthService } from "../../services/authService";
 import { FlowBuilderService } from "../../services/flowBuilderService";
-import { type ContentBlock, type TopicWithChildren } from "../../types/database";
-import NodePropertiesPanel from "./NodePropertiesPanel";
+import { type FlowNode, type TopicWithChildren } from "../../types/database";
 import TopicHierarchySelector from "../forms/TopicHierarchySelector";
-
-interface FlowNode {
-  id: string;
-  type:
-    | "quiz"
-    | "study"
-    | "video"
-    | "assignment"
-    | "assessment"
-    | "start"
-    | "end";
-  title: string;
-  description: string;
-  sort_order: number; // Use sort_order instead of position
-  config: any;
-  connections: string[];
-  status: "locked" | "available" | "completed" | "current";
-  difficulty: "easy" | "medium" | "hard";
-  xp: number;
-  icon: string;
-  color: [string, string];
-  estimatedTime?: string;
-  position?: { x: number; y: number }; // Position for rendering on canvas
-  content_blocks?: ContentBlock[]; // ⭐ NEW: Flexible content blocks
-}
-
-
+import NodePropertiesPanel from "./NodePropertiesPanel";
 
 interface FlowBuilderProps {
   nodes: FlowNode[];
@@ -343,7 +316,10 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       // Check if the stored topic still exists in the hierarchy
       if (topicExistsInHierarchy(hierarchicalTopics, storedTopicId)) {
         setCurrentTopicId(storedTopicId);
-        const resolved = findTopicByIdHierarchical(hierarchicalTopics, storedTopicId);
+        const resolved = findTopicByIdHierarchical(
+          hierarchicalTopics,
+          storedTopicId
+        );
         if (resolved) setSelectedTopicName(resolved.name);
       } else {
         // Remove invalid stored topic
@@ -472,9 +448,10 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     return nodeType ? nodeType.color : ["#6b7280", "#4b5563"];
   };
 
-
-
-  const findTopicByIdHierarchical = (topics: TopicWithChildren[], topicId: string): TopicWithChildren | null => {
+  const findTopicByIdHierarchical = (
+    topics: TopicWithChildren[],
+    topicId: string
+  ): TopicWithChildren | null => {
     for (const topic of topics) {
       if (topic.id === topicId) return topic;
       if (topic.children && topic.children.length > 0) {
@@ -555,7 +532,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     setShowTopicSelector(false);
 
     // Mark the topic as having a flow
-    const updateTopicFlow = (topicList: TopicWithChildren[]): TopicWithChildren[] => {
+    const updateTopicFlow = (
+      topicList: TopicWithChildren[]
+    ): TopicWithChildren[] => {
       return topicList.map((topic) => {
         if (topic.id === topicId) {
           return { ...topic, has_flow: true, flow_id: topicId };

@@ -13,7 +13,6 @@ import {
   Users,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface ColumnInfo {
   column_name: string;
@@ -76,9 +75,10 @@ const DatabaseOverview: React.FC = () => {
     try {
       console.log("🔍 Loading database info...");
       const [tablesData, relationshipsData, statsData] = await Promise.all([
-        SupabaseService.getDatabaseTables(),
-        SupabaseService.getDatabaseRelationships(),
-        SupabaseService.getDatabaseStats(),
+        // TODO: Replace with new DatabaseService
+        // DatabaseService.getDatabaseTables(),
+        // DatabaseService.getDatabaseRelationships(),
+        // DatabaseService.getDatabaseStats(),
       ]);
 
       console.log("📊 Database data loaded:", {
@@ -149,18 +149,18 @@ const DatabaseOverview: React.FC = () => {
     return <Database className="w-4 h-4 text-gray-500" />;
   };
 
-  const filteredTables = tables.filter(table => {
+  const filteredTables = tables.filter((table) => {
     if (searchTerm === "") return true;
     const searchLower = searchTerm.toLowerCase();
     return (
       table.table_name.toLowerCase().includes(searchLower) ||
-      table.columns.some(col =>
-        col.column_name.toLowerCase().includes(searchLower),
+      table.columns.some((col) =>
+        col.column_name.toLowerCase().includes(searchLower)
       )
     );
   });
 
-  const filteredRelationships = relationships.filter(rel => {
+  const filteredRelationships = relationships.filter((rel) => {
     if (searchTerm === "") return true;
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -301,13 +301,13 @@ const DatabaseOverview: React.FC = () => {
                 type="text"
                 placeholder="Search tables, columns, or relationships..."
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
             <select
               value={filterType}
-              onChange={e => setFilterType(e.target.value as any)}
+              onChange={(e) => setFilterType(e.target.value as any)}
               className="px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="all">All</option>
@@ -339,7 +339,7 @@ const DatabaseOverview: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              {filteredTables.map(table => (
+              {filteredTables.map((table) => (
                 <div
                   key={table.table_name}
                   className="bg-dark-800 rounded-lg border border-dark-700"
@@ -372,7 +372,7 @@ const DatabaseOverview: React.FC = () => {
                         {table.table_type}
                       </span>
                       <button
-                        onClick={e => {
+                        onClick={(e) => {
                           e.stopPropagation();
                           setSelectedTable(table.table_name);
                         }}
@@ -393,7 +393,7 @@ const DatabaseOverview: React.FC = () => {
                             Columns
                           </h4>
                           <div className="space-y-2">
-                            {table.columns.map(column => (
+                            {table.columns.map((column) => (
                               <div
                                 key={column.column_name}
                                 className="flex items-center justify-between p-3 bg-dark-900 rounded-lg"
@@ -409,7 +409,9 @@ const DatabaseOverview: React.FC = () => {
                                     {column.column_name}
                                   </span>
                                   <span
-                                    className={`text-sm ${getDataTypeColor(column.data_type)}`}
+                                    className={`text-sm ${getDataTypeColor(
+                                      column.data_type
+                                    )}`}
                                   >
                                     {column.data_type}
                                     {column.character_maximum_length &&
@@ -469,9 +471,9 @@ const DatabaseOverview: React.FC = () => {
                             <div className="space-y-2">
                               {table.constraints
                                 .filter(
-                                  constraint =>
+                                  (constraint) =>
                                     constraint !== null &&
-                                    constraint !== undefined,
+                                    constraint !== undefined
                                 )
                                 .map((constraint, idx) => (
                                   <div
@@ -596,7 +598,7 @@ const DatabaseOverview: React.FC = () => {
             </div>
 
             {(() => {
-              const table = tables.find(t => t.table_name === selectedTable);
+              const table = tables.find((t) => t.table_name === selectedTable);
               if (!table) return null;
 
               return (
@@ -650,7 +652,7 @@ const DatabaseOverview: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {table.columns.map(column => (
+                          {table.columns.map((column) => (
                             <tr
                               key={column.column_name}
                               className="border-b border-dark-800"
@@ -670,7 +672,9 @@ const DatabaseOverview: React.FC = () => {
                               </td>
                               <td className="py-3">
                                 <span
-                                  className={`${getDataTypeColor(column.data_type)}`}
+                                  className={`${getDataTypeColor(
+                                    column.data_type
+                                  )}`}
                                 >
                                   {column.data_type}
                                   {column.character_maximum_length &&

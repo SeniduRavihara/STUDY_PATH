@@ -12,12 +12,17 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface FeedPost {
   id: string;
   content: string;
-  type: "achievement" | "question" | "milestone" | "tip" | "quiz_pack" | "lesson_pack";
+  type:
+    | "achievement"
+    | "question"
+    | "milestone"
+    | "tip"
+    | "quiz_pack"
+    | "lesson_pack";
   subject: string | null;
   achievement: string | null;
   points_earned: number;
@@ -64,8 +69,9 @@ const FeedPostManager: React.FC = () => {
   const fetchData = async () => {
     try {
       const [feedPostsRes, subjectsRes] = await Promise.all([
-        SupabaseService.getFeedPosts(),
-        SupabaseService.getSubjects(),
+        // TODO: Replace with new FeedPostService and SubjectService
+        // FeedPostService.getFeedPosts(),
+        // SubjectService.getSubjects(),
       ]);
 
       if (feedPostsRes.data) {
@@ -83,7 +89,8 @@ const FeedPostManager: React.FC = () => {
     e.preventDefault();
 
     try {
-      const { user } = await SupabaseService.getCurrentUser();
+      // TODO: Replace with new AuthService
+      // const { user } = await AuthService.getCurrentUser();
       if (!user) throw new Error("User not authenticated");
 
       const postData = {
@@ -98,9 +105,10 @@ const FeedPostManager: React.FC = () => {
         comments: 0,
       };
 
-      const { data, error } = await SupabaseService.createFeedPost(postData);
+      // TODO: Replace with new FeedPostService
+      // const { data, error } = await FeedPostService.createFeedPost(postData);
       if (error) throw error;
-      setFeedPosts(prev => [data, ...prev]);
+      setFeedPosts((prev) => [data, ...prev]);
 
       setShowCreateForm(false);
       resetForm();
@@ -116,9 +124,10 @@ const FeedPostManager: React.FC = () => {
     if (!confirm("Are you sure you want to delete this post?")) return;
 
     try {
-      const { error } = await SupabaseService.deleteFeedPost(id);
+      // TODO: Replace with new FeedPostService
+      // const { error } = await FeedPostService.deleteFeedPost(id);
       if (error) throw error;
-      setFeedPosts(prev => prev.filter(post => post.id !== id));
+      setFeedPosts((prev) => prev.filter((post) => post.id !== id));
 
       alert("Post deleted successfully!");
     } catch (error) {
@@ -177,9 +186,10 @@ const FeedPostManager: React.FC = () => {
     }
   };
 
-  const filteredPosts = filterType === "all" 
-    ? feedPosts 
-    : feedPosts.filter(post => post.type === filterType);
+  const filteredPosts =
+    filterType === "all"
+      ? feedPosts
+      : feedPosts.filter((post) => post.type === filterType);
 
   if (loading) {
     return (
@@ -220,8 +230,15 @@ const FeedPostManager: React.FC = () => {
         >
           All Posts ({feedPosts.length})
         </button>
-        {["achievement", "question", "milestone", "tip", "quiz_pack", "lesson_pack"].map(type => {
-          const count = feedPosts.filter(post => post.type === type).length;
+        {[
+          "achievement",
+          "question",
+          "milestone",
+          "tip",
+          "quiz_pack",
+          "lesson_pack",
+        ].map((type) => {
+          const count = feedPosts.filter((post) => post.type === type).length;
           return (
             <button
               key={type}
@@ -240,7 +257,7 @@ const FeedPostManager: React.FC = () => {
 
       {/* Posts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPosts.map(post => (
+        {filteredPosts.map((post) => (
           <div
             key={post.id}
             className="card group hover:scale-105 transition-transform duration-200"
@@ -250,7 +267,9 @@ const FeedPostManager: React.FC = () => {
                 {getPostTypeIcon(post.type)}
                 <div>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium border ${getPostTypeColor(post.type)}`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium border ${getPostTypeColor(
+                      post.type
+                    )}`}
                   >
                     {post.type.replace("_", " ")}
                   </span>
@@ -313,9 +332,7 @@ const FeedPostManager: React.FC = () => {
 
             <div className="mt-4 pt-4 border-t border-dark-700">
               <div className="flex items-center justify-between text-sm text-dark-400">
-                <span>
-                  By {post.users?.name || post.users?.email}
-                </span>
+                <span>By {post.users?.name || post.users?.email}</span>
                 <span>{new Date(post.created_at).toLocaleDateString()}</span>
               </div>
             </div>
@@ -330,10 +347,9 @@ const FeedPostManager: React.FC = () => {
             No posts found
           </h3>
           <p className="text-dark-400 mb-6">
-            {filterType === "all" 
+            {filterType === "all"
               ? "Create your first post to get started!"
-              : `No ${filterType.replace("_", " ")} posts found.`
-            }
+              : `No ${filterType.replace("_", " ")} posts found.`}
           </p>
           <button
             onClick={() => setShowCreateForm(true)}
@@ -371,8 +387,11 @@ const FeedPostManager: React.FC = () => {
                 </label>
                 <textarea
                   value={formData.content}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, content: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      content: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-32 resize-none"
                   placeholder="Write your post content..."
@@ -387,8 +406,8 @@ const FeedPostManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.type}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       type: e.target.value as FeedPost["type"],
                     }))
@@ -411,13 +430,16 @@ const FeedPostManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.subject}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, subject: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      subject: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Select a subject</option>
-                  {subjects.map(subject => (
+                  {subjects.map((subject) => (
                     <option key={subject.id} value={subject.name}>
                       {subject.name}
                     </option>
@@ -434,8 +456,11 @@ const FeedPostManager: React.FC = () => {
                   <input
                     type="text"
                     value={formData.achievement}
-                    onChange={e =>
-                      setFormData(prev => ({ ...prev, achievement: e.target.value }))
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        achievement: e.target.value,
+                      }))
                     }
                     className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="Enter achievement title"
@@ -451,8 +476,11 @@ const FeedPostManager: React.FC = () => {
                 <input
                   type="number"
                   value={formData.points_earned}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, points_earned: parseInt(e.target.value) || 0 }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      points_earned: parseInt(e.target.value) || 0,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="0"
@@ -468,8 +496,11 @@ const FeedPostManager: React.FC = () => {
                 <input
                   type="url"
                   value={formData.media_url}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, media_url: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      media_url: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="https://example.com/image.jpg"

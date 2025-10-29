@@ -1,6 +1,5 @@
 import { Edit, Filter, HelpCircle, Plus, Save, Trash2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface MCQ {
   id: string;
@@ -58,13 +57,13 @@ const MCQManager: React.FC = () => {
     if (selectedSubject === "") {
       setFilteredMcqs(mcqs);
     } else {
-      const filtered = mcqs.filter(mcq => {
+      const filtered = mcqs.filter((mcq) => {
         // Check if MCQ belongs to the selected subject directly
         if (mcq.subject_id === selectedSubject) {
           return true;
         }
         // Also check if MCQ belongs to a chapter of the selected subject
-        const chapter = chapters.find(c => c.id === mcq.chapter_id);
+        const chapter = chapters.find((c) => c.id === mcq.chapter_id);
         return chapter && chapter.subjects.id === selectedSubject;
       });
       setFilteredMcqs(filtered);
@@ -74,9 +73,10 @@ const MCQManager: React.FC = () => {
   const fetchData = async () => {
     try {
       const [mcqsData, chaptersData, subjectsData] = await Promise.all([
-        SupabaseService.getMCQs(),
-        SupabaseService.getChapters(),
-        SupabaseService.getSubjects(),
+        // TODO: Replace with new MCQService, ChapterService, SubjectService
+        // MCQService.getMCQs(),
+        // ChapterService.getChapters(),
+        // SubjectService.getSubjects(),
       ]);
 
       if (mcqsData.data) {
@@ -97,9 +97,11 @@ const MCQManager: React.FC = () => {
 
     try {
       if (editingMCQ) {
-        await SupabaseService.updateMCQ(editingMCQ.id, formData);
+        // TODO: Replace with new MCQService
+        // await MCQService.updateMCQ(editingMCQ.id, formData);
       } else {
-        await SupabaseService.createMCQ(formData);
+        // TODO: Replace with new MCQService
+        // await MCQService.createMCQ(formData);
       }
 
       setShowForm(false);
@@ -128,7 +130,8 @@ const MCQManager: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this MCQ?")) {
       try {
-        await SupabaseService.deleteMCQ(id);
+        // TODO: Replace with new MCQService
+        // await MCQService.deleteMCQ(id);
         fetchData();
       } catch (error) {
         console.error("Error deleting MCQ:", error);
@@ -150,7 +153,7 @@ const MCQManager: React.FC = () => {
 
   const addOption = () => {
     if (formData.options.length < 6) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         options: [...prev.options, ""],
       }));
@@ -160,7 +163,7 @@ const MCQManager: React.FC = () => {
   const removeOption = (index: number) => {
     if (formData.options.length > 2) {
       const newOptions = formData.options.filter((_, i) => i !== index);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         options: newOptions,
         correct_answer:
@@ -174,7 +177,7 @@ const MCQManager: React.FC = () => {
   const updateOption = (index: number, value: string) => {
     const newOptions = [...formData.options];
     newOptions[index] = value;
-    setFormData(prev => ({ ...prev, options: newOptions }));
+    setFormData((prev) => ({ ...prev, options: newOptions }));
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -205,7 +208,8 @@ const MCQManager: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-white">MCQ Management</h1>
           <p className="text-dark-400 mt-2">
-            Create and manage multiple choice questions for specific subjects and chapters
+            Create and manage multiple choice questions for specific subjects
+            and chapters
           </p>
         </div>
         <button
@@ -226,11 +230,11 @@ const MCQManager: React.FC = () => {
           </div>
           <select
             value={selectedSubject}
-            onChange={e => setSelectedSubject(e.target.value)}
+            onChange={(e) => setSelectedSubject(e.target.value)}
             className="px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">All Subjects</option>
-            {subjects.map(subject => (
+            {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
               </option>
@@ -275,8 +279,8 @@ const MCQManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.subject_id}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       subject_id: e.target.value,
                       chapter_id: "", // Reset chapter when subject changes
@@ -286,7 +290,7 @@ const MCQManager: React.FC = () => {
                   required
                 >
                   <option value="">Select a subject</option>
-                  {subjects.map(subject => (
+                  {subjects.map((subject) => (
                     <option key={subject.id} value={subject.id}>
                       {subject.name}
                     </option>
@@ -300,8 +304,8 @@ const MCQManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.chapter_id}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       chapter_id: e.target.value,
                     }))
@@ -311,18 +315,19 @@ const MCQManager: React.FC = () => {
                 >
                   <option value="">No specific chapter</option>
                   {chapters
-                    .filter(chapter => chapter.subjects.id === formData.subject_id)
-                    .map(chapter => (
+                    .filter(
+                      (chapter) => chapter.subjects.id === formData.subject_id
+                    )
+                    .map((chapter) => (
                       <option key={chapter.id} value={chapter.id}>
                         {chapter.title}
                       </option>
                     ))}
                 </select>
                 <p className="text-xs text-dark-400 mt-1">
-                  {!formData.subject_id 
+                  {!formData.subject_id
                     ? "Select a subject first to see available chapters"
-                    : "Leave empty to create a general subject MCQ"
-                  }
+                    : "Leave empty to create a general subject MCQ"}
                 </p>
               </div>
             </div>
@@ -334,8 +339,8 @@ const MCQManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.difficulty}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       difficulty: e.target.value as any,
                     }))
@@ -355,8 +360,8 @@ const MCQManager: React.FC = () => {
               </label>
               <textarea
                 value={formData.question}
-                onChange={e =>
-                  setFormData(prev => ({ ...prev, question: e.target.value }))
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, question: e.target.value }))
                 }
                 className="input-field w-full h-24 resize-none"
                 placeholder="Enter your question here..."
@@ -376,8 +381,8 @@ const MCQManager: React.FC = () => {
                       name="correct_answer"
                       value={index}
                       checked={formData.correct_answer === index}
-                      onChange={e =>
-                        setFormData(prev => ({
+                      onChange={(e) =>
+                        setFormData((prev) => ({
                           ...prev,
                           correct_answer: parseInt(e.target.value),
                         }))
@@ -387,7 +392,7 @@ const MCQManager: React.FC = () => {
                     <input
                       type="text"
                       value={option}
-                      onChange={e => updateOption(index, e.target.value)}
+                      onChange={(e) => updateOption(index, e.target.value)}
                       className="input-field flex-1"
                       placeholder={`Option ${index + 1}`}
                       required
@@ -422,8 +427,8 @@ const MCQManager: React.FC = () => {
               </label>
               <textarea
                 value={formData.explanation}
-                onChange={e =>
-                  setFormData(prev => ({
+                onChange={(e) =>
+                  setFormData((prev) => ({
                     ...prev,
                     explanation: e.target.value,
                   }))
@@ -478,9 +483,9 @@ const MCQManager: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredMcqs.map(mcq => {
-              const chapter = chapters.find(c => c.id === mcq.chapter_id);
-              const subject = subjects.find(s => s.id === mcq.subject_id);
+            {filteredMcqs.map((mcq) => {
+              const chapter = chapters.find((c) => c.id === mcq.chapter_id);
+              const subject = subjects.find((s) => s.id === mcq.subject_id);
               return (
                 <div
                   key={mcq.id}
@@ -502,7 +507,9 @@ const MCQManager: React.FC = () => {
                           </span>
                         </div>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(mcq.difficulty)}`}
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                            mcq.difficulty
+                          )}`}
                         >
                           {mcq.difficulty}
                         </span>

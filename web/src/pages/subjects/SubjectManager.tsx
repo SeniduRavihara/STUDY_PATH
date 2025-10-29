@@ -48,7 +48,6 @@ const SubjectManager: React.FC = () => {
     "History",
     "Literature",
     "Writing",
-    "Math",
     "Data",
     "Target",
   ];
@@ -161,7 +160,7 @@ const SubjectManager: React.FC = () => {
 
   const handlePublishSubject = async (subjectId: string) => {
     try {
-      await SubjectService.updateSubject(subjectId, { is_active: true });
+      await SubjectService.updateSubject(subjectId, { status: "published" });
       await fetchSubjects();
       alert("Subject published successfully!");
     } catch (error) {
@@ -172,7 +171,7 @@ const SubjectManager: React.FC = () => {
 
   const handleUnpublishSubject = async (subjectId: string) => {
     try {
-      await SubjectService.updateSubject(subjectId, { is_active: false });
+      await SubjectService.updateSubject(subjectId, { status: "draft" });
       await fetchSubjects();
       alert("Subject unpublished successfully!");
     } catch (error) {
@@ -231,7 +230,7 @@ const SubjectManager: React.FC = () => {
                 <div
                   className="w-1.5 h-10 rounded-md"
                   style={{
-                    backgroundColor: subject.color,
+                    backgroundColor: subject.color ?? undefined,
                   }}
                 />
                 <div className="flex-1 min-w-0">
@@ -254,14 +253,14 @@ const SubjectManager: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {/* Review button - available for all subjects */}
                 <button
                   onClick={() => handleReviewSubject(subject)}
                   className="text-blue-400 hover:text-blue-300 transition-colors"
                   title="Review"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-5 h-5" />
                 </button>
 
                 {/* Owner-only buttons */}
@@ -272,17 +271,17 @@ const SubjectManager: React.FC = () => {
                       className="text-dark-400 hover:text-white transition-colors"
                       title="Edit"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-5 h-5" />
                     </button>
 
                     {/* Publish/Unpublish buttons */}
-                    {subject.is_active ? (
+                    {subject.status === "published" ? (
                       <button
                         onClick={() => handleUnpublishSubject(subject.id)}
                         className="text-orange-400 hover:text-orange-300 transition-colors"
                         title="Unpublish"
                       >
-                        <XCircle className="w-4 h-4" />
+                        <XCircle className="w-5 h-5" />
                       </button>
                     ) : (
                       <button
@@ -290,7 +289,7 @@ const SubjectManager: React.FC = () => {
                         className="text-green-400 hover:text-green-300 transition-colors"
                         title="Publish"
                       >
-                        <CheckCircle className="w-4 h-4" />
+                        <CheckCircle className="w-5 h-5" />
                       </button>
                     )}
 
@@ -299,7 +298,7 @@ const SubjectManager: React.FC = () => {
                       className="text-red-400 hover:text-red-300 transition-colors"
                       title="Delete"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </>
                 )}
@@ -312,14 +311,14 @@ const SubjectManager: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium border ${
-                    subject.is_active
+                    subject.status === "published"
                       ? "bg-green-500/10 text-green-500 border-green-500/20"
                       : "bg-gray-500/10 text-gray-500 border-gray-500/20"
                   }`}
                 >
-                  {subject.is_active ? "Published" : "Draft"}
+                  {subject.status === "published" ? "Published" : "Draft"}
                 </span>
-              </div>
+              </div>  
               <span className="text-dark-400 text-sm">
                 {new Date(subject.created_at).toLocaleDateString()}
               </span>

@@ -10,7 +10,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface SettingsData {
   // General Settings
@@ -65,9 +64,10 @@ const Settings: React.FC = () => {
     try {
       // In a real app, you'd fetch settings from your backend
       // For now, we'll use the default values
-      const { user } = await SupabaseService.getCurrentUser();
+      // TODO: Replace with new AuthService
+      // const { user } = await AuthService.getCurrentUser();
       if (user) {
-        setSettings(prev => ({
+        setSettings((prev) => ({
           ...prev,
           adminEmail: user.email || "",
         }));
@@ -83,7 +83,7 @@ const Settings: React.FC = () => {
     setSaving(true);
     try {
       // In a real app, you'd save settings to your backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
       alert("Settings saved successfully!");
     } catch (error) {
       console.error("Error saving settings:", error);
@@ -96,7 +96,7 @@ const Settings: React.FC = () => {
   const handleReset = async () => {
     try {
       // In a real app, you'd reset settings to defaults
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
       setSettings({
         siteName: "StudyPath",
         siteDescription: "Modern Learning Platform",
@@ -123,14 +123,14 @@ const Settings: React.FC = () => {
   const handleClearData = async () => {
     if (
       !confirm(
-        "Are you sure you want to clear all data? This action cannot be undone!",
+        "Are you sure you want to clear all data? This action cannot be undone!"
       )
     )
       return;
 
     try {
       // In a real app, you'd implement data clearing logic
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API call
       alert("All data has been cleared successfully!");
     } catch (error) {
       console.error("Error clearing data:", error);
@@ -190,8 +190,8 @@ const Settings: React.FC = () => {
             <input
               type="text"
               value={settings.siteName}
-              onChange={e =>
-                setSettings(prev => ({ ...prev, siteName: e.target.value }))
+              onChange={(e) =>
+                setSettings((prev) => ({ ...prev, siteName: e.target.value }))
               }
               className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Enter site name"
@@ -205,8 +205,8 @@ const Settings: React.FC = () => {
             <input
               type="email"
               value={settings.adminEmail}
-              onChange={e =>
-                setSettings(prev => ({ ...prev, adminEmail: e.target.value }))
+              onChange={(e) =>
+                setSettings((prev) => ({ ...prev, adminEmail: e.target.value }))
               }
               className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="admin@studypath.app"
@@ -219,8 +219,8 @@ const Settings: React.FC = () => {
             </label>
             <textarea
               value={settings.siteDescription}
-              onChange={e =>
-                setSettings(prev => ({
+              onChange={(e) =>
+                setSettings((prev) => ({
                   ...prev,
                   siteDescription: e.target.value,
                 }))
@@ -237,8 +237,8 @@ const Settings: React.FC = () => {
             <input
               type="url"
               value={settings.siteUrl}
-              onChange={e =>
-                setSettings(prev => ({ ...prev, siteUrl: e.target.value }))
+              onChange={(e) =>
+                setSettings((prev) => ({ ...prev, siteUrl: e.target.value }))
               }
               className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="https://studypath.app"
@@ -278,8 +278,8 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={settings.emailNotifications}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     emailNotifications: e.target.checked,
                   }))
@@ -304,8 +304,8 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={settings.pushNotifications}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     pushNotifications: e.target.checked,
                   }))
@@ -330,8 +330,8 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={settings.weeklyReports}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     weeklyReports: e.target.checked,
                   }))
@@ -377,8 +377,8 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={settings.requireEmailVerification}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     requireEmailVerification: e.target.checked,
                   }))
@@ -405,8 +405,8 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={settings.allowUserRegistration}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     allowUserRegistration: e.target.checked,
                   }))
@@ -426,8 +426,8 @@ const Settings: React.FC = () => {
               min="1"
               max="168"
               value={settings.sessionTimeout}
-              onChange={e =>
-                setSettings(prev => ({
+              onChange={(e) =>
+                setSettings((prev) => ({
                   ...prev,
                   sessionTimeout: parseInt(e.target.value),
                 }))
@@ -469,8 +469,8 @@ const Settings: React.FC = () => {
               <input
                 type="checkbox"
                 checked={settings.autoBackup}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     autoBackup: e.target.checked,
                   }))
@@ -488,8 +488,8 @@ const Settings: React.FC = () => {
               </label>
               <select
                 value={settings.backupFrequency}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     backupFrequency: e.target.value,
                   }))
@@ -511,8 +511,8 @@ const Settings: React.FC = () => {
                 min="30"
                 max="3650"
                 value={settings.dataRetentionDays}
-                onChange={e =>
-                  setSettings(prev => ({
+                onChange={(e) =>
+                  setSettings((prev) => ({
                     ...prev,
                     dataRetentionDays: parseInt(e.target.value),
                   }))

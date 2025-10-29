@@ -17,34 +17,15 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import FlowBuilder from "../../components/flow/FlowBuilder";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSidebar } from "../../contexts/SidebarContext";
-import type { Subject, TopicWithChildren } from "../../types/database";
 import { SubjectService, TopicService } from "../../services";
-import FlowBuilder from "../../components/flow/FlowBuilder";
-
-interface FlowNode {
-  id: string;
-  type:
-    | "quiz"
-    | "study"
-    | "video"
-    | "assignment"
-    | "assessment"
-    | "start"
-    | "end";
-  title: string;
-  description: string;
-  sort_order: number; // Use sort_order instead of position
-  config: any;
-  connections: string[];
-  status: "locked" | "available" | "completed" | "current";
-  difficulty: "easy" | "medium" | "hard";
-  xp: number;
-  icon: string;
-  color: [string, string];
-  estimatedTime?: string;
-}
+import type {
+  FlowNode,
+  Subject,
+  TopicWithChildren,
+} from "../../types/database";
 
 interface TopicHierarchyItemProps {
   topic: TopicWithChildren;
@@ -130,9 +111,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
         await TopicService.deleteTopic(topicId);
 
         // Reload topics from database
-        const updatedTopics = await TopicService.getTopicsBySubject(
-          subjectId
-        );
+        const updatedTopics = await TopicService.getTopicsBySubject(subjectId);
         onUpdate(updatedTopics);
       } catch (error) {
         console.error("Error deleting topic:", error);
@@ -179,7 +158,11 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                 onClick={toggleExpanded}
                 className="text-dark-400 hover:text-white transition-colors"
               >
-                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {isExpanded ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
               </button>
             )}
 
@@ -191,7 +174,11 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   : "bg-dark-600 text-dark-400"
               }`}
             >
-              {topic.has_flow ? <Check className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+              {topic.has_flow ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <Circle className="w-4 h-4" />
+              )}
             </div>
 
             {/* Topic Content */}
@@ -227,9 +214,9 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                       </span>
                     )}
                     {topic.children && topic.children.length > 0 && (
-                    <span className="text-xs text-dark-500">
-                    {topic.children.length} children
-                    </span>
+                      <span className="text-xs text-dark-500">
+                        {topic.children.length} children
+                      </span>
                     )}
                   </div>
                 </div>
@@ -331,8 +318,8 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
 
       {/* Children */}
       {isExpanded && topic.children && topic.children.length > 0 && (
-      <div className="mt-2 space-y-2">
-      {topic.children.map((child) => (
+        <div className="mt-2 space-y-2">
+          {topic.children.map((child) => (
             <TopicHierarchyItem
               key={child.id}
               topic={child}
@@ -413,9 +400,7 @@ const SubjectBuilder: React.FC = () => {
             setSubject(subjectData);
 
             // Load topics for this subject
-            const topicsData = await TopicService.getTopicsBySubject(
-              subjectId
-            );
+            const topicsData = await TopicService.getTopicsBySubject(subjectId);
             setTopics(topicsData);
           }
         } else {
@@ -530,12 +515,18 @@ const SubjectBuilder: React.FC = () => {
     }
 
     setIsSaving(true);
-    // Simulate publish operation
-    setTimeout(() => {
+    try {
+      // Update subject status in the database
+      await SubjectService.updateSubject(subjectId, { status: "published" });
+      // Optionally: save flowNodes to the database here
+
       setIsSaving(false);
-      alert("Subject published successfully! (Local state only)");
+      alert("Subject published successfully!");
       navigate("/admin/subjects");
-    }, 1500);
+    } catch (error) {
+      setIsSaving(false);
+      alert("Error publishing subject. Please try again.");
+    }
   };
 
   const addNewTopic = async () => {
@@ -557,9 +548,7 @@ const SubjectBuilder: React.FC = () => {
       });
 
       // Reload topics from database
-      const updatedTopics = await TopicService.getTopicsBySubject(
-        subject.id
-      );
+      const updatedTopics = await TopicService.getTopicsBySubject(subject.id);
       setTopics(updatedTopics);
 
       setIsAddingTopic(false);

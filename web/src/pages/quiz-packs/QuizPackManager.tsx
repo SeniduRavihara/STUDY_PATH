@@ -9,7 +9,6 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { SupabaseService } from "../../lib/supabaseService";
 
 interface MCQ {
   id: string;
@@ -83,9 +82,10 @@ const QuizPackManager: React.FC = () => {
   const fetchData = async () => {
     try {
       const [mcqsRes, subjectsRes, chaptersRes] = await Promise.all([
-        SupabaseService.getMCQs(),
-        SupabaseService.getSubjects(),
-        SupabaseService.getChapters(),
+        // TODO: Replace with new MCQService, SubjectService, ChapterService
+        // MCQService.getMCQs(),
+        // SubjectService.getSubjects(),
+        // ChapterService.getChapters(),
       ]);
 
       if (mcqsRes.data) setMcqs(mcqsRes.data);
@@ -93,10 +93,13 @@ const QuizPackManager: React.FC = () => {
       if (chaptersRes.data) setChapters(chaptersRes.data);
 
       // Load existing quiz packs from feed posts
-      const feedPostsRes = await SupabaseService.getFeedPosts();
+      // TODO: Replace with new FeedPostService
+      // const feedPostsRes = await FeedPostService.getFeedPosts();
       if (feedPostsRes.data) {
-        const quizPackPosts = feedPostsRes.data.filter(post => post.type === "quiz_pack");
-        const packs: QuizPack[] = quizPackPosts.map(post => ({
+        const quizPackPosts = feedPostsRes.data.filter(
+          (post) => post.type === "quiz_pack"
+        );
+        const packs: QuizPack[] = quizPackPosts.map((post) => ({
           id: post.id,
           title: post.content.split(":")[0] || "Quiz Pack",
           description: post.content,
@@ -116,10 +119,14 @@ const QuizPackManager: React.FC = () => {
     }
   };
 
-  const filteredMcqs = mcqs.filter(mcq => {
-    const matchesSearch = mcq.question.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSubject = !selectedSubject || mcq.chapters?.subjects?.name === selectedSubject;
-    const matchesDifficulty = !selectedDifficulty || mcq.difficulty === selectedDifficulty;
+  const filteredMcqs = mcqs.filter((mcq) => {
+    const matchesSearch = mcq.question
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesSubject =
+      !selectedSubject || mcq.chapters?.subjects?.name === selectedSubject;
+    const matchesDifficulty =
+      !selectedDifficulty || mcq.difficulty === selectedDifficulty;
     return matchesSearch && matchesSubject && matchesDifficulty;
   });
 
@@ -127,11 +134,14 @@ const QuizPackManager: React.FC = () => {
     e.preventDefault();
 
     try {
-      const { user } = await SupabaseService.getCurrentUser();
+      // TODO: Replace with new AuthService
+      // const { user } = await AuthService.getCurrentUser();
       if (!user) throw new Error("User not authenticated");
 
-      const selectedMcqData = mcqs.filter(mcq => formData.selectedMcqs.includes(mcq.id));
-      
+      const selectedMcqData = mcqs.filter((mcq) =>
+        formData.selectedMcqs.includes(mcq.id)
+      );
+
       const packData = {
         title: formData.title,
         description: formData.description,
@@ -153,7 +163,8 @@ const QuizPackManager: React.FC = () => {
         comments: 0,
       };
 
-      const { data, error } = await SupabaseService.createFeedPost(postData);
+      // TODO: Replace with new FeedPostService
+      // const { data, error } = await FeedPostService.createFeedPost(postData);
       if (error) throw error;
 
       // Add to local state
@@ -168,7 +179,7 @@ const QuizPackManager: React.FC = () => {
         created_at: data.created_at,
         created_by: user.email || "You",
       };
-      setQuizPacks(prev => [newPack, ...prev]);
+      setQuizPacks((prev) => [newPack, ...prev]);
 
       setShowCreateForm(false);
       resetForm();
@@ -184,9 +195,10 @@ const QuizPackManager: React.FC = () => {
     if (!confirm("Are you sure you want to delete this quiz pack?")) return;
 
     try {
-      const { error } = await SupabaseService.deleteFeedPost(id);
+      // TODO: Replace with new FeedPostService
+      // const { error } = await FeedPostService.deleteFeedPost(id);
       if (error) throw error;
-      setQuizPacks(prev => prev.filter(pack => pack.id !== id));
+      setQuizPacks((prev) => prev.filter((pack) => pack.id !== id));
 
       alert("Quiz pack deleted successfully!");
     } catch (error) {
@@ -252,7 +264,9 @@ const QuizPackManager: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-dark-400 text-sm">Total Quiz Packs</p>
-              <p className="text-2xl font-bold text-white">{quizPacks.length}</p>
+              <p className="text-2xl font-bold text-white">
+                {quizPacks.length}
+              </p>
             </div>
             <HelpCircle className="w-8 h-8 text-primary-500" />
           </div>
@@ -288,7 +302,7 @@ const QuizPackManager: React.FC = () => {
 
       {/* Quiz Packs Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {quizPacks.map(pack => (
+        {quizPacks.map((pack) => (
           <div
             key={pack.id}
             className="card group hover:scale-105 transition-transform duration-200"
@@ -332,7 +346,9 @@ const QuizPackManager: React.FC = () => {
                   <span>{pack.mcq_count} MCQs</span>
                 </span>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(pack.difficulty)}`}
+                  className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(
+                    pack.difficulty
+                  )}`}
                 >
                   {pack.difficulty}
                 </span>
@@ -356,7 +372,8 @@ const QuizPackManager: React.FC = () => {
             No quiz packs found
           </h3>
           <p className="text-dark-400 mb-6">
-            Create your first quiz pack by combining MCQs from different subjects.
+            Create your first quiz pack by combining MCQs from different
+            subjects.
           </p>
           <button
             onClick={() => setShowCreateForm(true)}
@@ -396,8 +413,11 @@ const QuizPackManager: React.FC = () => {
                   <input
                     type="text"
                     value={formData.title}
-                    onChange={e =>
-                      setFormData(prev => ({ ...prev, title: e.target.value }))
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
                     }
                     className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="e.g., Advanced Calculus Quiz"
@@ -412,14 +432,17 @@ const QuizPackManager: React.FC = () => {
                   </label>
                   <select
                     value={formData.subject}
-                    onChange={e =>
-                      setFormData(prev => ({ ...prev, subject: e.target.value }))
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        subject: e.target.value,
+                      }))
                     }
                     className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     required
                   >
                     <option value="">Select a subject</option>
-                    {subjects.map(subject => (
+                    {subjects.map((subject) => (
                       <option key={subject.id} value={subject.name}>
                         {subject.name}
                       </option>
@@ -435,8 +458,11 @@ const QuizPackManager: React.FC = () => {
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, description: e.target.value }))
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
                   }
                   className="w-full px-4 py-3 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500 h-24 resize-none"
                   placeholder="Describe what this quiz pack covers..."
@@ -451,8 +477,8 @@ const QuizPackManager: React.FC = () => {
                 </label>
                 <select
                   value={formData.difficulty}
-                  onChange={e =>
-                    setFormData(prev => ({
+                  onChange={(e) =>
+                    setFormData((prev) => ({
                       ...prev,
                       difficulty: e.target.value as "easy" | "medium" | "hard",
                     }))
@@ -470,7 +496,7 @@ const QuizPackManager: React.FC = () => {
                 <label className="block text-white font-medium mb-2">
                   Select MCQs
                 </label>
-                
+
                 {/* Filters */}
                 <div className="mb-4 flex flex-wrap gap-4">
                   <div className="flex-1 min-w-64">
@@ -479,7 +505,7 @@ const QuizPackManager: React.FC = () => {
                       <input
                         type="text"
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="Search MCQs..."
                       />
@@ -487,11 +513,11 @@ const QuizPackManager: React.FC = () => {
                   </div>
                   <select
                     value={selectedSubject}
-                    onChange={e => setSelectedSubject(e.target.value)}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
                     className="px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">All Subjects</option>
-                    {subjects.map(subject => (
+                    {subjects.map((subject) => (
                       <option key={subject.id} value={subject.name}>
                         {subject.name}
                       </option>
@@ -499,7 +525,7 @@ const QuizPackManager: React.FC = () => {
                   </select>
                   <select
                     value={selectedDifficulty}
-                    onChange={e => setSelectedDifficulty(e.target.value)}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
                     className="px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">All Difficulties</option>
@@ -516,7 +542,7 @@ const QuizPackManager: React.FC = () => {
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      {filteredMcqs.map(mcq => (
+                      {filteredMcqs.map((mcq) => (
                         <label
                           key={mcq.id}
                           className="flex items-start space-x-3 cursor-pointer p-3 rounded-lg hover:bg-dark-700 transition-colors"
@@ -524,17 +550,17 @@ const QuizPackManager: React.FC = () => {
                           <input
                             type="checkbox"
                             checked={formData.selectedMcqs.includes(mcq.id)}
-                            onChange={e => {
+                            onChange={(e) => {
                               if (e.target.checked) {
-                                setFormData(prev => ({
+                                setFormData((prev) => ({
                                   ...prev,
                                   selectedMcqs: [...prev.selectedMcqs, mcq.id],
                                 }));
                               } else {
-                                setFormData(prev => ({
+                                setFormData((prev) => ({
                                   ...prev,
                                   selectedMcqs: prev.selectedMcqs.filter(
-                                    id => id !== mcq.id,
+                                    (id) => id !== mcq.id
                                   ),
                                 }));
                               }
@@ -546,10 +572,17 @@ const QuizPackManager: React.FC = () => {
                               {mcq.question}
                             </p>
                             <div className="flex items-center space-x-4 mt-1 text-xs text-dark-400">
-                              <span>{mcq.chapters?.subjects?.name || "Unknown Subject"}</span>
-                              <span>{mcq.chapters?.title || "Unknown Chapter"}</span>
+                              <span>
+                                {mcq.chapters?.subjects?.name ||
+                                  "Unknown Subject"}
+                              </span>
+                              <span>
+                                {mcq.chapters?.title || "Unknown Chapter"}
+                              </span>
                               <span
-                                className={`px-2 py-1 rounded-full ${getDifficultyColor(mcq.difficulty)}`}
+                                className={`px-2 py-1 rounded-full ${getDifficultyColor(
+                                  mcq.difficulty
+                                )}`}
                               >
                                 {mcq.difficulty}
                               </span>
