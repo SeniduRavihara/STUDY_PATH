@@ -78,12 +78,11 @@ export class SubjectService {
   }
 
   static async deleteSubject(id: string): Promise<void> {
+    console.log("Deleting subject:", id);
 
-    console.log("HELLOO");
-    
     const { error } = await supabase
       .from('subjects')
-      .update({ is_active: false })
+      .delete()
       .eq('id', id);
 
     if (error) {
