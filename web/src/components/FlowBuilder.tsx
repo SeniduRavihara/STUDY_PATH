@@ -139,9 +139,7 @@ const calculateNodePosition = (sortOrder: number, containerWidth: number) => {
       x = containerWidth * FLOW_CONFIG.centerColumnX;
   }
 
-  console.log(
-    `POSITION DEBUG: sortOrder=${sortOrder}, validSortOrder=${validSortOrder}, x=${x}, y=${y}`
-  );
+  // position calculated
 
   return { x, y };
 };
@@ -313,16 +311,20 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   onSubjectChange,
   currentFlowId,
 }) => {
-  // Debug: Log received props
-  console.log("FlowBuilder received topics:", topics);
+  // FlowBuilder received props
   const [selectedNode, setSelectedNode] = useState<FlowNode | null>(null);
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState("");
+  const [selectedTopicName, setSelectedTopicName] = useState<string | null>(
+    null
+  );
   const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [quizPacks, setQuizPacks] = useState<any[]>([]);
-  const [loadingQuizPacks, setLoadingQuizPacks] = useState(false);
+  // Quiz packs are now stored inside flow nodes as JSON. Keep these values empty
+  // so legacy UI paths gracefully fall back to content-blocks.
+  const quizPacks: unknown[] = [];
+  const loadingQuizPacks = false;
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Helper function to check if topic exists in the hierarchy
@@ -341,6 +343,11 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   // Load last selected topic from localStorage on mount
   useEffect(() => {
+    // Only restore a stored topic id if we don't already have an active selection.
+    // This avoids overwriting a freshly-selected topic when `topics` updates
+    // (for example, after onTopicsChange runs).
+    if (currentTopicId) return;
+
     const storedTopicId = localStorage.getItem(
       `lastSelectedTopic_${subjectId}`
     );
@@ -348,6 +355,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       // Check if the stored topic still exists in the hierarchy
       if (topicExistsInHierarchy(topics, storedTopicId)) {
         setCurrentTopicId(storedTopicId);
+        const resolved = findTopicById(topics, storedTopicId);
+        if (resolved) setSelectedTopicName(resolved.name);
       } else {
         // Remove invalid stored topic
         localStorage.removeItem(`lastSelectedTopic_${subjectId}`);
@@ -363,68 +372,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   }, [currentTopicId, subjectId]);
 
   // Load quiz packs hierarchically when topic is selected
-  useEffect(() => {
-    const loadQuizPacksHierarchically = async () => {
-      if (!currentTopicId) {
-        setQuizPacks([]);
-        return;
-      }
-
-      setLoadingQuizPacks(true);
-      try {
-        // Get all quiz packs for the subject
-        const allPacks = await DatabaseService.getQuizPacksBySubject(subjectId);
-
-        // Find the current topic and its hierarchy
-        const currentTopic = findTopicById(topics, currentTopicId);
-        if (!currentTopic) {
-          setQuizPacks([]);
-          return;
-        }
-
-        // Get all relevant topic IDs (current topic, its children, and its parents)
-        const relevantTopicIds = new Set<string>();
-
-        // Add current topic
-        relevantTopicIds.add(currentTopicId);
-
-        // Add all subtopics (children) of current topic
-        const addChildren = (topic: any) => {
-          topic.children?.forEach((child: any) => {
-            relevantTopicIds.add(child.id);
-            addChildren(child);
-          });
-        };
-        addChildren(currentTopic);
-
-        // Add parent topics
-        let parent = currentTopic;
-        while (parent.parent_id) {
-          const parentTopic = findTopicById(topics, parent.parent_id);
-          if (parentTopic) {
-            relevantTopicIds.add(parentTopic.id);
-            parent = parentTopic;
-          } else {
-            break;
-          }
-        }
-
-        // Filter quiz packs to only include those for relevant topics
-        const relevantPacks = allPacks.filter(
-          (pack) => relevantTopicIds.has(pack.topic_id) || pack.topic_id === "" // Include subject-wide packs
-        );
-
-        setQuizPacks(relevantPacks);
-      } catch (error) {
-        console.error("Error loading quiz packs:", error);
-        setQuizPacks([]);
-      } finally {
-        setLoadingQuizPacks(false);
-      }
-    };
-
-    loadQuizPacksHierarchically();
-  }, [currentTopicId, subjectId, topics]);
+  // Quiz packs/MCQs are now stored inside flow nodes as JSON.
+  // Avoid fetching legacy `quiz_packs` table which may not exist in the updated schema.
+  // Keep quizPacks state empty and loading flag false so NodePropertiesPanel shows the content-blocks tip.
 
   // Load existing flow when topic is selected
   useEffect(() => {
@@ -463,34 +413,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     loadExistingFlow();
   }, [currentTopicId]);
 
-  // Get all leaf topics (topics without children) for flow assignment
-  const getLeafTopics = (topics: Topic[]): Topic[] => {
-    const leafTopics: Topic[] = [];
-
-    const traverse = (topicList: Topic[]) => {
-      topicList.forEach((topic) => {
-        console.log(
-          `Checking topic: ${topic.name}, level: ${topic.level}, children: ${topic.children.length}`
-        );
-        if (topic.children.length === 0) {
-          console.log(`Found leaf topic: ${topic.name}`);
-          leafTopics.push(topic);
-        } else {
-          traverse(topic.children);
-        }
-      });
-    };
-
-    traverse(topics);
-    console.log(`Total leaf topics found: ${leafTopics.length}`);
-    return leafTopics;
-  };
-
-  const leafTopics = getLeafTopics(topics);
-
-  // Debug: Log the topics and leaf topics
-  console.log("All topics:", topics);
-  console.log("Leaf topics:", leafTopics);
+  // (leaf topic helper removed; keep topic utilities minimal)
 
   const nodeTypes = [
     {
@@ -581,13 +504,10 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       nodes.length > 0 ? Math.max(...nodes.map((n) => n.sort_order || 1)) : 0;
     const newSortOrder = maxSortOrder + 1;
 
-    console.log(
-      `ADDING NODE: maxSortOrder=${maxSortOrder}, newSortOrder=${newSortOrder}, nodes.length=${nodes.length}`
-    );
 
     const newNode: FlowNode = {
       id: `node-${Date.now()}`,
-      type: type as any,
+      type: type as FlowNode["type"],
       title: `New ${nodeType.name}`,
       description: `Description for ${nodeType.name} node`,
       sort_order: newSortOrder, // Use unique sort_order
@@ -602,7 +522,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       content_blocks: [], // 🎯 START WITH EMPTY BLOCKS - user adds content manually
     };
 
-    console.log(`NEW NODE CREATED:`, newNode);
+  // new node created
     onNodesChange([...nodes, newNode]);
   };
 
@@ -636,6 +556,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   const handleTopicChange = (topicId: string) => {
     setCurrentTopicId(topicId);
+    // Try to resolve the topic immediately and store its name so the header updates
+    const resolved = findTopicById(topics, topicId);
+    if (resolved) {
+      setSelectedTopicName(resolved.name);
+    } else {
+      setSelectedTopicName(null);
+    }
     setShowTopicSelector(false);
 
     // Mark the topic as having a flow
@@ -657,6 +584,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       onSubjectChange(topicId);
     }
   };
+
+  // (debug effect intentionally removed)
 
   // Save flow to database
   const saveFlow = async () => {
@@ -708,20 +637,32 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       if (flowWithNodes) {
         // Convert database nodes back to FlowNode format
         const convertedNodes: FlowNode[] = flowWithNodes.nodes.map(
-          (node: any) => ({
+          (node: {
+            id: string;
+            node_type: string;
+            title: string;
+            description: string;
+            sort_order: number;
+            config: unknown;
+            connections: string[];
+            status: string;
+            difficulty: string;
+            xp_reward: number;
+            estimated_time?: number;
+          }) => ({
             id: node.id,
-            type: node.node_type,
+            type: node.node_type as FlowNode["type"],
             title: node.title,
             description: node.description,
             sort_order: node.sort_order,
             config: node.config,
             connections: node.connections,
-            status: node.status,
-            difficulty: node.difficulty,
+            status: node.status as FlowNode["status"],
+            difficulty: node.difficulty as FlowNode["difficulty"],
             xp: node.xp_reward,
             icon: getNodeIcon(node.node_type).name,
             color: getNodeColor(node.node_type),
-            estimatedTime: `${node.estimated_time} min`,
+            estimatedTime: node.estimated_time ? `${node.estimated_time} min` : undefined,
           })
         );
 
@@ -922,7 +863,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                     className="text-left hover:bg-dark-600 rounded-lg p-2 -m-2 transition-colors group"
                   >
                     <h3 className="text-white text-2xl font-bold group-hover:text-primary-400 transition-colors">
-                      {currentTopic ? currentTopic.name : "Select a Topic"}
+                      {selectedTopicName ||
+                        (currentTopic ? currentTopic.name : "Select a Topic")}
                     </h3>
                     <p className="text-gray-400 text-sm mt-1">
                       {currentTopic
@@ -932,11 +874,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                     <p className="text-primary-400 text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       Click to {currentTopic ? "change topic" : "select topic"}
                     </p>
-                    {showTopicSelector && (
-                      <p className="text-green-400 text-xs mt-1">
-                        Modal is open! (Debug)
-                      </p>
-                    )}
+                    {/* topic selector modal state is handled separately */}
                   </button>
                 </div>
                 <div className="text-right">
@@ -1245,17 +1183,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                   Only the latest/deepest topics (leaf topics) can have flows
                   assigned. Each leaf topic gets its own separate flow.
                 </p>
-                <div className="mt-2">
-                  <button
-                    onClick={() => {
-                      console.log("All topics:", topics);
-                      console.log("Leaf topics:", leafTopics);
-                    }}
-                    className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded"
-                  >
-                    Debug: Check Console
-                  </button>
-                </div>
+                {/* Debug button removed */}
               </div>
               <button
                 onClick={() => setShowTopicSelector(false)}

@@ -1,10 +1,4 @@
-import {
-  Layers,
-  Maximize2,
-  Minimize2,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Layers, Maximize2, Minimize2, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import type { TopicWithChildren } from "../lib/database";
 import ContentBlockEditor, { type ContentBlock } from "./ContentBlockEditor";
@@ -50,8 +44,6 @@ interface NodePropertiesPanelProps {
   getNodeColor: (type: string) => string[];
 }
 
-
-
 const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   selectedNode,
   updateNode,
@@ -62,6 +54,11 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   findTopicById,
   getNodeColor,
 }) => {
+  // Avoid unused prop TypeScript warnings for legacy/optional props
+  void quizPacks;
+  void loadingQuizPacks;
+  void topics;
+  void findTopicById;
   const [activeTab, setActiveTab] = useState<string>("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
@@ -96,7 +93,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     setShowBlockTypeSelector(false);
   };
 
-  const getDefaultDataForType = (type: ContentBlock["type"]): any => {
+  const getDefaultDataForType = (type: ContentBlock["type"]): unknown => {
     switch (type) {
       case "text":
         return { content: "" };
@@ -149,7 +146,6 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   if (isFullScreen) {
     return (
       <div className="fixed inset-0 bg-dark-900 z-50 flex flex-col">
-
         {/* Full Screen Header */}
         <div className="bg-dark-800 px-6 py-4 border-b border-dark-700 flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -313,54 +309,14 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                   </div>
                 </div>
 
-                {selectedNode.type === "quiz" && (
-                  <div>
-                    <label className="block text-white font-medium mb-2">
-                      Quiz Pack (Legacy)
-                    </label>
-                    <select
-                      value={selectedNode.config?.quiz_pack_id || ""}
-                      onChange={(e) => {
-                        const newConfig = {
-                          ...selectedNode.config,
-                          quiz_pack_id: e.target.value || undefined,
-                        };
-                        updateNode(selectedNode.id, { config: newConfig });
-                      }}
-                      className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      disabled={loadingQuizPacks}
-                    >
-                      <option value="">
-                        {loadingQuizPacks
-                          ? "Loading quiz packs..."
-                          : "Select a quiz pack (optional)"}
-                      </option>
-                      {quizPacks.map((pack) => {
-                        const topicName = pack.topic_id
-                          ? findTopicById(topics, pack.topic_id)?.name ||
-                            "Unknown Topic"
-                          : "Entire Subject";
-                        return (
-                          <option key={pack.id} value={pack.id}>
-                            {pack.title} ({pack.mcq_count} questions) -{" "}
-                            {topicName}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    {quizPacks.length === 0 && !loadingQuizPacks && (
-                      <p className="text-dark-400 text-sm mt-2">
-                        Tip: Use Content Blocks tab to add MCQs directly to this
-                        node!
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* Quiz pack legacy UI removed - MCQs are stored inside node content_blocks as JSON now. */}
               </div>
             ) : (
               <div className="space-y-4">
                 {(() => {
-                  const block = (selectedNode.content_blocks || []).find(b => b.id === activeTab);
+                  const block = (selectedNode.content_blocks || []).find(
+                    (b) => b.id === activeTab
+                  );
                   if (!block) return <div>Block not found</div>;
 
                   return (
@@ -376,9 +332,14 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                         </div>
                         <button
                           onClick={() => {
-                            const currentBlocks = selectedNode.content_blocks || [];
-                            const updatedBlocks = currentBlocks.filter(b => b.id !== block.id);
-                            updateNode(selectedNode.id, { content_blocks: updatedBlocks });
+                            const currentBlocks =
+                              selectedNode.content_blocks || [];
+                            const updatedBlocks = currentBlocks.filter(
+                              (b) => b.id !== block.id
+                            );
+                            updateNode(selectedNode.id, {
+                              content_blocks: updatedBlocks,
+                            });
                             setActiveTab("basic"); // Switch back to basic if block is deleted
                           }}
                           className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
@@ -389,11 +350,14 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                       <SingleBlockEditor
                         block={block}
                         onChange={(updatedBlock: ContentBlock) => {
-                          const currentBlocks = selectedNode.content_blocks || [];
-                          const updatedBlocks = currentBlocks.map(b =>
+                          const currentBlocks =
+                            selectedNode.content_blocks || [];
+                          const updatedBlocks = currentBlocks.map((b) =>
                             b.id === block.id ? updatedBlock : b
                           );
-                          updateNode(selectedNode.id, { content_blocks: updatedBlocks });
+                          updateNode(selectedNode.id, {
+                            content_blocks: updatedBlocks,
+                          });
                         }}
                       />
                     </div>
@@ -411,8 +375,6 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             onClose={() => setShowBlockTypeSelector(false)}
           />
         )}
-
-
       </div>
     );
   }
@@ -556,46 +518,13 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             />
           </div>
 
-          {/* Quiz Pack Selection - Only show for quiz nodes (LEGACY) */}
+          {/* Legacy quiz packs removed: prefer Content Blocks for MCQs */}
           {selectedNode.type === "quiz" && (
             <div>
-              <label className="block text-white font-medium mb-2">
-                Quiz Pack (Legacy)
-              </label>
-              <select
-                value={selectedNode.config?.quiz_pack_id || ""}
-                onChange={(e) => {
-                  const newConfig = {
-                    ...selectedNode.config,
-                    quiz_pack_id: e.target.value || undefined,
-                  };
-                  updateNode(selectedNode.id, { config: newConfig });
-                }}
-                className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                disabled={loadingQuizPacks}
-              >
-                <option value="">
-                  {loadingQuizPacks
-                    ? "Loading quiz packs..."
-                    : "Select a quiz pack (optional)"}
-                </option>
-                {quizPacks.map((pack) => {
-                  const topicName = pack.topic_id
-                    ? findTopicById(topics, pack.topic_id)?.name ||
-                      "Unknown Topic"
-                    : "Entire Subject";
-                  return (
-                    <option key={pack.id} value={pack.id}>
-                      {pack.title} ({pack.mcq_count} questions) - {topicName}
-                    </option>
-                  );
-                })}
-              </select>
-              {quizPacks.length === 0 && !loadingQuizPacks && (
-                <p className="text-dark-400 text-sm mt-2">
-                  Tip: Use Content Blocks tab to add MCQs directly to this node!
-                </p>
-              )}
+              <p className="text-dark-400 text-sm mt-1">
+                Legacy quiz packs are no longer supported. Use the Content
+                Blocks tab to add MCQs directly to this node.
+              </p>
             </div>
           )}
 
@@ -632,7 +561,5 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     </div>
   );
 };
-
-
 
 export default NodePropertiesPanel;

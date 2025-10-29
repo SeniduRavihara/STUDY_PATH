@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { Check, ChevronDown, ChevronRight, Circle } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import type { TopicWithChildren } from "../lib/database";
 
 interface TopicHierarchySelectorProps {
@@ -9,13 +9,31 @@ interface TopicHierarchySelectorProps {
   allTopics: TopicWithChildren[];
 }
 
+// Helper: check whether a topic (or any of its descendants) matches selectedId
+function containsSelected(t: TopicWithChildren, selectedId: string): boolean {
+  if (!selectedId) return false;
+  if (t.id === selectedId) return true;
+  if (!t.children || t.children.length === 0) return false;
+  return t.children.some((c) => containsSelected(c, selectedId));
+}
+
 const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
   topic,
   currentTopicId,
   onTopicSelect,
   allTopics,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(topic.level === 0); // Auto-expand top level
+  // Auto-expand top level and any parent that contains the current selection so deep/leaf topics are visible
+  const [isExpanded, setIsExpanded] = useState(
+    () => topic.level === 0 || containsSelected(topic, currentTopicId)
+  );
+
+  // If selection elsewhere changes, auto-expand parents that contain it so selection is visible
+  useEffect(() => {
+    if (containsSelected(topic, currentTopicId)) {
+      setIsExpanded(true);
+    }
+  }, [currentTopicId, topic]);
 
   const getIndentStyle = () => {
     return {
@@ -34,7 +52,7 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
       {/* Topic Card */}
       <div
         className={`rounded-lg p-3 transition-colors ${
-          isLeafTopic ? "cursor-pointer" : "cursor-default"
+          isLeafTopic ? "cursor-pointer" : "cursor-pointer"
         } ${
           isSelected
             ? "bg-primary-500 text-white"
@@ -44,7 +62,15 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
             ? "bg-dark-800 hover:bg-dark-700 text-white"
             : "bg-dark-700 text-dark-400" // Non-selectable topics are dimmed
         }`}
-        onClick={() => isLeafTopic && onTopicSelect(topic.id)}
+        onClick={() => {
+          // Clicking a non-leaf toggles expansion so users can reveal deep children more easily.
+          if (hasChildren) {
+            setIsExpanded((s: boolean) => !s);
+            return;
+          }
+          // For leaf topics, perform selection.
+          onTopicSelect(topic.id);
+        }}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1">
@@ -57,7 +83,11 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
                 }}
                 className="text-dark-400 hover:text-white transition-colors"
               >
-                {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                {isExpanded ? (
+                  <ChevronDown className="w-3 h-3" />
+                ) : (
+                  <ChevronRight className="w-3 h-3" />
+                )}
               </button>
             )}
 
@@ -71,7 +101,11 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
                   : "bg-dark-600 text-dark-400"
               }`}
             >
-              {topic.has_flow ? <Check className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+              {topic.has_flow ? (
+                <Check className="w-3 h-3" />
+              ) : (
+                <Circle className="w-3 h-3" />
+              )}
             </div>
 
             {/* Topic Content */}
