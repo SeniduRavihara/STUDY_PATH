@@ -3,7 +3,6 @@ import {
   BookOpen,
   Eye,
   FileText,
-  Plus,
   Save,
   Settings,
 } from "lucide-react";
@@ -32,13 +31,11 @@ const SubjectBuilder: React.FC = () => {
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview"
   );
-  // Removed stepper logic, only tab view is used
   const [subject, setSubject] = useState<Subject | null>(null);
   const [flowNodes, setFlowNodes] = useState<FlowNode[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [topics, setTopics] = useState<TopicWithChildren[]>([]);
-  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
   const [newTopicDescription, setNewTopicDescription] = useState("");
@@ -64,14 +61,9 @@ const SubjectBuilder: React.FC = () => {
             /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (!uuidRegex.test(subjectId)) {
             console.log(
-              "Invalid subject ID format, loading available subjects"
+              "Invalid subject ID format, redirecting to subjects list"
             );
-            // Load all available subjects instead
-            const allSubjects = await SubjectService.getSubjects();
-            setAvailableSubjects(allSubjects);
-            setSubject(null);
-            setTopics([]);
-            setIsLoading(false);
+            navigate("/admin/subjects");
             return;
           }
 
@@ -88,21 +80,8 @@ const SubjectBuilder: React.FC = () => {
             setTopics(topicsData);
           }
         } else {
-          // Load all available subjects for selection
-          const allSubjects = await SubjectService.getSubjects();
-          setAvailableSubjects(allSubjects);
-
-          // Check if we have a last selected subject
-          const lastSubjectId = localStorage.getItem("lastSelectedSubject");
-          if (
-            lastSubjectId &&
-            allSubjects.some((s) => s.id === lastSubjectId)
-          ) {
-            // Automatically navigate to the last selected subject
-            navigate(`/admin/subject-builder/${lastSubjectId}`);
-            return;
-          }
-
+          // No subjectId in URL, redirect to subjects list
+          navigate("/admin/subjects");
           setSubject(null);
           setTopics([]);
         }
@@ -114,9 +93,7 @@ const SubjectBuilder: React.FC = () => {
     };
 
     loadData();
-  }, [subjectId]);
-
-  // Removed steps for stepper view
+  }, [navigate, subjectId]);
 
   const tabs = [
     { id: "overview", name: "Overview", icon: BookOpen, stepId: 1 },
@@ -170,6 +147,8 @@ const SubjectBuilder: React.FC = () => {
   };
 
   const handlePublish = async () => {
+    if (!subject || !subjectId) return;
+
     if (flowNodes.length === 0) {
       alert("Please create at least one learning node before publishing.");
       return;
@@ -186,6 +165,7 @@ const SubjectBuilder: React.FC = () => {
       navigate("/admin/subjects");
     } catch (error) {
       setIsSaving(false);
+      console.error("Error publishing subject:", error);
       alert("Error publishing subject. Please try again.");
     }
   };
@@ -284,85 +264,6 @@ const SubjectBuilder: React.FC = () => {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Loading Subject Builder...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show subject selection if no subject is selected
-  if (!subject && availableSubjects.length > 0) {
-    return (
-      <div className="min-h-screen bg-dark-950">
-        <div className="bg-dark-900 border-b border-dark-800">
-          <div className="px-6 py-4">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate("/admin/subjects")}
-                className="text-dark-400 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Select a Subject
-                </h1>
-                <p className="text-dark-400">
-                  Choose a subject to edit or create a new one
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableSubjects.map((subj) => (
-              <div
-                key={subj.id}
-                onClick={() => navigate(`/admin/subject-builder/${subj.id}`)}
-                className="bg-dark-800 rounded-xl p-6 cursor-pointer hover:bg-dark-700 transition-colors border border-dark-700 hover:border-primary-500"
-              >
-                <div className="flex items-center space-x-4 mb-4">
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: subj.color }}
-                  >
-                    {subj.icon || "📚"}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">
-                      {subj.name}
-                    </h3>
-                    <p className="text-dark-400 text-sm">{subj.description}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-dark-500">
-                    {subj.is_active ? "Active" : "Inactive"}
-                  </span>
-                  <button className="text-primary-500 hover:text-primary-400 text-sm font-medium">
-                    Edit Subject →
-                  </button>
-                </div>
-              </div>
-            ))}
-
-            {/* Create New Subject Card */}
-            <div
-              onClick={() => navigate("/admin/subject-builder")}
-              className="bg-dark-800 rounded-xl p-6 cursor-pointer hover:bg-dark-700 transition-colors border-2 border-dashed border-dark-600 hover:border-primary-500 flex items-center justify-center"
-            >
-              <div className="text-center">
-                <Plus className="w-8 h-8 text-dark-400 mx-auto mb-2" />
-                <h3 className="text-lg font-semibold text-white mb-1">
-                  Create New Subject
-                </h3>
-                <p className="text-dark-400 text-sm">
-                  Start building a new learning path
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
