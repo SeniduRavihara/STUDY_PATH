@@ -16,9 +16,9 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import type { Subject, TopicWithChildren } from "../lib/database";
-import { DatabaseService } from "../lib/database";
+import { useAuth } from "../../contexts/AuthContext";
+import type { Subject, TopicWithChildren } from "../../types/database";
+import { DatabaseService } from "../../services/database";
 
 interface MCQ {
   id: string;
@@ -243,8 +243,8 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   ): TopicWithChildren | null => {
     for (const topic of topics) {
       if (topic.id === topicId) return topic;
-      if (topic.children.length > 0) {
-        const found = findTopicById(topic.children, topicId);
+      if (topic.children && topic.children.length > 0) {
+        const found = findTopicById(topic.children!, topicId);
         if (found) return found;
       }
     }
@@ -318,7 +318,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
 
     const renderTopicItem = (topic: TopicWithChildren, level: number = 0) => {
       const isExpanded = expandedTopics.has(topic.id);
-      const hasChildren = topic.children.length > 0;
+      const hasChildren = topic.children && topic.children.length > 0;
       const indent = level * 20;
 
       return (
@@ -350,7 +350,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
           </div>
           {hasChildren && isExpanded && (
             <div>
-              {topic.children.map((child) => renderTopicItem(child, level + 1))}
+              {topic.children!.map((child) => renderTopicItem(child, level + 1))}
             </div>
           )}
         </div>

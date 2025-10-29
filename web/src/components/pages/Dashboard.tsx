@@ -8,7 +8,7 @@ Users,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SupabaseService } from "../lib/supabaseService";
+import { SupabaseService } from "../../lib/supabaseService";
 
 interface Stats {
   subjects: number;

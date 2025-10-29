@@ -1,6 +1,6 @@
 import { Check, ChevronDown, ChevronRight, Circle } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import type { TopicWithChildren } from "../lib/database";
+import type { TopicWithChildren } from "../../types/database";
 
 interface TopicHierarchySelectorProps {
   topic: TopicWithChildren;
@@ -44,7 +44,7 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
   };
 
   const isSelected = currentTopicId === topic.id;
-  const hasChildren = topic.children.length > 0;
+  const hasChildren = topic.children && topic.children.length > 0;
   const isLeafTopic = !hasChildren; // Only leaf topics (no children) can be selected
 
   return (
@@ -141,7 +141,7 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
                 </span>
                 {hasChildren && (
                   <span className="text-xs text-dark-500">
-                    {topic.children.length} children
+                    {topic.children!.length} children
                   </span>
                 )}
               </div>
@@ -158,7 +158,7 @@ const TopicHierarchySelector: React.FC<TopicHierarchySelectorProps> = ({
       {/* Children */}
       {hasChildren && isExpanded && (
         <div className="mt-2 space-y-2">
-          {topic.children.map((child) => (
+          {topic.children!.map((child) => (
             <TopicHierarchySelector
               key={child.id}
               topic={child}

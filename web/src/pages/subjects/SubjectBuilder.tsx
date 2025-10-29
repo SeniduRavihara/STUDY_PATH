@@ -17,11 +17,11 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useSidebar } from "../contexts/SidebarContext";
-import type { Subject, TopicWithChildren } from "../lib/database";
-import { DatabaseService } from "../lib/database";
-import FlowBuilder from "./FlowBuilder";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSidebar } from "../../contexts/SidebarContext";
+import type { Subject, TopicWithChildren } from "../../types/database";
+import { DatabaseService } from "../../services/database";
+import FlowBuilder from "../../components/flow/FlowBuilder";
 
 interface FlowNode {
   id: string;
@@ -100,8 +100,8 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
         parent_id: parentId,
         name: newChildName,
         description: newChildDescription,
-        level: topic.level + 1,
-        sort_order: topic.children.length + 1,
+        level: (topic.level || 0) + 1,
+        sort_order: (topic.children?.length || 0) + 1,
         created_by: user.id,
       });
 
@@ -174,7 +174,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1">
             {/* Expand/Collapse Button */}
-            {topic.children.length > 0 && (
+            {topic.children && topic.children.length > 0 && (
               <button
                 onClick={toggleExpanded}
                 className="text-dark-400 hover:text-white transition-colors"
@@ -226,10 +226,10 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                         Has Flow
                       </span>
                     )}
-                    {topic.children.length > 0 && (
-                      <span className="text-xs text-dark-500">
-                        {topic.children.length} children
-                      </span>
+                    {topic.children && topic.children.length > 0 && (
+                    <span className="text-xs text-dark-500">
+                    {topic.children.length} children
+                    </span>
                     )}
                   </div>
                 </div>
@@ -330,9 +330,9 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
       </div>
 
       {/* Children */}
-      {isExpanded && topic.children.length > 0 && (
-        <div className="mt-2 space-y-2">
-          {topic.children.map((child) => (
+      {isExpanded && topic.children && topic.children.length > 0 && (
+      <div className="mt-2 space-y-2">
+      {topic.children.map((child) => (
             <TopicHierarchyItem
               key={child.id}
               topic={child}

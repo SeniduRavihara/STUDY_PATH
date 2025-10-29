@@ -1,9 +1,9 @@
 import { Layers, Maximize2, Minimize2, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
-import type { TopicWithChildren } from "../lib/database";
-import ContentBlockEditor, { type ContentBlock } from "./ContentBlockEditor";
-import BlockTypeSelector from "./block-editors/BlockTypeSelector";
-import SingleBlockEditor from "./block-editors/SingleBlockEditor";
+import type { TopicWithChildren } from "../../types/database";
+import ContentBlockEditor, { type ContentBlock } from "../content/ContentBlockEditor";
+import BlockTypeSelector from "../content/block-editors/BlockTypeSelector";
+import SingleBlockEditor from "../content/block-editors/SingleBlockEditor";
 
 interface FlowNode {
   id: string;

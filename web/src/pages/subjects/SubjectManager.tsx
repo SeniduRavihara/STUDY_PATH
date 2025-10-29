@@ -1,9 +1,9 @@
 import { CheckCircle, Edit, Eye, Plus, Trash2, X, XCircle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import type { Subject } from "../lib/database";
-import { DatabaseService } from "../lib/database";
+import { useAuth } from "../../contexts/AuthContext";
+import type { Subject } from "../../types/database";
+import { DatabaseService } from "../../services/database";
 
 const SubjectManager: React.FC = () => {
   const navigate = useNavigate();

@@ -14,10 +14,10 @@ import {
   Video,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { DatabaseService } from "../lib/database";
-import { type ContentBlock } from "./ContentBlockEditor";
+import { DatabaseService } from "../../services/database";
+import { type ContentBlock, type TopicWithChildren } from "../../types/database";
 import NodePropertiesPanel from "./NodePropertiesPanel";
-import TopicHierarchySelector from "./TopicHierarchySelector";
+import TopicHierarchySelector from "../forms/TopicHierarchySelector";
 
 interface FlowNode {
   id: string;
@@ -44,31 +44,15 @@ interface FlowNode {
   content_blocks?: ContentBlock[]; // ⭐ NEW: Flexible content blocks
 }
 
-interface Topic {
-  id: string;
-  subject_id: string;
-  parent_id: string | null;
-  name: string;
-  description: string | null;
-  level: number;
-  sort_order: number;
-  is_active: boolean;
-  has_flow: boolean;
-  flow_id: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  children: Topic[];
-  isExpanded?: boolean;
-}
+
 
 interface FlowBuilderProps {
   nodes: FlowNode[];
   onNodesChange: (nodes: FlowNode[]) => void;
   subjectName: string;
   sidebarCollapsed?: boolean;
-  topics: Topic[];
-  onTopicsChange: (topics: Topic[]) => void;
+  topics: TopicWithChildren[];
+  onTopicsChange: (topics: TopicWithChildren[]) => void;
   subjectId: string;
   onSubjectChange?: (subjectId: string) => void;
   currentFlowId?: string; // Add current flow ID
@@ -327,9 +311,12 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const loadingQuizPacks = false;
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Topics are already hierarchical
+  const hierarchicalTopics = topics;
+
   // Helper function to check if topic exists in the hierarchy
   const topicExistsInHierarchy = (
-    topics: Topic[],
+    topics: TopicWithChildren[],
     targetId: string
   ): boolean => {
     for (const topic of topics) {
@@ -353,9 +340,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     );
     if (storedTopicId && topics.length > 0) {
       // Check if the stored topic still exists in the hierarchy
-      if (topicExistsInHierarchy(topics, storedTopicId)) {
+      if (topicExistsInHierarchy(hierarchicalTopics, storedTopicId)) {
         setCurrentTopicId(storedTopicId);
-        const resolved = findTopicById(topics, storedTopicId);
+        const resolved = findTopicByIdHierarchical(hierarchicalTopics, storedTopicId);
         if (resolved) setSelectedTopicName(resolved.name);
       } else {
         // Remove invalid stored topic
@@ -484,11 +471,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     return nodeType ? nodeType.color : ["#6b7280", "#4b5563"];
   };
 
-  const findTopicById = (topics: Topic[], topicId: string): Topic | null => {
+
+
+  const findTopicByIdHierarchical = (topics: TopicWithChildren[], topicId: string): TopicWithChildren | null => {
     for (const topic of topics) {
       if (topic.id === topicId) return topic;
-      if (topic.children.length > 0) {
-        const found = findTopicById(topic.children, topicId);
+      if (topic.children && topic.children.length > 0) {
+        const found = findTopicByIdHierarchical(topic.children, topicId);
         if (found) return found;
       }
     }
@@ -503,7 +492,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     const maxSortOrder =
       nodes.length > 0 ? Math.max(...nodes.map((n) => n.sort_order || 1)) : 0;
     const newSortOrder = maxSortOrder + 1;
-
 
     const newNode: FlowNode = {
       id: `node-${Date.now()}`,
@@ -522,7 +510,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       content_blocks: [], // 🎯 START WITH EMPTY BLOCKS - user adds content manually
     };
 
-  // new node created
+    // new node created
     onNodesChange([...nodes, newNode]);
   };
 
@@ -557,7 +545,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const handleTopicChange = (topicId: string) => {
     setCurrentTopicId(topicId);
     // Try to resolve the topic immediately and store its name so the header updates
-    const resolved = findTopicById(topics, topicId);
+    const resolved = findTopicByIdHierarchical(hierarchicalTopics, topicId);
     if (resolved) {
       setSelectedTopicName(resolved.name);
     } else {
@@ -566,12 +554,12 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     setShowTopicSelector(false);
 
     // Mark the topic as having a flow
-    const updateTopicFlow = (topicList: Topic[]): Topic[] => {
+    const updateTopicFlow = (topicList: TopicWithChildren[]): TopicWithChildren[] => {
       return topicList.map((topic) => {
         if (topic.id === topicId) {
           return { ...topic, has_flow: true, flow_id: topicId };
         }
-        if (topic.children.length > 0) {
+        if (topic.children && topic.children.length > 0) {
           return { ...topic, children: updateTopicFlow(topic.children) };
         }
         return topic;
@@ -662,7 +650,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             xp: node.xp_reward,
             icon: getNodeIcon(node.node_type).name,
             color: getNodeColor(node.node_type),
-            estimatedTime: node.estimated_time ? `${node.estimated_time} min` : undefined,
+            estimatedTime: node.estimated_time
+              ? `${node.estimated_time} min`
+              : undefined,
           })
         );
 
@@ -683,19 +673,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   const getCurrentTopic = () => {
     if (!currentTopicId) return null;
-
-    const findTopic = (topicList: Topic[]): Topic | null => {
-      for (const topic of topicList) {
-        if (topic.id === currentTopicId) return topic;
-        if (topic.children.length > 0) {
-          const found = findTopic(topic.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    return findTopic(topics);
+    return findTopicByIdHierarchical(hierarchicalTopics, currentTopicId);
   };
 
   const currentTopic = getCurrentTopic();
@@ -1146,8 +1124,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             deleteNode={deleteNode}
             quizPacks={quizPacks}
             loadingQuizPacks={loadingQuizPacks}
-            topics={topics}
-            findTopicById={findTopicById}
+            topics={hierarchicalTopics}
+            findTopicById={findTopicByIdHierarchical}
             getNodeColor={getNodeColor}
           />
         ) : (

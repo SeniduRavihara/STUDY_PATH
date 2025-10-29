@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { useSidebar } from "../contexts/SidebarContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;

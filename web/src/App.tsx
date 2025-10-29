@@ -5,19 +5,19 @@ import {
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import AdminLayout from "./components/AdminLayout";
-import Dashboard from "./components/Dashboard";
-import DatabaseOverview from "./components/DatabaseOverview";
-import FeedPostManager from "./components/FeedPostManager";
-import Login from "./components/Login";
-import MCQManager from "./components/MCQManager";
-import QuizPackDetail from "./components/QuizPackDetail";
-import QuizPackManager from "./components/QuizPackManager";
-import Settings from "./components/Settings";
-import Signup from "./components/Signup";
-import StudyPackManager from "./components/StudyPackManager";
-import SubjectBuilder from "./components/SubjectBuilder";
-import SubjectManager from "./components/SubjectManager";
+import AdminLayout from "./components/layout/AdminLayout";
+import Dashboard from "./components/pages/Dashboard";
+import DatabaseOverview from "./components/pages/DatabaseOverview";
+import FeedPostManager from "./components/pages/FeedPostManager";
+import Login from "./pages/auth/Login";
+import MCQManager from "./pages/mcqs/MCQManager";
+import QuizPackDetail from "./pages/quiz-packs/QuizPackDetail";
+import QuizPackManager from "./pages/quiz-packs/QuizPackManager";
+import Settings from "./pages/settings/Settings";
+import Signup from "./pages/auth/Signup";
+import StudyPackManager from "./pages/study-packs/StudyPackManager";
+import SubjectBuilder from "./pages/subjects/SubjectBuilder";
+import SubjectManager from "./pages/subjects/SubjectManager";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
 import "./index.css";

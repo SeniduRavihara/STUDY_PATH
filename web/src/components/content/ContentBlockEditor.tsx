@@ -14,7 +14,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useState } from "react";
-import MCQPackEditorModal from "./MCQPackEditorModal";
+import MCQPackEditorModal from "../modals/MCQPackEditorModal";
 import TextBlockEditor from "./block-editors/TextBlockEditor";
 import NoteBlockEditor from "./block-editors/NoteBlockEditor";
 
