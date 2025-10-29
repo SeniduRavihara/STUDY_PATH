@@ -27,7 +27,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
 
   // Debug logging
-  console.log("Current location:", location.pathname);
+  // console.log("Current location:", location.pathname);
 
   const navigation = [
     { name: "Dashboard", path: "/admin", icon: BarChart3 },

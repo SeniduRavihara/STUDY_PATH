@@ -67,9 +67,6 @@ const SubjectBuilder: React.FC = () => {
             return;
           }
 
-          // Save this subject as the currently working one
-          localStorage.setItem("lastSelectedSubject", subjectId);
-
           // Load subject data
           const subjectData = await SubjectService.getSubjectById(subjectId);
           if (subjectData) {
@@ -113,30 +110,16 @@ const SubjectBuilder: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (!subject) return;
+    if (!subject || !subjectId) return;
 
     setIsSaving(true);
     try {
-      if (subjectId) {
-        // Update existing subject
-        await SubjectService.updateSubject(subjectId, {
-          name: subject.name,
-          description: subject.description,
-          icon: subject.icon,
-          color: subject.color,
-        });
-      } else {
-        // Create new subject
-        const newSubject = await SubjectService.createSubject({
-          name: subject.name,
-          description: subject.description,
-          icon: subject.icon,
-          color: subject.color,
-        });
-        setSubject(newSubject);
-        // Navigate to the new subject
-        navigate(`/admin/subject-builder/${newSubject.id}`);
-      }
+      await SubjectService.updateSubject(subjectId, {
+        name: subject.name,
+        description: subject.description,
+        icon: subject.icon,
+        color: subject.color,
+      });
       alert("Subject saved successfully!");
     } catch (error) {
       console.error("Error saving subject:", error);
@@ -205,13 +188,7 @@ const SubjectBuilder: React.FC = () => {
     switch (activeTab) {
       case "overview":
         return (
-          <OverviewTab
-            subject={subject}
-            onSubjectChange={setSubject}
-            onSave={handleSave}
-            isSaving={isSaving}
-            onPublish={handlePublish}
-          />
+          <OverviewTab subject={subject} onSubjectDataChange={setSubject} />
         );
 
       case "topics":
@@ -272,7 +249,7 @@ const SubjectBuilder: React.FC = () => {
   return (
     <div className="min-h-screen bg-dark-950">
       {/* Header */}
-      <div className="bg-dark-900 border-b border-dark-800">
+      <div className="bg-dark-900 border-b border-dark-800 rounded-t-2xl">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -292,8 +269,6 @@ const SubjectBuilder: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {/* Removed view mode toggle, only tabs are shown */}
-
               <button
                 onClick={handleSave}
                 disabled={isSaving}
