@@ -18,7 +18,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import type { Subject, TopicWithChildren } from "../../types/database";
-import { DatabaseService } from "../../services/database";
+import { MCQService } from "../../services/mcqService";
+import { QuizPackService } from "../../services/quizPackService";
 
 interface MCQ {
   id: string;
@@ -92,11 +93,11 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     try {
       setLoading(true);
       // Fetch MCQs for this subject
-      const mcqsData = await DatabaseService.getMCQsBySubject(subject.id);
+      const mcqsData = await MCQService.getMCQsBySubject(subject.id);
       setMcqs(mcqsData);
 
       // Fetch quiz packs for this subject
-      const quizPacksData = await DatabaseService.getQuizPacksBySubject(
+      const quizPacksData = await QuizPackService.getQuizPacksBySubject(
         subject.id
       );
       setQuizPacks(quizPacksData);
@@ -131,7 +132,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
         created_by: user.id,
       });
 
-      const newPack = await DatabaseService.createQuizPack({
+      const newPack = await QuizPackService.createQuizPack({
         title: formData.title,
         description: formData.description,
         topic_id: formData.topic_id,
@@ -160,7 +161,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
     if (!editingPack) return;
 
     try {
-      const updatedPack = await DatabaseService.updateQuizPack(editingPack.id, {
+      const updatedPack = await QuizPackService.updateQuizPack(editingPack.id, {
         title: formData.title,
         description: formData.description,
         topic_id: formData.topic_id,
@@ -184,7 +185,7 @@ const QuizPackBuilder: React.FC<QuizPackBuilderProps> = ({
   const handleDeletePack = async (packId: string) => {
     if (confirm("Are you sure you want to delete this quiz pack?")) {
       try {
-        await DatabaseService.deleteQuizPack(packId);
+        await QuizPackService.deleteQuizPack(packId);
         setQuizPacks(quizPacks.filter((pack) => pack.id !== packId));
       } catch (error) {
         console.error("Error deleting quiz pack:", error);

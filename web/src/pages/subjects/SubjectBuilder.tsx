@@ -20,7 +20,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useSidebar } from "../../contexts/SidebarContext";
 import type { Subject, TopicWithChildren } from "../../types/database";
-import { DatabaseService } from "../../services/database";
+import { SubjectService, TopicService } from "../../services";
 import FlowBuilder from "../../components/flow/FlowBuilder";
 
 interface FlowNode {
@@ -77,9 +77,9 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
     updates: Partial<TopicWithChildren>
   ) => {
     try {
-      await DatabaseService.updateTopic(topicId, updates);
+      await TopicService.updateTopic(topicId, updates);
       // Reload topics from database
-      const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
+      const updatedTopics = await TopicService.getTopicsBySubject(subjectId);
       onUpdate(updatedTopics);
     } catch (error) {
       console.error("Error updating topic:", error);
@@ -95,7 +95,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
 
     setIsAddingChildLoading(true);
     try {
-      await DatabaseService.createTopic({
+      await TopicService.createTopic({
         subject_id: subjectId,
         parent_id: parentId,
         name: newChildName,
@@ -106,7 +106,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
       });
 
       // Reload topics from database
-      const updatedTopics = await DatabaseService.getTopicsBySubject(subjectId);
+      const updatedTopics = await TopicService.getTopicsBySubject(subjectId);
       onUpdate(updatedTopics);
 
       setIsAddingChild(false);
@@ -127,10 +127,10 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
       )
     ) {
       try {
-        await DatabaseService.deleteTopic(topicId);
+        await TopicService.deleteTopic(topicId);
 
         // Reload topics from database
-        const updatedTopics = await DatabaseService.getTopicsBySubject(
+        const updatedTopics = await TopicService.getTopicsBySubject(
           subjectId
         );
         onUpdate(updatedTopics);
@@ -396,7 +396,7 @@ const SubjectBuilder: React.FC = () => {
               "Invalid subject ID format, loading available subjects"
             );
             // Load all available subjects instead
-            const allSubjects = await DatabaseService.getSubjects();
+            const allSubjects = await SubjectService.getSubjects();
             setAvailableSubjects(allSubjects);
             setSubject(null);
             setTopics([]);
@@ -408,19 +408,19 @@ const SubjectBuilder: React.FC = () => {
           localStorage.setItem("lastSelectedSubject", subjectId);
 
           // Load subject data
-          const subjectData = await DatabaseService.getSubjectById(subjectId);
+          const subjectData = await SubjectService.getSubjectById(subjectId);
           if (subjectData) {
             setSubject(subjectData);
 
             // Load topics for this subject
-            const topicsData = await DatabaseService.getTopicsBySubject(
+            const topicsData = await TopicService.getTopicsBySubject(
               subjectId
             );
             setTopics(topicsData);
           }
         } else {
           // Load all available subjects for selection
-          const allSubjects = await DatabaseService.getSubjects();
+          const allSubjects = await SubjectService.getSubjects();
           setAvailableSubjects(allSubjects);
 
           // Check if we have a last selected subject
@@ -496,7 +496,7 @@ const SubjectBuilder: React.FC = () => {
     try {
       if (subjectId) {
         // Update existing subject
-        await DatabaseService.updateSubject(subjectId, {
+        await SubjectService.updateSubject(subjectId, {
           name: subject.name,
           description: subject.description,
           icon: subject.icon,
@@ -504,7 +504,7 @@ const SubjectBuilder: React.FC = () => {
         });
       } else {
         // Create new subject
-        const newSubject = await DatabaseService.createSubject({
+        const newSubject = await SubjectService.createSubject({
           name: subject.name,
           description: subject.description,
           icon: subject.icon,
@@ -547,7 +547,7 @@ const SubjectBuilder: React.FC = () => {
     }
 
     try {
-      await DatabaseService.createTopic({
+      await TopicService.createTopic({
         subject_id: subject.id,
         name: newTopicName,
         description: newTopicDescription,
@@ -557,7 +557,7 @@ const SubjectBuilder: React.FC = () => {
       });
 
       // Reload topics from database
-      const updatedTopics = await DatabaseService.getTopicsBySubject(
+      const updatedTopics = await TopicService.getTopicsBySubject(
         subject.id
       );
       setTopics(updatedTopics);

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import type { Subject } from "../../types/database";
-import { DatabaseService } from "../../services/database";
+import { SubjectService } from "../../services/subjectService";
 
 const SubjectManager: React.FC = () => {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ const SubjectManager: React.FC = () => {
     try {
       setLoading(true);
       // Fetch ALL subjects from database (including unpublished ones for admin)
-      const allSubjects = await DatabaseService.getAllSubjects();
+      const allSubjects = await SubjectService.getAllSubjects();
       setSubjects(allSubjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);
@@ -80,7 +80,7 @@ const SubjectManager: React.FC = () => {
 
     try {
       // Create subject in database
-      const newSubject = await DatabaseService.createSubject({
+      const newSubject = await SubjectService.createSubject({
         name: formData.name,
         description: formData.description,
         icon: formData.icon,
@@ -108,7 +108,7 @@ const SubjectManager: React.FC = () => {
 
     try {
       // Update subject in database
-      await DatabaseService.updateSubject(editingSubject.id, {
+      await SubjectService.updateSubject(editingSubject.id, {
         name: formData.name,
         description: formData.description,
         icon: formData.icon,
@@ -138,7 +138,7 @@ const SubjectManager: React.FC = () => {
 
     try {
       // Delete subject from database
-      await DatabaseService.deleteSubject(id);
+      await SubjectService.deleteSubject(id);
 
       // Refresh subjects list
       await fetchSubjects();
@@ -161,7 +161,7 @@ const SubjectManager: React.FC = () => {
 
   const handlePublishSubject = async (subjectId: string) => {
     try {
-      await DatabaseService.updateSubject(subjectId, { is_active: true });
+      await SubjectService.updateSubject(subjectId, { is_active: true });
       await fetchSubjects();
       alert("Subject published successfully!");
     } catch (error) {
@@ -172,7 +172,7 @@ const SubjectManager: React.FC = () => {
 
   const handleUnpublishSubject = async (subjectId: string) => {
     try {
-      await DatabaseService.updateSubject(subjectId, { is_active: false });
+      await SubjectService.updateSubject(subjectId, { is_active: false });
       await fetchSubjects();
       alert("Subject unpublished successfully!");
     } catch (error) {

@@ -14,7 +14,8 @@ import {
   Video,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { DatabaseService } from "../../services/database";
+import { AuthService } from "../../services/authService";
+import { FlowBuilderService } from "../../services/flowBuilderService";
 import { type ContentBlock, type TopicWithChildren } from "../../types/database";
 import NodePropertiesPanel from "./NodePropertiesPanel";
 import TopicHierarchySelector from "../forms/TopicHierarchySelector";
@@ -376,7 +377,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       setIsLoading(true);
       try {
         // Get flows for this topic
-        const flows = await DatabaseService.getFlowsByTopic(currentTopicId);
+        const flows = await FlowBuilderService.getFlowsByTopic(currentTopicId);
 
         if (flows.length > 0) {
           // Load the first flow (you can modify this logic to load a specific flow)
@@ -584,7 +585,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
     setIsSaving(true);
     try {
-      const user = await DatabaseService.getCurrentUser();
+      const user = await AuthService.getCurrentUser();
       if (!user) {
         alert("Please log in to save flows.");
         return;
@@ -594,7 +595,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
       // Create flow if it doesn't exist
       if (!currentFlowId) {
-        const flow = await DatabaseService.createFlow({
+        const flow = await FlowBuilderService.createFlow({
           topicId: currentTopicId,
           name: `${getCurrentTopic()?.name || "Topic"} Flow`,
           description: `Learning flow for ${
@@ -607,7 +608,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       }
 
       // Save flow nodes
-      await DatabaseService.saveFlowNodes(currentFlowId || "", nodes);
+      await FlowBuilderService.saveFlowNodes(currentFlowId || "", nodes);
 
       alert("Flow saved successfully!");
     } catch (error) {
@@ -621,7 +622,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   // Load flow from database
   const loadFlow = async (flowId: string, showAlert: boolean = true) => {
     try {
-      const flowWithNodes = await DatabaseService.loadFlowWithNodes(flowId);
+      const flowWithNodes = await FlowBuilderService.loadFlowWithNodes(flowId);
       if (flowWithNodes) {
         // Convert database nodes back to FlowNode format
         const convertedNodes: FlowNode[] = flowWithNodes.nodes.map(

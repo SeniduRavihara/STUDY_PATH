@@ -29,7 +29,11 @@ import {
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { DatabaseService } from "../../services/database";
+import { supabase } from "../../lib/supabase";
+import { MCQService } from "../../services/mcqService";
+import { QuizPackService } from "../../services/quizPackService";
+import { SubjectService } from "../../services/subjectService";
+import { TopicService } from "../../services/topicService";
 
 interface MCQ {
   id: string;
@@ -238,7 +242,7 @@ const QuizPackDetail: React.FC = () => {
 
       // Load quiz pack
       const { data: packData, error: packError } =
-        await DatabaseService.supabase
+        await supabase
           .from("quiz_packs")
           .select("*")
           .eq("id", quizPackId)
@@ -250,7 +254,7 @@ const QuizPackDetail: React.FC = () => {
       // Load MCQs for this quiz pack
       if (packData.mcq_ids && packData.mcq_ids.length > 0) {
         const { data: mcqsData, error: mcqsError } =
-          await DatabaseService.supabase
+          await supabase
             .from("mcqs")
             .select("*")
             .in("id", packData.mcq_ids)
@@ -262,7 +266,7 @@ const QuizPackDetail: React.FC = () => {
 
       // Load topic
       const { data: topicData, error: topicError } =
-        await DatabaseService.supabase
+        await supabase
           .from("topics")
           .select("*")
           .eq("id", packData.topic_id)
@@ -273,7 +277,7 @@ const QuizPackDetail: React.FC = () => {
 
       // Load subject
       const { data: subjectData, error: subjectError } =
-        await DatabaseService.supabase
+        await supabase
           .from("subjects")
           .select("*")
           .eq("id", packData.subject_id)
@@ -316,7 +320,7 @@ const QuizPackDetail: React.FC = () => {
     if (!quizPack || !user?.id) return;
 
     try {
-      const newMCQ = await DatabaseService.createMCQ({
+      const newMCQ = await MCQService.createMCQ({
         question: mcqFormData.question,
         options: mcqFormData.options,
         correct_answer: mcqFormData.correct_answer,
@@ -328,7 +332,7 @@ const QuizPackDetail: React.FC = () => {
       });
 
       // Add MCQ to the quiz pack
-      const updatedPack = await DatabaseService.updateQuizPack(quizPack.id, {
+      const updatedPack = await QuizPackService.updateQuizPack(quizPack.id, {
         mcq_ids: [...quizPack.mcq_ids, newMCQ.id],
       });
 
@@ -346,7 +350,7 @@ const QuizPackDetail: React.FC = () => {
     if (!editingMCQ || !user?.id) return;
 
     try {
-      const { data, error } = await DatabaseService.supabase
+      const { data, error } = await supabase
         .from("mcqs")
         .update({
           question: mcqFormData.question,
@@ -376,12 +380,12 @@ const QuizPackDetail: React.FC = () => {
       try {
         // Remove MCQ from quiz pack
         const updatedMcqIds = quizPack!.mcq_ids.filter((id) => id !== mcqId);
-        await DatabaseService.updateQuizPack(quizPack!.id, {
+        await QuizPackService.updateQuizPack(quizPack!.id, {
           mcq_ids: updatedMcqIds,
         });
 
         // Delete MCQ from database
-        await DatabaseService.supabase
+        await supabase
           .from("mcqs")
           .update({ is_active: false })
           .eq("id", mcqId);
@@ -435,8 +439,8 @@ const QuizPackDetail: React.FC = () => {
     const newMcqIds = reorderedMcqs.map((mcq) => mcq.id);
 
     try {
-      // Update the quiz pack with new order
-      const updatedPack = await DatabaseService.updateQuizPack(quizPack.id, {
+    // Update the quiz pack with new order
+    const updatedPack = await QuizPackService.updateQuizPack(quizPack.id, {
         mcq_ids: newMcqIds,
       });
 
