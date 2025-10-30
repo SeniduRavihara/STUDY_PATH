@@ -1,6 +1,7 @@
 import {
   BarChart3,
   BookOpen,
+  Check,
   Code,
   FileText,
   HelpCircle,
@@ -14,7 +15,7 @@ import {
   StickyNote,
   Trash2,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { FlowNode, TopicWithChildren } from "../../types/database";
 import BlockTypeSelector from "../content/block-editors/BlockTypeSelector";
 import SingleBlockEditor from "../content/block-editors/SingleBlockEditor";
@@ -47,6 +48,89 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   const [activeTab, setActiveTab] = useState<string>("basic");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showBlockTypeSelector, setShowBlockTypeSelector] = useState(false);
+  // Local copies of content blocks while in full-screen editor.
+  // Keys are block IDs, values are editable copies. This preserves
+  // edits when switching between blocks without saving to parent state.
+  const [localBlocks, setLocalBlocks] = useState<Record<string, ContentBlock>>(
+    {}
+  );
+  // Track which blocks have unsaved local edits
+  const [dirtyBlocks, setDirtyBlocks] = useState<Record<string, boolean>>({});
+
+  // Helper to set active tab and persist editorBlock in the URL so refresh
+  // can restore which exact block/tab the user was editing.
+  function setActiveTabAndUrl(tabId: string) {
+    setActiveTab(tabId);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (tabId === "basic") {
+        params.delete("editorBlock");
+      } else {
+        params.set("editorBlock", tabId);
+      }
+      const newUrl =
+        window.location.pathname +
+        (params.toString() ? `?${params.toString()}` : "");
+      window.history.replaceState({}, "", newUrl);
+    } catch {
+      // ignore
+    }
+  }
+
+  // Keep localBlocks in sync when the selected node or its blocks change
+  useEffect(() => {
+    if (!isFullScreen || !selectedNode) return;
+
+    // Ensure local map contains all current blocks (merge new ones)
+    setLocalBlocks((prev) => {
+      const next = { ...prev };
+      (selectedNode.content_blocks || []).forEach((b) => {
+        if (!next[b.id]) next[b.id] = { ...b };
+      });
+      return next;
+    });
+    // If node changed (different id), keep dirty flags only for blocks that still exist
+    setDirtyBlocks((prev) => {
+      const next: Record<string, boolean> = {};
+      (selectedNode.content_blocks || []).forEach((b) => {
+        if (prev[b.id]) next[b.id] = prev[b.id];
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFullScreen, selectedNode?.id, selectedNode?.content_blocks?.length]);
+
+  // If the URL contains editorNode=<id> and it matches the selected node,
+  // open the full-screen editor automatically (used after page refresh).
+  useEffect(() => {
+    if (!selectedNode) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const editorNode = params.get("editorNode");
+      if (editorNode && editorNode === selectedNode.id && !isFullScreen) {
+        const seed: Record<string, ContentBlock> = {};
+        (selectedNode.content_blocks || []).forEach((b) => {
+          seed[b.id] = { ...b };
+        });
+        setLocalBlocks(seed);
+        setDirtyBlocks({});
+        const editorBlock = params.get("editorBlock");
+        // If editorBlock points to an existing block, open that tab, otherwise open basic
+        if (
+          editorBlock &&
+          (selectedNode.content_blocks || []).some((b) => b.id === editorBlock)
+        ) {
+          setActiveTab(editorBlock);
+        } else {
+          setActiveTab("basic");
+        }
+        setIsFullScreen(true);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode?.id]);
 
   if (!selectedNode) return null;
 
@@ -60,8 +144,8 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     };
     const updatedBlocks = [...currentBlocks, newBlock];
     updateNode(selectedNode.id, { content_blocks: updatedBlocks });
-    // Switch to the new block tab
-    setActiveTab(newBlock.id);
+    // Switch to the new block tab and persist in URL
+    setActiveTabAndUrl(newBlock.id);
   };
 
   const handleAddBlockClick = () => {
@@ -118,8 +202,86 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     }
   };
 
-  const toggleFullScreen = () => {
-    setIsFullScreen(!isFullScreen);
+  // Save any local edits (only the dirty blocks) back to the parent FlowNode
+  const saveLocalChanges = async () => {
+    if (!selectedNode) return;
+
+    // If nothing dirty, no-op
+    const dirtyIds = Object.keys(dirtyBlocks).filter((id) => dirtyBlocks[id]);
+    if (dirtyIds.length === 0) return;
+
+    const currentBlocks = selectedNode.content_blocks || [];
+    const updatedBlocks = currentBlocks.map((b) =>
+      dirtyBlocks[b.id] ? localBlocks[b.id] ?? b : b
+    );
+
+    // Call parent updater once with all changes
+    await updateNode(selectedNode.id, { content_blocks: updatedBlocks });
+
+    // Clear dirty tracking for saved blocks
+    setDirtyBlocks((prev) => {
+      const next = { ...prev };
+      dirtyIds.forEach((id) => delete next[id]);
+      return next;
+    });
+  };
+
+  // Guarded toggle: when closing, prompt to save local edits
+  const guardedToggleFullScreen = async () => {
+    if (isFullScreen) {
+      // closing
+      const hasDirty = Object.values(dirtyBlocks).some(Boolean);
+      if (hasDirty) {
+        const shouldSave = window.confirm(
+          "You have unsaved content changes. Save before exiting? Click OK to save, Cancel to discard."
+        );
+        if (shouldSave) {
+          await saveLocalChanges();
+        }
+      }
+      // Remove editor query params when closing
+      try {
+        const params = new URLSearchParams(window.location.search);
+        params.delete("editorNode");
+        params.delete("editorBlock");
+        const newUrl =
+          window.location.pathname +
+          (params.toString() ? `?${params.toString()}` : "");
+        window.history.replaceState({}, "", newUrl);
+      } catch {
+        // ignore
+      }
+      setIsFullScreen(false);
+    } else {
+      // opening: seed localBlocks from selectedNode
+      if (selectedNode) {
+        const seed: Record<string, ContentBlock> = {};
+        (selectedNode.content_blocks || []).forEach((b) => {
+          seed[b.id] = { ...b };
+        });
+        setLocalBlocks(seed);
+        setDirtyBlocks({});
+        // ensure we open on basic tab if nothing selected
+        if (!activeTab) setActiveTab("basic");
+      }
+      // Add editor query params so refresh keeps editor open for this node
+      try {
+        const params = new URLSearchParams(window.location.search);
+        params.set("editorNode", selectedNode?.id ?? "");
+        if (activeTab && activeTab !== "basic") {
+          params.set("editorBlock", activeTab);
+        } else {
+          params.delete("editorBlock");
+        }
+        const newUrl =
+          window.location.pathname +
+          (params.toString() ? `?${params.toString()}` : "");
+        window.history.replaceState({}, "", newUrl);
+      } catch {
+        // ignore
+      }
+      setIsFullScreen(true);
+    }
   };
 
   // Full screen overlay
@@ -143,7 +305,18 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={toggleFullScreen}
+              onClick={saveLocalChanges}
+              disabled={
+                !Object.values(dirtyBlocks).some((v) => v) || !selectedNode
+              }
+              className="btn-primary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Save changes"
+            >
+              <Check className="w-4 h-4" />
+              <span>Save</span>
+            </button>
+            <button
+              onClick={() => guardedToggleFullScreen()}
               className="btn-secondary flex items-center space-x-2"
               title="Exit content editor"
             >
@@ -164,7 +337,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
         <div className="bg-dark-800 px-6 border-b border-dark-700">
           <div className="flex space-x-2 overflow-x-auto">
             <button
-              onClick={() => setActiveTab("basic")}
+              onClick={() => setActiveTabAndUrl("basic")}
               className={`px-6 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === "basic"
                   ? "text-primary-400 border-b-2 border-primary-400"
@@ -179,7 +352,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             {(selectedNode.content_blocks || []).map((block, index) => (
               <button
                 key={block.id}
-                onClick={() => setActiveTab(block.id)}
+                onClick={() => setActiveTabAndUrl(block.id)}
                 className={`px-6 py-3 text-sm font-medium transition-colors flex items-center space-x-2 whitespace-nowrap ${
                   activeTab === block.id
                     ? "text-primary-400 border-b-2 border-primary-400"
@@ -199,7 +372,15 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                   {block.type === "meme" && <Smile className="w-4 h-4" />}
                   {block.type === "code" && <Code className="w-4 h-4" />}
                 </span>
-                <span>Block {index + 1}</span>
+                <span className="flex items-center space-x-2">
+                  <span>Block {index + 1}</span>
+                  {dirtyBlocks[block.id] && (
+                    <span
+                      className="inline-block w-2 h-2 bg-orange-400 rounded-full"
+                      title="Unsaved changes"
+                    />
+                  )}
+                </span>
                 <span className="capitalize text-xs bg-dark-600 px-2 py-1 rounded">
                   {block.type.replace("_", " ")}
                 </span>
@@ -403,16 +584,17 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                       </div>
                       <div className="p-8">
                         <SingleBlockEditor
-                          block={block}
+                          block={localBlocks[block.id] ?? block}
                           onChange={(updatedBlock: ContentBlock) => {
-                            const currentBlocks =
-                              selectedNode.content_blocks || [];
-                            const updatedBlocks = currentBlocks.map((b) =>
-                              b.id === block.id ? updatedBlock : b
-                            );
-                            updateNode(selectedNode.id, {
-                              content_blocks: updatedBlocks,
-                            });
+                            // Update local copy and mark dirty; persist only when user hits Save
+                            setLocalBlocks((prev) => ({
+                              ...prev,
+                              [updatedBlock.id]: updatedBlock,
+                            }));
+                            setDirtyBlocks((prev) => ({
+                              ...prev,
+                              [updatedBlock.id]: true,
+                            }));
                           }}
                         />
                       </div>
@@ -446,7 +628,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={toggleFullScreen}
+            onClick={() => guardedToggleFullScreen()}
             className="btn-primary flex items-center space-x-2"
             title="Edit content blocks in fullscreen"
           >
@@ -621,7 +803,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             </div>
           </div>
           <button
-            onClick={toggleFullScreen}
+            onClick={() => guardedToggleFullScreen()}
             className="w-full btn-primary flex items-center justify-center space-x-2 py-3"
           >
             <Layers className="w-5 h-5" />

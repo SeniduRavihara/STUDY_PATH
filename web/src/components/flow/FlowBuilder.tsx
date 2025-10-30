@@ -38,6 +38,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingOpenNodeId, setPendingOpenNodeId] = useState<string | null>(
+    null
+  );
   const modal = useModal();
 
   // Topics are already hierarchical
@@ -126,6 +129,29 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     loadExistingFlow();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTopicId]);
+
+  // On mount, check URL for editorNode param and remember it so we can re-open
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const editorNode = params.get("editorNode");
+      if (editorNode) setPendingOpenNodeId(editorNode);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // When nodes load, if we had a pending editor node id, try to re-select it
+  useEffect(() => {
+    if (!pendingOpenNodeId) return;
+    if (nodes && nodes.length > 0) {
+      const found = nodes.find((n) => n.id === pendingOpenNodeId);
+      if (found) {
+        setSelectedNode(found);
+        setPendingOpenNodeId(null);
+      }
+    }
+  }, [nodes, pendingOpenNodeId]);
 
   // const getNodeColor = () => {
   //   return ["#10b981", "#059669"];
