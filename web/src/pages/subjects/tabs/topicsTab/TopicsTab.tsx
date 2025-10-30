@@ -1,6 +1,6 @@
-import type { User } from "@supabase/supabase-js";
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
+import { useAuth } from "../../../../contexts/AuthContext";
 import { useModal } from "../../../../contexts/ModalContext";
 import { TopicService } from "../../../../services/topicService";
 import type { TopicWithChildren } from "../../../../types/database";
@@ -10,19 +10,18 @@ interface TopicsTabProps {
   topics: TopicWithChildren[];
   onTopicsChange: (topics: TopicWithChildren[]) => void;
   subjectId: string;
-  user: User | null;
 }
 
 const TopicsTab: React.FC<TopicsTabProps> = ({
   topics,
   onTopicsChange,
   subjectId,
-  user,
 }) => {
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
   const [newTopicDescription, setNewTopicDescription] = useState("");
   const modal = useModal();
+  const { user } = useAuth();
 
   const handleAddTopic = async () => {
     if (!newTopicName.trim()) return;

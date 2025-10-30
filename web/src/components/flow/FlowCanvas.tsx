@@ -1,357 +1,487 @@
-import {
-  BookOpen,
-  CheckCircle,
-  FileText,
-  HelpCircle,
-  Play,
-  Plus,
-  Settings,
-  Video,
-  Heart,
-  Trophy,
-} from "lucide-react";
-import React, { useState, useRef } from "react";
+import React, { useRef } from "react";
+import { CheckCircle, FileText, Play, Settings } from "lucide-react";
+import { type FlowNode, type TopicWithChildren } from "../../types/database";
 
-interface FlowNode {
-  id: string;
-  type: "quiz" | "study" | "video" | "assignment" | "assessment" | "start" | "end";
-  title: string;
-  description: string;
-  sort_order: number;
-  config: any;
-  connections: string[];
-  status: "locked" | "available" | "completed" | "current";
-  difficulty: "easy" | "medium" | "hard";
-  xp: number;
-  icon: string;
-  color: [string, string];
-  estimatedTime?: string;
+interface FlowCanvasProps {
+  nodes: FlowNode[];
+  selectedNode: FlowNode | null;
+  onNodeSelect: (node: FlowNode) => void;
+  onAddNode: () => void;
+  isLoading: boolean;
+  currentTopicId: string;
+  getCurrentTopic: () => TopicWithChildren | null;
+}
+
+// Extended FlowNode with position for rendering
+interface PositionedFlowNode extends FlowNode {
   position?: { x: number; y: number };
 }
 
-interface Topic {
-  id: string;
-  name: string;
-  description: string;
-  parentId?: string;
-  level: number;
-  hasFlow: boolean;
-  flowId?: string;
-  children: Topic[];
-  isExpanded?: boolean;
-}
+// 3-Column Grid System Configuration (matching mobile app)
+const FLOW_CONFIG = {
+  nodeSpacing: 140, // Vertical spacing between nodes
+  leftColumnX: 0.2, // 20% from left edge (left column)
+  centerColumnX: 0.5, // 50% from left edge (center column)
+  rightColumnX: 0.8, // 80% from left edge (right column)
+  startY: 100, // Start 100px from top
+  nodeSize: 110, // Node diameter for positioning
+  connectionOffset: 25, // Vertical offset for L-shaped connections
+};
 
-interface FlowCanvasProps {
-  flowNodes: FlowNode[];
-  selectedNode: FlowNode | null;
-  onNodeSelect: (node: FlowNode) => void;
-  onNodeUpdate: (nodeId: string, updates: Partial<FlowNode>) => void;
-  onNodeDelete: (nodeId: string) => void;
-  onAddNode: (type: string) => void;
-  showNodeCreator: boolean;
-  onShowNodeCreator: (show: boolean) => void;
-  topics: Topic[];
-  currentTopicId: string | null;
-  onTopicSelect: (topicId: string) => void;
-  isLoading: boolean;
-}
+// 3-Column Grid Flow Pattern (Center acts as transition hub) - Mobile Logic
+const POSITION_PATTERN = [
+  "center", // Row 1: Start center
+  "right", // Row 2: Move right
+  "center", // Row 3: Back to center
+  "left", // Row 4: Move left
+  "center", // Row 5: Back to center
+  "right", // Row 6: Move right
+  "center", // Row 7: Back to center
+  "left", // Row 8: Move left
+  "center", // Row 9: Back to center
+  "right", // Row 10: Move right
+  "center", // Row 11: Back to center
+  "left", // Row 12: Move left
+];
 
-const FlowCanvas: React.FC<FlowCanvasProps> = ({
-  flowNodes,
-  selectedNode,
-  onNodeSelect,
-  onNodeUpdate,
-  onShowNodeCreator,
-  isLoading,
-}) => {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const canvasRef = useRef<HTMLDivElement>(null);
+// Get smart position for node based on mobile's organic pattern
+const getSmartPosition = (index: number): "left" | "center" | "right" => {
+  return POSITION_PATTERN[index % POSITION_PATTERN.length] as
+    | "left"
+    | "center"
+    | "right";
+};
 
-  // Node types configuration
-  const nodeTypes = [
-    {
-      type: "start",
-      name: "Start",
-      icon: Play,
-      color: "bg-gradient-to-br from-green-500 to-green-600",
-    },
-    {
-      type: "study",
-      name: "Study",
-      icon: BookOpen,
-      color: "bg-gradient-to-br from-blue-500 to-blue-600",
-    },
-    {
-      type: "quiz",
-      name: "Quiz",
-      icon: HelpCircle,
-      color: "bg-gradient-to-br from-purple-500 to-purple-600",
-    },
-    {
-      type: "video",
-      name: "Video",
-      icon: Video,
-      color: "bg-gradient-to-br from-red-500 to-red-600",
-    },
-    {
-      type: "assignment",
-      name: "Assignment",
-      icon: FileText,
-      color: "bg-gradient-to-br from-orange-500 to-orange-600",
-    },
-    {
-      type: "assessment",
-      name: "Assessment",
-      icon: CheckCircle,
-      color: "bg-gradient-to-br from-indigo-500 to-indigo-600",
-    },
-    {
-      type: "end",
-      name: "End",
-      icon: Trophy,
-      color: "bg-gradient-to-br from-yellow-500 to-yellow-600",
-    },
-  ];
+// Calculate node position using simple switch case based on node position
+const calculateNodePosition = (sortOrder: number, containerWidth: number) => {
+  // Validate and provide default sort_order
+  const validSortOrder =
+    isNaN(sortOrder) || sortOrder === undefined || sortOrder === null
+      ? 1
+      : sortOrder;
 
-  // Helper functions
-  const getNodeColor = (type: string) => {
-    const nodeType = nodeTypes.find(nt => nt.type === type);
-    return nodeType?.color || "bg-gradient-to-br from-gray-500 to-gray-600";
-  };
+  // Calculate Y position (vertical) - fixed spacing
+  const y = FLOW_CONFIG.startY + (validSortOrder - 1) * FLOW_CONFIG.nodeSpacing;
 
-  const getNodeIcon = (type: string) => {
-    const nodeType = nodeTypes.find(nt => nt.type === type);
-    return nodeType?.icon || Settings;
-  };
+  // Get position from mobile's organic pattern
+  const positionKey = getSmartPosition(validSortOrder - 1);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "border-green-500 bg-green-500/20";
-      case "current":
-        return "border-blue-500 bg-blue-500/20";
-      case "available":
-        return "border-yellow-500 bg-yellow-500/20";
-      case "locked":
-        return "border-gray-500 bg-gray-500/20";
-      default:
-        return "border-gray-500 bg-gray-500/20";
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "easy":
-        return "text-green-400";
-      case "medium":
-        return "text-yellow-400";
-      case "hard":
-        return "text-red-400";
-      default:
-        return "text-gray-400";
-    }
-  };
-
-  // Calculate course progress
-  const courseProgress = flowNodes.length > 0 
-    ? (flowNodes.filter(n => n.status === "completed").length / flowNodes.length) * 100 
-    : 0;
-
-  // Handle node drag start
-  const handleNodeDragStart = (e: React.MouseEvent) => {
-    if (!canvasRef.current) return;
-    
-    const nodeRect = e.currentTarget.getBoundingClientRect();
-    
-    setIsDragging(true);
-    setDragOffset({
-      x: e.clientX - nodeRect.left,
-      y: e.clientY - nodeRect.top,
-    });
-  };
-
-  // Handle node drag
-  const handleNodeDrag = (e: React.MouseEvent, node: FlowNode) => {
-    if (!isDragging || !canvasRef.current) return;
-    
-    const rect = canvasRef.current.getBoundingClientRect();
-    const newX = e.clientX - rect.left - dragOffset.x;
-    const newY = e.clientY - rect.top - dragOffset.y;
-    
-    onNodeUpdate(node.id, {
-      position: { x: newX, y: newY }
-    });
-  };
-
-  // Handle node drag end
-  const handleNodeDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  // Render flow nodes
-  const renderFlowNodes = () => {
-    return flowNodes.map((node, index) => {
-      const Icon = getNodeIcon(node.type);
-      const isSelected = selectedNode?.id === node.id;
-      
-      return (
-        <div
-          key={node.id}
-          className={`absolute cursor-move select-none transition-all duration-200 ${
-            isSelected ? "scale-105 z-10" : "hover:scale-102"
-          }`}
-          style={{
-            left: node.position?.x || (index * 200) + 50,
-            top: node.position?.y || 100,
-          }}
-          onMouseDown={handleNodeDragStart}
-          onMouseMove={(e) => handleNodeDrag(e, node)}
-          onMouseUp={handleNodeDragEnd}
-          onMouseLeave={handleNodeDragEnd}
-          onClick={(e) => {
-            e.stopPropagation();
-            onNodeSelect(node);
-          }}
-        >
-          <div
-            className={`w-48 h-32 rounded-2xl border-2 ${getStatusColor(node.status)} ${getNodeColor(node.type)} p-4 flex flex-col justify-between shadow-lg hover:shadow-xl transition-all duration-200`}
-          >
-            {/* Node Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Icon className="w-5 h-5 text-white" />
-                <span className="text-white text-sm font-medium">
-                  {node.type.charAt(0).toUpperCase() + node.type.slice(1)}
-                </span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <Heart className="w-4 h-4 text-red-400" />
-                <span className="text-white text-xs">{node.xp}</span>
-              </div>
-            </div>
-
-            {/* Node Content */}
-            <div className="flex-1 flex flex-col justify-center">
-              <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2">
-                {node.title}
-              </h3>
-              <p className="text-white/80 text-xs line-clamp-2">
-                {node.description}
-              </p>
-            </div>
-
-            {/* Node Footer */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${getDifficultyColor(node.difficulty)}`} />
-                <span className={`text-xs ${getDifficultyColor(node.difficulty)}`}>
-                  {node.difficulty}
-                </span>
-              </div>
-              {node.estimatedTime && (
-                <span className="text-white/60 text-xs">
-                  {node.estimatedTime}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      );
-    });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex-1 bg-dark-900 rounded-2xl p-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white text-lg">Loading flow...</p>
-        </div>
-      </div>
-    );
+  // Map position to actual X coordinate
+  let x: number;
+  switch (positionKey) {
+    case "left":
+      x = containerWidth * FLOW_CONFIG.leftColumnX;
+      break;
+    case "center":
+      x = containerWidth * FLOW_CONFIG.centerColumnX;
+      break;
+    case "right":
+      x = containerWidth * FLOW_CONFIG.rightColumnX;
+      break;
+    default:
+      x = containerWidth * FLOW_CONFIG.centerColumnX;
   }
 
+  return { x, y };
+};
+
+// Generate flow positions using sort_order + presentation logic
+const generateFlowPositions = (
+  nodes: FlowNode[],
+  containerWidth: number = 800 // Use fixed width for consistent positioning
+): PositionedFlowNode[] => {
+  return nodes.map((node) => {
+    // Calculate position using sort_order
+    const position = calculateNodePosition(node.sort_order, containerWidth);
+
+    return {
+      ...node,
+      position: position,
+    };
+  });
+};
+
+// Get node anchor point based on position and direction
+const getNodeAnchorPoint = (
+  node: PositionedFlowNode,
+  direction: "top" | "bottom" | "left" | "right" | "center"
+): { x: number; y: number } => {
+  const centerX = node.position?.x || 0;
+  const centerY = node.position?.y || 0;
+  const halfSize = FLOW_CONFIG.nodeSize / 2;
+
+  switch (direction) {
+    case "top":
+      return { x: centerX, y: centerY - halfSize };
+    case "bottom":
+      return { x: centerX, y: centerY + halfSize };
+    case "left":
+      return { x: centerX - halfSize, y: centerY };
+    case "right":
+      return { x: centerX + halfSize, y: centerY };
+    case "center":
+      return { x: centerX, y: centerY };
+    default:
+      return { x: centerX, y: centerY };
+  }
+};
+
+// Get connection points based on node positions and flow direction
+const getConnectionPoints = (
+  currentNode: FlowNode,
+  nextNode: FlowNode
+): { start: { x: number; y: number }; end: { x: number; y: number } } => {
+  const currentPos = getSmartPosition((currentNode.sort_order || 1) - 1);
+  const nextPos = getSmartPosition((nextNode.sort_order || 1) - 1);
+
+  let startPoint: { x: number; y: number };
+  let endPoint: { x: number; y: number };
+
+  // Mobile-inspired connection logic
+  if (currentPos === "center" && nextPos === "right") {
+    // Center to Right: Start from RIGHT side, end at TOP
+    startPoint = getNodeAnchorPoint(currentNode, "right");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  } else if (currentPos === "right" && nextPos === "center") {
+    // Right to Center: Start from BOTTOM, end at RIGHT side
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "right");
+  } else if (currentPos === "center" && nextPos === "left") {
+    // Center to Left: Start from LEFT side, end at TOP
+    startPoint = getNodeAnchorPoint(currentNode, "left");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  } else if (currentPos === "left" && nextPos === "center") {
+    // Left to Center: Start from BOTTOM, end at LEFT side
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "left");
+  } else {
+    // Fallback for other combinations
+    startPoint = getNodeAnchorPoint(currentNode, "bottom");
+    endPoint = getNodeAnchorPoint(nextNode, "top");
+  }
+
+  return { start: startPoint, end: endPoint };
+};
+
+// Create proper L-shaped path with correct orientation
+const createVerticalFlowPath = (
+  startNode: FlowNode,
+  endNode: FlowNode
+): string => {
+  const points = getConnectionPoints(startNode, endNode);
+  const start = points.start;
+  const end = points.end;
+
+  const currentPos = getSmartPosition((startNode.sort_order || 1) - 1);
+  const nextPos = getSmartPosition((endNode.sort_order || 1) - 1);
+
+  let path: string;
+  const cornerRadius = 8; // Small radius to smooth the sharp turns
+
+  // Mobile-inspired L-shaped patterns with smooth corners
+  if (currentPos === "center" && nextPos === "right") {
+    // Center to Right: go RIGHT first, then DOWN with smooth corner
+    const cornerX = end.x - cornerRadius;
+    const cornerY = start.y + cornerRadius;
+    path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+  } else if (currentPos === "right" && nextPos === "center") {
+    // Right to Center: go DOWN first, then LEFT with smooth corner
+    const cornerX = start.x - cornerRadius;
+    const cornerY = end.y - cornerRadius;
+    path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+  } else if (currentPos === "center" && nextPos === "left") {
+    // Center to Left: go LEFT first, then DOWN with smooth corner
+    const cornerX = end.x + cornerRadius;
+    const cornerY = start.y + cornerRadius;
+    path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+  } else if (currentPos === "left" && nextPos === "center") {
+    // Left to Center: go DOWN first, then RIGHT with smooth corner
+    const cornerX = start.x + cornerRadius;
+    const cornerY = end.y - cornerRadius;
+    path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+  } else if (currentPos === "center" && nextPos === "center") {
+    // Center to Center: straight line down
+    path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+  } else {
+    // Fallback: determine based on relative positions
+    if (start.x === end.x) {
+      // Same X position - straight line down
+      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    } else if (start.y === end.y) {
+      // Same Y position - straight line across
+      path = `M ${start.x} ${start.y} L ${end.x} ${end.y}`;
+    } else {
+      // Different X and Y - create L-shape with smooth corner
+      if (end.x > start.x) {
+        // Target is to the RIGHT of current - go RIGHT first, then DOWN with smooth corner
+        const cornerX = end.x - cornerRadius;
+        const cornerY = start.y + cornerRadius;
+        path = `M ${start.x} ${start.y} L ${cornerX} ${start.y} Q ${end.x} ${start.y} ${end.x} ${cornerY} L ${end.x} ${end.y}`;
+      } else {
+        // Target is to the LEFT of current - go DOWN first, then LEFT with smooth corner
+        const cornerX = start.x - cornerRadius;
+        const cornerY = end.y - cornerRadius;
+        path = `M ${start.x} ${start.y} L ${start.x} ${cornerY} Q ${start.x} ${end.y} ${cornerX} ${end.y} L ${end.x} ${end.y}`;
+      }
+    }
+  }
+
+  return path;
+};
+
+// Generate all vertical flow paths between consecutive nodes
+const generateVerticalFlowPaths = (nodes: FlowNode[]): string[] => {
+  if (nodes.length < 2) return [];
+
+  const paths: string[] = [];
+  for (let i = 0; i < nodes.length - 1; i++) {
+    const currentPath = createVerticalFlowPath(nodes[i], nodes[i + 1]);
+    paths.push(currentPath);
+  }
+  return paths;
+};
+
+const FlowCanvas: React.FC<FlowCanvasProps> = ({
+  nodes,
+  selectedNode,
+  onNodeSelect,
+  onAddNode,
+  isLoading,
+  currentTopicId,
+  getCurrentTopic,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to get node icon (all nodes use the same triangle play icon)
+  const getNodeIcon = () => {
+    return Play;
+  };
+
+  // Helper function to get node color (all nodes use the same color for now)
+  const getNodeColor = () => {
+    return ["#10b981", "#059669"];
+  };
+
+  // Compute flow positions
+  const flowNodes = generateFlowPositions(nodes, 800); // Fixed width for consistent positioning
+
+  // Generate vertical paths
+  const verticalPaths = generateVerticalFlowPaths(flowNodes);
+
+  // Calculate total content height
+  const totalContentHeight =
+    flowNodes.length > 0
+      ? (flowNodes[flowNodes.length - 1].position?.y || 0) +
+        FLOW_CONFIG.nodeSpacing +
+        300
+      : 600;
+
   return (
-    <div className="flex-1 bg-dark-900 rounded-2xl overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="bg-dark-800 p-6 border-b border-dark-700">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Flow Builder</h2>
-            <p className="text-dark-400">Design your learning journey</p>
+    <div
+      ref={containerRef}
+      className="relative overflow-auto flex justify-center"
+      style={{
+        height: "600px",
+        background: "radial-gradient(circle, #374151 1px, transparent 1px)",
+        backgroundSize: "20px 20px",
+      }}
+    >
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-dark-800 bg-opacity-80 flex items-center justify-center z-50">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+            <div className="text-white text-lg font-medium">
+              {currentTopicId
+                ? `Loading flow for ${getCurrentTopic()?.name || "topic"}...`
+                : "Loading..."}
+            </div>
+            <div className="text-dark-300 text-sm">
+              Please wait while we fetch your flow
+            </div>
           </div>
-          <button
-            onClick={() => onShowNodeCreator(true)}
-            className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Add Node</span>
-          </button>
         </div>
-
-        {/* Progress Bar */}
-        <div className="w-full bg-dark-700 rounded-full h-2 mb-4">
-          <div
-            className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-500"
-            style={{ width: `${courseProgress}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-sm text-dark-400">
-          <span>{Math.round(courseProgress)}% Complete</span>
-          <span>{flowNodes.filter(n => n.status === "completed").length} of {flowNodes.length} nodes</span>
-        </div>
-      </div>
-
-      {/* Flow Canvas */}
+      )}
       <div
-        ref={canvasRef}
-        className="flex-1 relative overflow-auto bg-gradient-to-br from-dark-900 via-dark-800 to-dark-900"
-        style={{ minHeight: "600px" }}
-        onClick={() => onNodeSelect(null as any)}
+        className="relative mx-auto"
+        style={{
+          minHeight: totalContentHeight,
+          width: "800px", // Fixed width for consistent centering
+          maxWidth: "100%",
+        }}
       >
-        {flowNodes.length === 0 ? (
+        {/* SVG Connections */}
+        <svg
+          height={totalContentHeight}
+          width="800"
+          style={{ position: "absolute", top: 0, left: 0 }}
+        >
+          {verticalPaths.map((path, index) => (
+            <path
+              key={index}
+              d={path}
+              stroke="#666666"
+              strokeWidth="6"
+              fill="none"
+              opacity={0.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          ))}
+        </svg>
+
+        {/* Learning Nodes */}
+        {flowNodes.map((node) => {
+          const Icon = getNodeIcon();
+          const nodeColor = getNodeColor();
+
+          const getNodeSize = () => {
+            const baseSize = FLOW_CONFIG.nodeSize;
+            switch (node.status) {
+              case "current":
+                return baseSize;
+              case "completed":
+                return baseSize * 0.9;
+              case "available":
+                return baseSize * 0.85;
+              case "locked":
+                return baseSize * 0.8;
+              default:
+                return baseSize * 0.85;
+            }
+          };
+
+          const getNodeIconName = () => {
+            switch (node.status) {
+              case "completed":
+                return CheckCircle;
+              case "locked":
+                return Settings; // Lock icon
+              case "current":
+                return Play;
+              default:
+                return Icon;
+            }
+          };
+
+          const getStatusColor = () => {
+            switch (node.status) {
+              case "completed":
+                return ["#10b981", "#059669"];
+              case "current":
+                return ["#8b5cf6", "#7c3aed"];
+              case "locked":
+                return ["#6b7280", "#4b5563"];
+              default:
+                return nodeColor;
+            }
+          };
+
+          const nodeSize = getNodeSize();
+          const StatusIcon = getNodeIconName();
+          const statusColor = getStatusColor();
+          const isDisabled = node.status === "locked";
+
+          return (
+            <div
+              key={node.id}
+              className={`absolute select-none ${
+                selectedNode?.id === node.id ? "ring-2 ring-primary-500" : ""
+              }`}
+              style={{
+                left: (node.position?.x || 0) - nodeSize / 2,
+                top: (node.position?.y || 0) - nodeSize / 2,
+              }}
+              onClick={() => onNodeSelect(node)}
+            >
+              <button disabled={isDisabled} className="relative group">
+                {/* Node Circle */}
+                <div
+                  className="flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
+                  style={{
+                    width: nodeSize,
+                    height: nodeSize,
+                    borderRadius: 16,
+                    background: `linear-gradient(135deg, ${statusColor[0]}, ${statusColor[1]})`,
+                    boxShadow: `0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 ${statusColor[0]}40`,
+                  }}
+                >
+                  <StatusIcon className="w-8 h-8 text-white" />
+                </div>
+
+                {/* Node Label */}
+                <div
+                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center"
+                  style={{ minWidth: 100 }}
+                >
+                  <p
+                    className="text-xs font-semibold"
+                    style={{
+                      color: node.status === "locked" ? "#6b7280" : "#ffffff",
+                    }}
+                  >
+                    {node.title}
+                  </p>
+                  {(node.xp_reward || 0) > 0 && (
+                    <p
+                      className="text-xs mt-1"
+                      style={{
+                        color: node.status === "locked" ? "#6b7280" : "#fbbf24",
+                      }}
+                    >
+                      +{node.xp_reward || 0} XP
+                    </p>
+                  )}
+                </div>
+
+                {/* Difficulty Indicator */}
+                {node.status !== "locked" && (
+                  <div className="absolute -top-2 -right-2 bg-white rounded-full px-2 py-1 min-w-[20px]">
+                    <p
+                      className="text-xs font-bold text-center"
+                      style={{
+                        color:
+                          node.difficulty === "easy"
+                            ? "#10b981"
+                            : node.difficulty === "medium"
+                            ? "#f59e0b"
+                            : "#ef4444",
+                      }}
+                    >
+                      {node.difficulty === "easy"
+                        ? "E"
+                        : node.difficulty === "medium"
+                        ? "M"
+                        : "H"}
+                    </p>
+                  </div>
+                )}
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Empty state */}
+        {nodes.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-24 h-24 bg-dark-800 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Plus className="w-12 h-12 text-dark-400" />
+              <div className="w-16 h-16 bg-dark-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-8 h-8 text-dark-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Start Building Your Flow</h3>
-              <p className="text-dark-400 mb-6">Click "Add Node" to begin creating your learning path</p>
-              <button
-                onClick={() => onShowNodeCreator(true)}
-                className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-medium transition-colors"
-              >
-                Create First Node
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Start Building Your Learning Flow
+              </h3>
+              <p className="text-dark-400 mb-6">
+                Add nodes to create an interactive learning path
+              </p>
+              <button onClick={() => onAddNode()} className="btn-primary">
+                Add Your First Node
               </button>
             </div>
           </div>
-        ) : (
-          renderFlowNodes()
         )}
-      </div>
-
-      {/* Bottom Info Panel */}
-      <div className="bg-dark-700 bg-opacity-95 p-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-white font-semibold">
-              Next: {flowNodes.find(n => n.status === "current")?.title || "Complete the course!"}
-            </p>
-            <p className="text-gray-400 text-sm">
-              {flowNodes.filter(n => n.status === "completed").length} of {flowNodes.length} completed
-            </p>
-          </div>
-          <div className="flex items-center">
-            <Trophy className="w-5 h-5 text-yellow-500" />
-            <span className="text-yellow-400 font-bold ml-1">
-              {Math.round(courseProgress)}%
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   );
 };
-
 export default FlowCanvas;

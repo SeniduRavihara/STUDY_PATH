@@ -8,9 +8,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { useModal } from "../../contexts/ModalContext";
-import { useSidebar } from "../../contexts/SidebarContext";
 import { SubjectService, TopicService } from "../../services";
 import type {
   FlowNode,
@@ -27,17 +25,16 @@ const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { subjectId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { sidebarCollapsed } = useSidebar();
-  const { user } = useAuth();
   const modal = useModal();
   const [activeTab, setActiveTab] = useState(
     searchParams.get("tab") || "overview"
   );
   const [subject, setSubject] = useState<Subject | null>(null);
+  const [topics, setTopics] = useState<TopicWithChildren[]>([]);
   const [flowNodes, setFlowNodes] = useState<FlowNode[]>([]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [topics, setTopics] = useState<TopicWithChildren[]>([]);
 
   // Sync activeTab with URL parameter
   useEffect(() => {
@@ -167,7 +164,6 @@ const SubjectBuilder: React.FC = () => {
             topics={topics}
             onTopicsChange={setTopics}
             subjectId={subject?.id || ""}
-            user={user}
           />
         );
 
@@ -177,13 +173,9 @@ const SubjectBuilder: React.FC = () => {
             nodes={flowNodes}
             onNodesChange={setFlowNodes}
             subjectName={subject?.name || ""}
-            sidebarCollapsed={sidebarCollapsed}
             topics={topics}
             onTopicsChange={setTopics}
             subjectId={subject?.id || ""}
-            onSubjectChange={(topicId) => {
-              console.log("Topic changed to:", topicId);
-            }}
           />
         );
 
