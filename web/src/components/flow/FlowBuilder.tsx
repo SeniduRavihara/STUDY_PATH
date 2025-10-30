@@ -1,5 +1,4 @@
 import {
-  BookOpen,
   CheckCircle,
   Diamond,
   FileText,
@@ -31,6 +30,11 @@ interface FlowBuilderProps {
   subjectId: string;
   onSubjectChange?: (subjectId: string) => void;
   currentFlowId?: string; // Add current flow ID
+}
+
+// Extended FlowNode with position for rendering
+interface PositionedFlowNode extends FlowNode {
+  position?: { x: number; y: number };
 }
 
 // 3-Column Grid System Configuration (matching mobile app)
@@ -107,7 +111,7 @@ const calculateNodePosition = (sortOrder: number, containerWidth: number) => {
 const generateFlowPositions = (
   nodes: FlowNode[],
   containerWidth: number = 800 // Use fixed width for consistent positioning
-): FlowNode[] => {
+): PositionedFlowNode[] => {
   return nodes.map((node) => {
     // Calculate position using sort_order
     const position = calculateNodePosition(node.sort_order, containerWidth);
@@ -121,7 +125,7 @@ const generateFlowPositions = (
 
 // Get node anchor point based on position and direction
 const getNodeAnchorPoint = (
-  node: FlowNode,
+  node: PositionedFlowNode,
   direction: "top" | "bottom" | "left" | "right" | "center"
 ): { x: number; y: number } => {
   const centerX = node.position?.x || 0;
@@ -380,30 +384,15 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   // (leaf topic helper removed; keep topic utilities minimal)
 
-  const nodeTypes = [
+  // Content block type definitions for dynamic node creation
+  const contentBlockTypes = [
     {
-      type: "start",
-      name: "Start",
-      icon: Play,
-      color: ["#10b981", "#059669"],
-      xp: 0,
-      difficulty: "easy" as const,
-    },
-    {
-      type: "study",
-      name: "Study",
-      icon: BookOpen,
+      type: "text",
+      name: "Text",
+      icon: FileText,
       color: ["#3b82f6", "#1d4ed8"],
-      xp: 25,
-      difficulty: "medium" as const,
-    },
-    {
-      type: "quiz",
-      name: "Quiz",
-      icon: HelpCircle,
-      color: ["#f59e0b", "#d97706"],
-      xp: 30,
-      difficulty: "medium" as const,
+      xp: 10,
+      difficulty: "easy" as const,
     },
     {
       type: "video",
@@ -414,39 +403,39 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       difficulty: "easy" as const,
     },
     {
-      type: "assignment",
-      name: "Assignment",
-      icon: FileText,
-      color: ["#6366f1", "#4f46e5"],
-      xp: 40,
-      difficulty: "hard" as const,
+      type: "mcq",
+      name: "Quiz",
+      icon: HelpCircle,
+      color: ["#f59e0b", "#d97706"],
+      xp: 30,
+      difficulty: "medium" as const,
     },
     {
-      type: "assessment",
-      name: "Assessment",
-      icon: CheckCircle,
+      type: "image",
+      name: "Image",
+      icon: Flame,
       color: ["#ef4444", "#dc2626"],
-      xp: 50,
-      difficulty: "hard" as const,
+      xp: 15,
+      difficulty: "easy" as const,
     },
     {
-      type: "end",
-      name: "End",
+      type: "code",
+      name: "Code",
       icon: Settings,
-      color: ["#6b7280", "#4b5563"],
-      xp: 0,
-      difficulty: "easy" as const,
+      color: ["#6366f1", "#4f46e5"],
+      xp: 25,
+      difficulty: "medium" as const,
     },
   ];
 
-  const getNodeIcon = (type: string) => {
-    const nodeType = nodeTypes.find((nt) => nt.type === type);
-    return nodeType ? nodeType.icon : BookOpen;
+  const getNodeIcon = () => {
+    // All nodes use the same triangle play icon since they can contain multiple content types
+    return Play;
   };
 
-  const getNodeColor = (type: string) => {
-    const nodeType = nodeTypes.find((nt) => nt.type === type);
-    return nodeType ? nodeType.color : ["#6b7280", "#4b5563"];
+  const getNodeColor = () => {
+    // All nodes use the same color for now
+    return ["#10b981", "#059669"];
   };
 
   const findTopicByIdHierarchical = (
@@ -463,10 +452,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     return null;
   };
 
-  const addNode = (type: string) => {
-    const nodeType = nodeTypes.find((nt) => nt.type === type);
-    if (!nodeType) return;
-
+  const addNode = () => {
     // Get the highest sort_order from existing nodes and add 1
     const maxSortOrder =
       nodes.length > 0 ? Math.max(...nodes.map((n) => n.sort_order || 1)) : 0;
@@ -474,22 +460,24 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
     const newNode: FlowNode = {
       id: `node-${Date.now()}`,
-      type: type as FlowNode["type"],
-      title: `New ${nodeType.name}`,
-      description: `Description for ${nodeType.name} node`,
-      sort_order: newSortOrder, // Use unique sort_order
+      flow_id: flowId || "", // Use current flow ID or empty string
+      title: `New Learning Node`,
+      description: `A new learning node that you can customize with content blocks`,
+      sort_order: newSortOrder,
       config: {},
       connections: [],
-      status: nodes.length === 0 ? "current" : "available", // First node is current, others are available
-      difficulty: nodeType.difficulty,
-      xp: nodeType.xp,
-      icon: nodeType.icon.name,
-      color: nodeType.color as [string, string],
-      estimatedTime: "5 min",
-      content_blocks: [], // 🎯 START WITH EMPTY BLOCKS - user adds content manually
+      status: nodes.length === 0 ? "current" : "available",
+      difficulty: "medium",
+      xp_reward: 20,
+      estimated_time: 10,
+      content_blocks: [], // Start with empty content blocks - user adds them manually
+      is_active: true,
+      created_by: null, // Will be set when saved
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
-    // new node created
+    // New node created
     onNodesChange([...nodes, newNode]);
   };
 
@@ -515,7 +503,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     // Remove connections to this node
     const cleanedNodes = updatedNodes.map((node) => ({
       ...node,
-      connections: node.connections.filter((conn) => conn !== nodeId),
+      connections: node.connections!.filter((conn) => conn !== nodeId),
     }));
     onNodesChange(cleanedNodes);
     setSelectedNode(null);
@@ -608,7 +596,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         const convertedNodes: FlowNode[] = flowWithNodes.nodes.map(
           (node: {
             id: string;
-            node_type: string;
             title: string;
             description: string;
             sort_order: number;
@@ -618,22 +605,29 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             difficulty: string;
             xp_reward: number;
             estimated_time?: number;
+            content_blocks?: any[];
+            flow_id: string;
+            is_active: boolean;
+            created_by: string | null;
+            created_at: string;
+            updated_at: string;
           }) => ({
             id: node.id,
-            type: node.node_type as FlowNode["type"],
+            flow_id: node.flow_id,
             title: node.title,
             description: node.description,
             sort_order: node.sort_order,
             config: node.config,
-            connections: node.connections,
+            connections: node.connections || [],
             status: node.status as FlowNode["status"],
             difficulty: node.difficulty as FlowNode["difficulty"],
-            xp: node.xp_reward,
-            icon: getNodeIcon(node.node_type).name,
-            color: getNodeColor(node.node_type),
-            estimatedTime: node.estimated_time
-              ? `${node.estimated_time} min`
-              : undefined,
+            xp_reward: node.xp_reward,
+            estimated_time: node.estimated_time,
+            content_blocks: node.content_blocks || [],
+            is_active: node.is_active,
+            created_by: node.created_by,
+            created_at: node.created_at,
+            updated_at: node.updated_at,
           })
         );
 
@@ -672,7 +666,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     sort_order: node.sort_order || index + 1,
   }));
 
-  console.log("FIXED NODES:", fixedNodes);
+  // console.log("FIXED NODES:", fixedNodes);
 
   const flowNodes = generateFlowPositions(fixedNodes, 800); // Fixed width for consistent positioning
 
@@ -756,7 +750,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             </span>
           </button>
           <button
-            onClick={() => addNode("study")}
+            onClick={() => addNode()}
             className="btn-primary flex items-center space-x-2"
           >
             <Plus className="w-5 h-5" />
@@ -913,8 +907,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
               {/* Learning Nodes */}
               {flowNodes.map((node) => {
-                const Icon = getNodeIcon(node.type);
-                const nodeColor = getNodeColor(node.type);
+                const Icon = getNodeIcon();
+                const nodeColor = getNodeColor();
 
                 const getNodeSize = () => {
                   const baseSize = FLOW_CONFIG.nodeSize;
@@ -1006,7 +1000,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                         >
                           {node.title}
                         </p>
-                        {node.xp > 0 && (
+                        {(node.xp_reward || 0) > 0 && (
                           <p
                             className="text-xs mt-1"
                             style={{
@@ -1016,7 +1010,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                                   : "#fbbf24",
                             }}
                           >
-                            +{node.xp} XP
+                            +{node.xp_reward || 0} XP
                           </p>
                         )}
                       </div>
@@ -1061,10 +1055,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                     <p className="text-dark-400 mb-6">
                       Add nodes to create an interactive learning path
                     </p>
-                    <button
-                      onClick={() => addNode("study")}
-                      className="btn-primary"
-                    >
+                    <button onClick={() => addNode()} className="btn-primary">
                       Add Your First Node
                     </button>
                   </div>

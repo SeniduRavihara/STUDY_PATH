@@ -18,7 +18,7 @@ interface NodePropertiesPanelProps {
     topics: TopicWithChildren[],
     topicId: string
   ) => TopicWithChildren | null;
-  getNodeColor: (type: string) => string[];
+  getNodeColor: () => string[];
 }
 
 const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
@@ -235,10 +235,10 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={selectedNode.xp || 0}
+                      value={selectedNode.xp_reward || 0}
                       onChange={(e) =>
                         updateNode(selectedNode.id, {
-                          xp: parseInt(e.target.value) || 0,
+                          xp_reward: parseInt(e.target.value) || 0,
                         })
                       }
                       className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -274,10 +274,10 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                     </label>
                     <input
                       type="text"
-                      value={selectedNode.estimatedTime || ""}
+                      value={selectedNode.estimated_time?.toString() || ""}
                       onChange={(e) =>
                         updateNode(selectedNode.id, {
-                          estimatedTime: e.target.value,
+                          estimated_time: parseInt(e.target.value) || 0,
                         })
                       }
                       placeholder="e.g., 5-10 min"
@@ -448,11 +448,11 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             </label>
             <input
               type="number"
-              value={selectedNode.xp || 0}
+              value={selectedNode.xp_reward || 0}
               onChange={(e) =>
-                updateNode(selectedNode.id, {
-                  xp: parseInt(e.target.value) || 0,
-                })
+              updateNode(selectedNode.id, {
+              xp_reward: parseInt(e.target.value) || 0,
+              })
               }
               className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               min="0"
@@ -514,15 +514,16 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
 
           {/* <div className="flex items-center space-x-4 pt-4 border-t border-dark-600">
             <div className="flex items-center space-x-2">
-              <div
-                className={`w-4 h-4 ${
-                  getNodeColor(selectedNode.type)[0]
-                } rounded`}
-              />
-              <span className="text-white text-sm">
-                {selectedNode.type.charAt(0).toUpperCase() +
-                  selectedNode.type.slice(1)}{" "}
-                Node
+            <div
+            className={`w-4 h-4 ${
+            getNodeColor()[0]
+            } rounded`}
+            />
+            <span className="text-white text-sm">
+            {selectedNode.content_blocks.length > 0
+            ? `${selectedNode.content_blocks[0].type.charAt(0).toUpperCase() +
+                  selectedNode.content_blocks[0].type.slice(1)} Node`
+                : "Learning Node"}
               </span>
             </div>
           </div> */}
