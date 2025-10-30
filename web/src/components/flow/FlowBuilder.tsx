@@ -127,9 +127,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTopicId]);
 
-  const getNodeColor = () => {
-    return ["#10b981", "#059669"];
-  };
+  // const getNodeColor = () => {
+  //   return ["#10b981", "#059669"];
+  // };
 
   const findTopicByIdHierarchical = (
     topics: TopicWithChildren[],
@@ -494,7 +494,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             // loadingQuizPacks={loadingQuizPacks}
             topics={hierarchicalTopics}
             findTopicById={findTopicByIdHierarchical}
-            getNodeColor={getNodeColor}
+            // getNodeColor={getNodeColor}
           />
         ) : (
           <div className="w-80 bg-dark-800 rounded-2xl p-6 flex-shrink-0 flex items-center justify-center">
