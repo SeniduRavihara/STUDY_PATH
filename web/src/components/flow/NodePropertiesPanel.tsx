@@ -24,7 +24,11 @@ type ContentBlock = FlowNode["content_blocks"][0];
 
 interface NodePropertiesPanelProps {
   selectedNode: FlowNode | null;
-  updateNode: (nodeId: string, updates: Partial<FlowNode>) => Promise<void>;
+  updateNode: (
+    nodeId: string,
+    updates: Partial<FlowNode>,
+    persist?: boolean
+  ) => Promise<void>;
   deleteNode: (nodeId: string) => Promise<void>;
   topics: TopicWithChildren[];
   findTopicById: (
@@ -64,9 +68,17 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     try {
       const params = new URLSearchParams(window.location.search);
       if (tabId === "basic") {
-        params.delete("editorBlock");
+        params.delete("editorBlockOrder");
       } else {
-        params.set("editorBlock", tabId);
+        // Persist the block by its order (stable across bulk-save ID changes)
+        const blocks = selectedNode?.content_blocks || [];
+        const found = blocks.find((b) => b.id === tabId);
+        if (found && typeof found.order === "number") {
+          params.set("editorBlockOrder", String(found.order));
+        } else {
+          // Fallback: remove param if we can't resolve order
+          params.delete("editorBlockOrder");
+        }
       }
       const newUrl =
         window.location.pathname +
@@ -107,20 +119,53 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
     try {
       const params = new URLSearchParams(window.location.search);
       const editorNode = params.get("editorNode");
-      if (editorNode && editorNode === selectedNode.id && !isFullScreen) {
+      const editorNodeOrder = params.get("editorNodeOrder");
+
+      // Open editor if either: URL references this exact node id, OR
+      // the URL references this node's sort_order (fallback after bulk-save).
+      const matchesById = editorNode && editorNode === selectedNode.id;
+      const matchesByOrder =
+        editorNodeOrder &&
+        selectedNode.sort_order !== undefined &&
+        selectedNode.sort_order !== null &&
+        parseInt(editorNodeOrder, 10) === selectedNode.sort_order;
+
+      if ((matchesById || matchesByOrder) && !isFullScreen) {
+        // If we matched by order (because IDs changed), normalize the URL to
+        // use the current node id so subsequent logic is simpler.
+        if (matchesByOrder && selectedNode.id) {
+          params.set("editorNode", selectedNode.id);
+          const newUrl =
+            window.location.pathname +
+            (params.toString() ? `?${params.toString()}` : "");
+          window.history.replaceState({}, "", newUrl);
+        }
+
         const seed: Record<string, ContentBlock> = {};
         (selectedNode.content_blocks || []).forEach((b) => {
           seed[b.id] = { ...b };
         });
         setLocalBlocks(seed);
         setDirtyBlocks({});
-        const editorBlock = params.get("editorBlock");
-        // If editorBlock points to an existing block, open that tab, otherwise open basic
-        if (
-          editorBlock &&
-          (selectedNode.content_blocks || []).some((b) => b.id === editorBlock)
-        ) {
-          setActiveTab(editorBlock);
+
+        const editorBlockOrder = params.get("editorBlockOrder");
+        // If editorBlockOrder points to an existing block order, open that tab,
+        // otherwise open basic. We persist block by its order because block
+        // IDs may change after a bulk save.
+        if (editorBlockOrder) {
+          const parsed = parseInt(editorBlockOrder, 10);
+          if (!isNaN(parsed)) {
+            const byOrder = (selectedNode.content_blocks || []).find(
+              (b) => b.order === parsed
+            );
+            if (byOrder) {
+              setActiveTab(byOrder.id);
+            } else {
+              setActiveTab("basic");
+            }
+          } else {
+            setActiveTab("basic");
+          }
         } else {
           setActiveTab("basic");
         }
@@ -130,7 +175,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
       // ignore
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNode?.id]);
+  }, [selectedNode?.id, selectedNode?.sort_order]);
 
   if (!selectedNode) return null;
 
@@ -215,8 +260,8 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
       dirtyBlocks[b.id] ? localBlocks[b.id] ?? b : b
     );
 
-    // Call parent updater once with all changes
-    await updateNode(selectedNode.id, { content_blocks: updatedBlocks });
+    // Call parent updater once with all changes and request immediate persistence
+    await updateNode(selectedNode.id, { content_blocks: updatedBlocks }, true);
 
     // Clear dirty tracking for saved blocks
     setDirtyBlocks((prev) => {
@@ -243,7 +288,8 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
       try {
         const params = new URLSearchParams(window.location.search);
         params.delete("editorNode");
-        params.delete("editorBlock");
+        params.delete("editorBlockOrder");
+        params.delete("editorNodeOrder");
         const newUrl =
           window.location.pathname +
           (params.toString() ? `?${params.toString()}` : "");
@@ -268,10 +314,26 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
       try {
         const params = new URLSearchParams(window.location.search);
         params.set("editorNode", selectedNode?.id ?? "");
+        // Persist block tab by its order (if we can resolve it)
         if (activeTab && activeTab !== "basic") {
-          params.set("editorBlock", activeTab);
+          const blocks = selectedNode?.content_blocks || [];
+          const found = blocks.find((b) => b.id === activeTab);
+          if (found && typeof found.order === "number") {
+            params.set("editorBlockOrder", String(found.order));
+          } else {
+            params.delete("editorBlockOrder");
+          }
         } else {
-          params.delete("editorBlock");
+          params.delete("editorBlockOrder");
+        }
+        // Also persist current sort_order so we can re-find this node after a save+reload
+        if (
+          selectedNode?.sort_order !== undefined &&
+          selectedNode?.sort_order !== null
+        ) {
+          params.set("editorNodeOrder", String(selectedNode.sort_order));
+        } else {
+          params.delete("editorNodeOrder");
         }
         const newUrl =
           window.location.pathname +

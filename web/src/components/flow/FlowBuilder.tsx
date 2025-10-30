@@ -41,6 +41,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [pendingOpenNodeId, setPendingOpenNodeId] = useState<string | null>(
     null
   );
+  const [pendingOpenNodeOrder, setPendingOpenNodeOrder] = useState<number | null>(null);
   const modal = useModal();
 
   // Topics are already hierarchical
@@ -136,6 +137,11 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       const params = new URLSearchParams(window.location.search);
       const editorNode = params.get("editorNode");
       if (editorNode) setPendingOpenNodeId(editorNode);
+      const editorNodeOrder = params.get("editorNodeOrder");
+      if (editorNodeOrder) {
+        const parsed = parseInt(editorNodeOrder, 10);
+        if (!isNaN(parsed)) setPendingOpenNodeOrder(parsed);
+      }
     } catch {
       // ignore
     }
@@ -143,15 +149,22 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   // When nodes load, if we had a pending editor node id, try to re-select it
   useEffect(() => {
-    if (!pendingOpenNodeId) return;
+    if (!pendingOpenNodeId && pendingOpenNodeOrder === null) return;
     if (nodes && nodes.length > 0) {
-      const found = nodes.find((n) => n.id === pendingOpenNodeId);
+      let found: FlowNode | undefined;
+      if (pendingOpenNodeId) {
+        found = nodes.find((n) => n.id === pendingOpenNodeId);
+      }
+      if (!found && pendingOpenNodeOrder !== null) {
+        found = nodes.find((n) => n.sort_order === pendingOpenNodeOrder);
+      }
       if (found) {
         setSelectedNode(found);
         setPendingOpenNodeId(null);
+        setPendingOpenNodeOrder(null);
       }
     }
-  }, [nodes, pendingOpenNodeId]);
+  }, [nodes, pendingOpenNodeId, pendingOpenNodeOrder]);
 
   // const getNodeColor = () => {
   //   return ["#10b981", "#059669"];
@@ -234,7 +247,11 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     setHasUnsavedChanges(true);
   };
 
-  const updateNode = async (nodeId: string, updates: Partial<FlowNode>) => {
+  const updateNode = async (
+    nodeId: string,
+    updates: Partial<FlowNode>,
+    persist: boolean = false
+  ) => {
     console.log("🔧 FlowBuilder updateNode called:", nodeId, updates);
     const updatedNodes = nodes.map((node) =>
       node.id === nodeId ? { ...node, ...updates } : node
@@ -252,6 +269,37 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
     // Mark as having unsaved changes (save to DB only when user clicks Save Flow)
     setHasUnsavedChanges(true);
+
+    if (persist) {
+      // Persist this change to the DB by saving all nodes for the flow.
+      setIsSaving(true);
+      try {
+        let currentFlowId = flowId;
+        if (!currentFlowId) {
+          // create flow if missing (rare when saving a node)
+          const user = await AuthService.getCurrentUser();
+          if (!user) throw new Error("Must be logged in to save flow");
+          const flow = await FlowBuilderService.createFlow({
+            topicId: currentTopicId,
+            name: `${getCurrentTopic()?.name || "Topic"} Flow`,
+            description: `Learning flow for ${
+              getCurrentTopic()?.name || "topic"
+            }`,
+            createdBy: user.id,
+          });
+          currentFlowId = flow.id;
+          setFlowId(currentFlowId);
+        }
+
+        await FlowBuilderService.saveFlowNodes(currentFlowId, updatedNodes);
+        // Consider this change persisted; clear unsaved flag
+        setHasUnsavedChanges(false);
+      } catch (err) {
+        console.error("Error persisting node update:", err);
+      } finally {
+        setIsSaving(false);
+      }
+    }
   };
 
   const deleteNode = async (nodeId: string) => {
