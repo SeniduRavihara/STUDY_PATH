@@ -16,10 +16,11 @@ interface Stats {
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<Stats>({
+  const statsState = useState<Stats>({
     subjects: 0,
     feedPosts: 0,
   });
+  const stats = statsState[0];
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

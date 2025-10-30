@@ -16,6 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useModal } from "../../contexts/ModalContext";
 import type { FlowNode, TopicWithChildren } from "../../types/database";
 import BlockTypeSelector from "../content/block-editors/BlockTypeSelector";
 import SingleBlockEditor from "../content/block-editors/SingleBlockEditor";
@@ -60,6 +61,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   );
   // Track which blocks have unsaved local edits
   const [dirtyBlocks, setDirtyBlocks] = useState<Record<string, boolean>>({});
+  const modal = useModal();
 
   // Helper to set active tab and persist editorBlock in the URL so refresh
   // can restore which exact block/tab the user was editing.
@@ -277,8 +279,10 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
       // closing
       const hasDirty = Object.values(dirtyBlocks).some(Boolean);
       if (hasDirty) {
-        const shouldSave = window.confirm(
-          "You have unsaved content changes. Save before exiting? Click OK to save, Cancel to discard."
+        const shouldSave = await modal.confirm(
+          "You have unsaved content changes. Save before exiting?",
+          "Save",
+          "Discard"
         );
         if (shouldSave) {
           await saveLocalChanges();

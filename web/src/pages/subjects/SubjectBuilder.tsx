@@ -146,12 +146,12 @@ const SubjectBuilder: React.FC = () => {
       // Optionally: save flowNodes to the database here
 
       setIsSaving(false);
-      alert("Subject published successfully!");
+      await modal.alert("Subject published successfully!");
       navigate("/admin/subjects");
     } catch (error) {
       setIsSaving(false);
       console.error("Error publishing subject:", error);
-      alert("Error publishing subject. Please try again.");
+      await modal.alert("Error publishing subject. Please try again.");
     }
   };
 

@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-interface FeedPost {
+export interface FeedPost {
   id: string;
   content: string;
   type: string;

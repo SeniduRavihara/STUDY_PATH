@@ -41,7 +41,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [pendingOpenNodeId, setPendingOpenNodeId] = useState<string | null>(
     null
   );
-  const [pendingOpenNodeOrder, setPendingOpenNodeOrder] = useState<number | null>(null);
+  const [pendingOpenNodeOrder, setPendingOpenNodeOrder] = useState<
+    number | null
+  >(null);
   const modal = useModal();
 
   // Topics are already hierarchical
@@ -195,13 +197,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     if (!currentFlowId) {
       // Try to create a new flow if possible
       if (!currentTopicId) {
-        alert("Please select a topic before adding nodes.");
+        await modal.alert("Please select a topic before adding nodes.");
         return;
       }
       try {
         const user = await AuthService.getCurrentUser();
         if (!user) {
-          alert("Please log in to add nodes.");
+          await modal.alert("Please log in to add nodes.");
           return;
         }
         const flow = await FlowBuilderService.createFlow({
@@ -216,7 +218,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         setFlowId(currentFlowId);
       } catch (error) {
         console.error("Error creating flow before adding node:", error);
-        alert("Error creating flow. Please try again.");
+        await modal.alert("Error creating flow. Please try again.");
         return;
       }
     }
@@ -348,7 +350,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   // Save flow to database
   const saveFlow = async () => {
     if (!currentTopicId || nodes.length === 0) {
-      alert("Please select a topic and add some nodes before saving.");
+      await modal.alert(
+        "Please select a topic and add some nodes before saving."
+      );
       return;
     }
 
@@ -356,7 +360,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     try {
       const user = await AuthService.getCurrentUser();
       if (!user) {
-        alert("Please log in to save flows.");
+        await modal.alert("Please log in to save flows.");
         return;
       }
 
@@ -382,10 +386,10 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       // Clear unsaved changes flag after successful save
       setHasUnsavedChanges(false);
 
-      alert("Flow saved successfully!");
+      await modal.alert("Flow saved successfully!");
     } catch (error) {
       console.error("Error saving flow:", error);
-      alert("Error saving flow. Please try again.");
+      await modal.alert("Error saving flow. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -412,7 +416,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     } catch (error) {
       console.error("Error loading flow:", error);
       if (showAlert) {
-        alert("Error loading flow. Please try again.");
+        await modal.alert("Error loading flow. Please try again.");
       }
     }
   };

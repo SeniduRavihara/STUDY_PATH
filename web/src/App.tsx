@@ -8,20 +8,20 @@ import {
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./components/pages/Dashboard";
 import DatabaseOverview from "./components/pages/DatabaseOverview";
-import FeedPostManager from "./components/pages/FeedPostManager";
+// import FeedPostManager from "./components/pages/FeedPostManager";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ModalProvider } from "./contexts/ModalContext";
+import { SidebarProvider } from "./contexts/SidebarContext";
+import "./index.css";
 import Login from "./pages/auth/Login";
-import MCQManager from "./pages/mcqs/MCQManager";
-import QuizPackDetail from "./pages/quiz-packs/QuizPackDetail";
-import QuizPackManager from "./pages/quiz-packs/QuizPackManager";
-import Settings from "./pages/settings/Settings";
 import Signup from "./pages/auth/Signup";
-import StudyPackManager from "./pages/study-packs/StudyPackManager";
+// import MCQManager from "./pages/mcqs/MCQManager";
+// import QuizPackDetail from "./pages/quiz-packs/QuizPackDetail";
+// import QuizPackManager from "./pages/quiz-packs/QuizPackManager";
+import Settings from "./pages/settings/Settings";
+// import StudyPackManager from "./pages/study-packs/StudyPackManager";
 import SubjectBuilder from "./pages/subjects/SubjectBuilder";
 import SubjectManager from "./pages/subjects/SubjectManager";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { SidebarProvider } from "./contexts/SidebarContext";
-import { ModalProvider } from "./contexts/ModalContext";
-import "./index.css";
 import TestContentBlocks from "./pages/TestContentBlocks";
 import "./utils/sessionDebug"; // Import debug utility
 
@@ -86,11 +86,11 @@ const AdminRoutes: React.FC = () => {
               </div>
             }
           />
-          <Route path="/mcqs" element={<MCQManager />} />
+          {/* <Route path="/mcqs" element={<MCQManager />} />
           <Route path="/feed-posts" element={<FeedPostManager />} />
           <Route path="/quiz-packs" element={<QuizPackManager />} />
           <Route path="/quiz-pack/:quizPackId" element={<QuizPackDetail />} />
-          <Route path="/study-packs" element={<StudyPackManager />} />
+          <Route path="/study-packs" element={<StudyPackManager />} /> */}
           <Route
             path="/subject-builder/:subjectId"
             element={<SubjectBuilder />}

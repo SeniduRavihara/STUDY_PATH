@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import type { ReactNode } from "react";
+import React, { createContext, useContext, useState } from "react";
 import CustomModal from "../components/modal/CustomModal";
 import type { ModalType } from "../types/modal";
 
@@ -14,7 +15,11 @@ interface ModalState {
 
 interface ModalContextType {
   alert: (message: string) => Promise<void>;
-  confirm: (message: string, confirmText?: string, cancelText?: string) => Promise<boolean>;
+  confirm: (
+    message: string,
+    confirmText?: string,
+    cancelText?: string
+  ) => Promise<boolean>;
   prompt: (message: string, defaultValue?: string) => Promise<string | null>;
 }
 
@@ -93,11 +98,28 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   };
 
   const contextValue: ModalContextType = {
-    alert: (message: string) => showModal(message, "alert") as Promise<void>,
-    confirm: (message: string, confirmText = "OK", cancelText = "Cancel") =>
-      showModal(message, "confirm", confirmText, cancelText) as Promise<boolean>,
-    prompt: (message: string, defaultValue = "") =>
-      showModal(message, "prompt", undefined, undefined, defaultValue) as Promise<string | null>,
+    alert: async (message: string) => {
+      await showModal(message, "alert");
+      return;
+    },
+    confirm: async (
+      message: string,
+      confirmText = "OK",
+      cancelText = "Cancel"
+    ) => {
+      const res = await showModal(message, "confirm", confirmText, cancelText);
+      return res === true;
+    },
+    prompt: async (message: string, defaultValue = "") => {
+      const res = await showModal(
+        message,
+        "prompt",
+        undefined,
+        undefined,
+        defaultValue
+      );
+      return typeof res === "string" ? res : null;
+    },
   };
 
   return (
@@ -109,7 +131,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         type={modal.type}
         onClose={handleClose}
         onConfirm={modal.type !== "alert" ? handleConfirm : undefined}
-        confirmText={modal.confirmText || (modal.type === "alert" ? "OK" : "Confirm")}
+        confirmText={
+          modal.confirmText || (modal.type === "alert" ? "OK" : "Confirm")
+        }
         cancelText={modal.cancelText}
         inputValue={modal.inputValue}
         onInputChange={handleInputChange}

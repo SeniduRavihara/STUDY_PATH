@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface SettingsData {
   // General Settings
@@ -54,6 +55,7 @@ const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadSettings();
