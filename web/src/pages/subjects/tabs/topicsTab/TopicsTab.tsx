@@ -1,38 +1,52 @@
-import React from "react";
+import type { User } from "@supabase/supabase-js";
 import { Plus } from "lucide-react";
+import React, { useState } from "react";
+import { useModal } from "../../../../contexts/ModalContext";
+import { TopicService } from "../../../../services/topicService";
+import type { TopicWithChildren } from "../../../../types/database";
 import TopicHierarchyItem from "./TopicHierarchyItem";
-import type { TopicWithChildren } from "../../types/database";
 
 interface TopicsTabProps {
   topics: TopicWithChildren[];
   onTopicsChange: (topics: TopicWithChildren[]) => void;
-  isAddingTopic: boolean;
-  setIsAddingTopic: (adding: boolean) => void;
-  newTopicName: string;
-  setNewTopicName: (name: string) => void;
-  newTopicDescription: string;
-  setNewTopicDescription: (desc: string) => void;
-  onAddTopic: (name: string, description: string) => void;
   subjectId: string;
-  user: any;
+  user: User | null;
 }
 
 const TopicsTab: React.FC<TopicsTabProps> = ({
   topics,
   onTopicsChange,
-  isAddingTopic,
-  setIsAddingTopic,
-  newTopicName,
-  setNewTopicName,
-  newTopicDescription,
-  setNewTopicDescription,
-  onAddTopic,
   subjectId,
   user,
 }) => {
-  const handleAddTopic = () => {
-    if (newTopicName.trim()) {
-      onAddTopic(newTopicName, newTopicDescription);
+  const [isAddingTopic, setIsAddingTopic] = useState(false);
+  const [newTopicName, setNewTopicName] = useState("");
+  const [newTopicDescription, setNewTopicDescription] = useState("");
+  const modal = useModal();
+
+  const handleAddTopic = async () => {
+    if (!newTopicName.trim()) return;
+    if (!user) {
+      await modal.alert("You must be logged in to create topics.");
+      return;
+    }
+    try {
+      await TopicService.createTopic({
+        subject_id: subjectId,
+        name: newTopicName,
+        description: newTopicDescription,
+        level: 0,
+        sort_order: topics.length + 1,
+        created_by: user.id,
+      });
+      const updatedTopics = await TopicService.getTopicsBySubject(subjectId);
+      onTopicsChange(updatedTopics);
+      setIsAddingTopic(false);
+      setNewTopicName("");
+      setNewTopicDescription("");
+    } catch (error) {
+      console.error("Error creating topic:", error);
+      await modal.alert("Error creating topic. Please try again.");
     }
   };
 
@@ -45,8 +59,8 @@ const TopicsTab: React.FC<TopicsTabProps> = ({
               Topic Hierarchy
             </h3>
             <p className="text-dark-400 mt-1">
-              Organize your subject into topics, subtopics, and
-              sub-subtopics with unlimited depth
+              Organize your subject into topics, subtopics, and sub-subtopics
+              with unlimited depth
             </p>
           </div>
           <button
@@ -60,7 +74,7 @@ const TopicsTab: React.FC<TopicsTabProps> = ({
 
         {/* Add New Topic Form */}
         {isAddingTopic && (
-          <div className="bg-dark-700 rounded-lg p-4 border border-dark-600">
+          <div className="bg-dark-700 rounded-lg p-4 mb-5 border border-dark-600">
             <h4 className="text-white font-medium mb-3">Add New Topic</h4>
             <div className="space-y-3">
               <input

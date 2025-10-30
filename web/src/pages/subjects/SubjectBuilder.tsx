@@ -9,6 +9,7 @@ import {
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useModal } from "../../contexts/ModalContext";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { SubjectService, TopicService } from "../../services";
 import type {
@@ -16,12 +17,11 @@ import type {
   Subject,
   TopicWithChildren,
 } from "../../types/database";
-import FlowTab from "./FlowTab";
-import OverviewTab from "./OverviewTab";
-import PreviewTab from "./PreviewTab";
-import SettingsTab from "./SettingsTab";
-import TopicsTab from "./TopicsTab";
-import { useModal } from "../../contexts/ModalContext";
+import FlowTab from "./tabs/FlowTab";
+import OverviewTab from "./tabs/OverviewTab";
+import PreviewTab from "./tabs/PreviewTab";
+import SettingsTab from "./tabs/SettingsTab";
+import TopicsTab from "./tabs/topicsTab/TopicsTab";
 
 const SubjectBuilder: React.FC = () => {
   const navigate = useNavigate();
@@ -38,9 +38,6 @@ const SubjectBuilder: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [topics, setTopics] = useState<TopicWithChildren[]>([]);
-  const [isAddingTopic, setIsAddingTopic] = useState(false);
-  const [newTopicName, setNewTopicName] = useState("");
-  const [newTopicDescription, setNewTopicDescription] = useState("");
 
   // Sync activeTab with URL parameter
   useEffect(() => {
@@ -135,7 +132,9 @@ const SubjectBuilder: React.FC = () => {
     if (!subject || !subjectId) return;
 
     if (flowNodes.length === 0) {
-      await modal.alert("Please create at least one learning node before publishing.");
+      await modal.alert(
+        "Please create at least one learning node before publishing."
+      );
       return;
     }
 
@@ -155,37 +154,6 @@ const SubjectBuilder: React.FC = () => {
     }
   };
 
-  const addNewTopic = async () => {
-    if (!subject || !newTopicName.trim()) return;
-
-    if (!user) {
-      await modal.alert("You must be logged in to create topics.");
-      return;
-    }
-
-    try {
-      await TopicService.createTopic({
-        subject_id: subject.id,
-        name: newTopicName,
-        description: newTopicDescription,
-        level: 0,
-        sort_order: topics.length + 1,
-        created_by: user.id,
-      });
-
-      // Reload topics from database
-      const updatedTopics = await TopicService.getTopicsBySubject(subject.id);
-      setTopics(updatedTopics);
-
-      setIsAddingTopic(false);
-      setNewTopicName("");
-      setNewTopicDescription("");
-    } catch (error) {
-      console.error("Error creating topic:", error);
-      await modal.alert("Error creating topic. Please try again.");
-    }
-  };
-
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
@@ -198,13 +166,6 @@ const SubjectBuilder: React.FC = () => {
           <TopicsTab
             topics={topics}
             onTopicsChange={setTopics}
-            isAddingTopic={isAddingTopic}
-            setIsAddingTopic={setIsAddingTopic}
-            newTopicName={newTopicName}
-            setNewTopicName={setNewTopicName}
-            newTopicDescription={newTopicDescription}
-            setNewTopicDescription={setNewTopicDescription}
-            onAddTopic={addNewTopic}
             subjectId={subject?.id || ""}
             user={user}
           />

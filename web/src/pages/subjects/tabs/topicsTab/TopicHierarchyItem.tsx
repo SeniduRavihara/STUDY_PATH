@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import {
   Check,
   ChevronDown,
@@ -9,16 +9,17 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { TopicService } from "../../services";
-import { useModal } from "../../contexts/ModalContext";
-import type { TopicWithChildren } from "../../types/database";
+import React, { useState } from "react";
+import { useModal } from "../../../../contexts/ModalContext";
+import { TopicService } from "../../../../services";
+import type { TopicWithChildren } from "../../../../types/database";
 
 interface TopicHierarchyItemProps {
   topic: TopicWithChildren;
   onUpdate: (topics: TopicWithChildren[]) => void;
   allTopics: TopicWithChildren[];
   subjectId: string;
-  user: any; // Add user prop
+  user: User | null;
 }
 
 const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
@@ -147,9 +148,9 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                 className="text-dark-400 hover:text-white transition-colors"
               >
                 {isExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-5 h-5" />
                 ) : (
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 )}
               </button>
             )}
@@ -220,13 +221,13 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   onClick={saveEdit}
                   className="text-green-400 hover:text-green-300 transition-colors"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-5 h-5" />
                 </button>
                 <button
                   onClick={cancelEdit}
                   className="text-red-400 hover:text-red-300 transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </>
             ) : (
@@ -236,21 +237,21 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   className="text-blue-400 hover:text-blue-300 transition-colors"
                   title="Edit topic"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setIsAddingChild(true)}
                   className="text-primary-400 hover:text-primary-300 transition-colors"
                   title="Add subtopic"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => deleteTopic(topic.id)}
                   className="text-red-400 hover:text-red-300 transition-colors"
                   title="Delete topic"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </>
             )}
@@ -282,7 +283,7 @@ const TopicHierarchyItem: React.FC<TopicHierarchyItemProps> = ({
                   className="px-3 py-1 bg-primary-500 text-white rounded text-sm hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
                   {isAddingChildLoading && (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   )}
                   <span>
                     {isAddingChildLoading ? "Adding..." : "Add Subtopic"}

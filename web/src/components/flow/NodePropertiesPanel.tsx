@@ -1,41 +1,18 @@
 import { Layers, Maximize2, Minimize2, Plus, Trash2 } from "lucide-react";
 import React, { useState } from "react";
-import type { TopicWithChildren } from "../../types/database";
-import ContentBlockEditor, { type ContentBlock } from "../content/ContentBlockEditor";
+import type { FlowNode, TopicWithChildren } from "../../types/database";
+import ContentBlockEditor, {
+  type ContentBlock,
+} from "../content/ContentBlockEditor";
 import BlockTypeSelector from "../content/block-editors/BlockTypeSelector";
 import SingleBlockEditor from "../content/block-editors/SingleBlockEditor";
-
-interface FlowNode {
-  id: string;
-  type:
-    | "quiz"
-    | "study"
-    | "video"
-    | "assignment"
-    | "assessment"
-    | "start"
-    | "end";
-  title: string;
-  description: string;
-  sort_order: number;
-  config: any;
-  connections: string[];
-  status: "locked" | "available" | "completed" | "current";
-  difficulty: "easy" | "medium" | "hard";
-  xp: number;
-  icon: string;
-  color: [string, string];
-  estimatedTime?: string;
-  position?: { x: number; y: number };
-  content_blocks?: ContentBlock[]; // NEW: Content blocks array
-}
 
 interface NodePropertiesPanelProps {
   selectedNode: FlowNode | null;
   updateNode: (nodeId: string, updates: Partial<FlowNode>) => void;
   deleteNode: (nodeId: string) => void;
-  quizPacks: any[];
-  loadingQuizPacks: boolean;
+  // quizPacks: any[];
+  // loadingQuizPacks: boolean;
   topics: TopicWithChildren[];
   findTopicById: (
     topics: TopicWithChildren[],
@@ -48,15 +25,15 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
   selectedNode,
   updateNode,
   deleteNode,
-  quizPacks,
-  loadingQuizPacks,
+  // quizPacks,
+  // loadingQuizPacks,
   topics,
   findTopicById,
   getNodeColor,
 }) => {
   // Avoid unused prop TypeScript warnings for legacy/optional props
-  void quizPacks;
-  void loadingQuizPacks;
+  // void quizPacks;
+  // void loadingQuizPacks;
   void topics;
   void findTopicById;
   const [activeTab, setActiveTab] = useState<string>("basic");
@@ -152,12 +129,12 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             <h3 className="text-xl font-semibold text-white">
               Node Properties - {selectedNode.title}
             </h3>
-            <span className="text-sm text-dark-400">
+            {/* <span className="text-sm text-dark-400">
               (
               {selectedNode.type.charAt(0).toUpperCase() +
                 selectedNode.type.slice(1)}{" "}
               Node)
-            </span>
+            </span> */}
           </div>
           <div className="flex items-center space-x-3">
             <button
@@ -241,7 +218,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                     Description
                   </label>
                   <textarea
-                    value={selectedNode.description}
+                    value={selectedNode.description ?? ""}
                     onChange={(e) =>
                       updateNode(selectedNode.id, {
                         description: e.target.value,
@@ -274,7 +251,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                       Difficulty
                     </label>
                     <select
-                      value={selectedNode.difficulty}
+                      value={selectedNode.difficulty ?? ""}
                       onChange={(e) =>
                         updateNode(selectedNode.id, {
                           difficulty: e.target.value as
@@ -456,7 +433,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
               Description
             </label>
             <textarea
-              value={selectedNode.description}
+              value={selectedNode.description ?? ""}
               onChange={(e) =>
                 updateNode(selectedNode.id, { description: e.target.value })
               }
@@ -488,7 +465,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
               Difficulty
             </label>
             <select
-              value={selectedNode.difficulty}
+              value={selectedNode.difficulty ?? ""}
               onChange={(e) =>
                 updateNode(selectedNode.id, {
                   difficulty: e.target.value as "easy" | "medium" | "hard",
@@ -509,26 +486,33 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
             </label>
             <input
               type="text"
-              value={selectedNode.estimatedTime || ""}
-              onChange={(e) =>
-                updateNode(selectedNode.id, { estimatedTime: e.target.value })
+              value={
+                selectedNode.estimated_time !== undefined
+                  ? String(selectedNode.estimated_time)
+                  : ""
               }
+              onChange={(e) => {
+                const parsed = parseInt(e.target.value, 10);
+                updateNode(selectedNode.id, {
+                  estimated_time: isNaN(parsed) ? 0 : parsed,
+                });
+              }}
               placeholder="e.g., 5-10"
               className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
 
           {/* Legacy quiz packs removed: prefer Content Blocks for MCQs */}
-          {selectedNode.type === "quiz" && (
+          {/* {selectedNode.type == "quiz" && (
             <div>
               <p className="text-dark-400 text-sm mt-1">
                 Legacy quiz packs are no longer supported. Use the Content
                 Blocks tab to add MCQs directly to this node.
               </p>
             </div>
-          )}
+          )} */}
 
-          <div className="flex items-center space-x-4 pt-4 border-t border-dark-600">
+          {/* <div className="flex items-center space-x-4 pt-4 border-t border-dark-600">
             <div className="flex items-center space-x-2">
               <div
                 className={`w-4 h-4 ${
@@ -541,7 +525,7 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
                 Node
               </span>
             </div>
-          </div>
+          </div> */}
         </div>
       ) : (
         <div className="space-y-4">

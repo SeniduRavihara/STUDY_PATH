@@ -12,13 +12,14 @@ import {
   Settings,
   Trophy,
   Video,
+  X,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { AuthService } from "../../services/authService";
 import { FlowBuilderService } from "../../services/flowBuilderService";
 import { type FlowNode, type TopicWithChildren } from "../../types/database";
-import TopicHierarchySelector from "../forms/TopicHierarchySelector";
 import NodePropertiesPanel from "./NodePropertiesPanel";
+import TopicHierarchySelector from "./TopicHierarchySelector";
 
 interface FlowBuilderProps {
   nodes: FlowNode[];
@@ -281,8 +282,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   // Quiz packs are now stored inside flow nodes as JSON. Keep these values empty
   // so legacy UI paths gracefully fall back to content-blocks.
-  const quizPacks: unknown[] = [];
-  const loadingQuizPacks = false;
+  // const quizPacks: unknown[] = [];
+  // const loadingQuizPacks = false;
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Topics are already hierarchical
@@ -1102,8 +1103,8 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             selectedNode={selectedNode}
             updateNode={updateNode}
             deleteNode={deleteNode}
-            quizPacks={quizPacks}
-            loadingQuizPacks={loadingQuizPacks}
+            // quizPacks={quizPacks}
+            // loadingQuizPacks={loadingQuizPacks}
             topics={hierarchicalTopics}
             findTopicById={findTopicByIdHierarchical}
             getNodeColor={getNodeColor}
@@ -1146,8 +1147,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
               <button
                 onClick={() => setShowTopicSelector(false)}
                 className="text-dark-400 hover:text-white transition-colors"
+                title="Close"
               >
-                ×
+                <X className="w-6 h-6" />
               </button>
             </div>
 

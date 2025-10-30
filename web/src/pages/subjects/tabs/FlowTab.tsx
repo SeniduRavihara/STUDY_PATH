@@ -1,6 +1,6 @@
 import React from "react";
-import FlowBuilder from "../../components/flow/FlowBuilder";
-import type { FlowNode, TopicWithChildren } from "../../types/database";
+import FlowBuilder from "../../../components/flow/FlowBuilder";
+import type { FlowNode, TopicWithChildren } from "../../../types/database";
 
 interface FlowTabProps {
   nodes: FlowNode[];

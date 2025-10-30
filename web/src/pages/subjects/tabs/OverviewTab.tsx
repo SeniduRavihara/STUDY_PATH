@@ -1,5 +1,5 @@
 import React from "react";
-import type { Subject } from "../../types/database";
+import type { Subject } from "../../../types/database";
 
 interface OverviewTabProps {
   subject: Subject | null;
@@ -27,7 +27,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               type="text"
               value={subject?.name || ""}
               onChange={(e) =>
-                subject && onSubjectDataChange({ ...subject, name: e.target.value })
+                subject &&
+                onSubjectDataChange({ ...subject, name: e.target.value })
               }
               className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Enter subject name"
