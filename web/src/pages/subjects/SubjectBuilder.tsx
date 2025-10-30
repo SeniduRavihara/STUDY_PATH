@@ -36,6 +36,10 @@ const SubjectBuilder: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    console.log("Flow nodes updated:", flowNodes);
+  }, [flowNodes]);
+
   // Sync activeTab with URL parameter
   useEffect(() => {
     const tabFromUrl = searchParams.get("tab");

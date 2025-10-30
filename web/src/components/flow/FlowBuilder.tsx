@@ -37,6 +37,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const modal = useModal();
 
   // Topics are already hierarchical
@@ -104,7 +105,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       try {
         // Get flow for this topic
         const flow = await FlowBuilderService.getFlowByTopic(currentTopicId);
-        console.log("Flow for topic:", flow);
+        // console.log("Flow for topic:", flow);
 
         if (flow) {
           await loadFlow(flow.id, false);
@@ -203,19 +204,11 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     // Add node to UI immediately
     onNodesChange([...nodes, newNode]);
 
-    // Save node to database
-    try {
-      await FlowBuilderService.saveFlowNodes(currentFlowId, [
-        ...nodes,
-        newNode,
-      ]);
-    } catch (error) {
-      console.error("Error saving new node to database:", error);
-      // Optionally show a toast or revert UI change
-    }
+    // Mark as having unsaved changes (save to DB only when user clicks Save Flow)
+    setHasUnsavedChanges(true);
   };
 
-  const updateNode = (nodeId: string, updates: Partial<FlowNode>) => {
+  const updateNode = async (nodeId: string, updates: Partial<FlowNode>) => {
     console.log("🔧 FlowBuilder updateNode called:", nodeId, updates);
     const updatedNodes = nodes.map((node) =>
       node.id === nodeId ? { ...node, ...updates } : node
@@ -230,9 +223,12 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         setSelectedNode(freshNode);
       }
     }
+
+    // Mark as having unsaved changes (save to DB only when user clicks Save Flow)
+    setHasUnsavedChanges(true);
   };
 
-  const deleteNode = (nodeId: string) => {
+  const deleteNode = async (nodeId: string) => {
     const updatedNodes = nodes.filter((node) => node.id !== nodeId);
     // Remove connections to this node
     const cleanedNodes = updatedNodes.map((node) => ({
@@ -241,6 +237,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     }));
     onNodesChange(cleanedNodes);
     setSelectedNode(null);
+
+    // Mark as having unsaved changes (save to DB only when user clicks Save Flow)
+    setHasUnsavedChanges(true);
   };
 
   const handleTopicChange = (topicId: string) => {
@@ -306,6 +305,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       // Save flow nodes
       await FlowBuilderService.saveFlowNodes(currentFlowId || "", nodes);
 
+      // Clear unsaved changes flag after successful save
+      setHasUnsavedChanges(false);
+
       alert("Flow saved successfully!");
     } catch (error) {
       console.error("Error saving flow:", error);
@@ -325,6 +327,9 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         // console.log("SENU", flowWithNodes.nodes);
 
         setFlowId(flowId);
+
+        // Clear unsaved changes since we just loaded fresh data
+        setHasUnsavedChanges(false);
 
         if (showAlert) {
           modal.alert("Flow loaded successfully!");
@@ -371,12 +376,18 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             disabled={
               isSaving || !currentTopicId || nodes.length === 0 || isLoading
             }
-            className="btn-secondary flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+              hasUnsavedChanges && !isSaving
+                ? "btn-warning animate-pulse"
+                : "btn-secondary"
+            }`}
             title={
               !currentTopicId
                 ? "Please select a topic first"
                 : nodes.length === 0
                 ? "Please add some nodes first"
+                : hasUnsavedChanges
+                ? "Save unsaved changes to database"
                 : "Save flow to database"
             }
           >
@@ -388,8 +399,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
                 ? "Select Topic First"
                 : nodes.length === 0
                 ? "Add Nodes First"
+                : hasUnsavedChanges
+                ? "Save Changes"
                 : "Save Flow"}
             </span>
+            {hasUnsavedChanges && !isSaving && (
+              <div className="w-2 h-2 bg-orange-400 rounded-full animate-ping"></div>
+            )}
           </button>
           <button
             onClick={() => addNode()}

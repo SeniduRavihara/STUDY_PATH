@@ -9,8 +9,8 @@ import SingleBlockEditor from "../content/block-editors/SingleBlockEditor";
 
 interface NodePropertiesPanelProps {
   selectedNode: FlowNode | null;
-  updateNode: (nodeId: string, updates: Partial<FlowNode>) => void;
-  deleteNode: (nodeId: string) => void;
+  updateNode: (nodeId: string, updates: Partial<FlowNode>) => Promise<void>;
+  deleteNode: (nodeId: string) => Promise<void>;
   // quizPacks: any[];
   // loadingQuizPacks: boolean;
   topics: TopicWithChildren[];
@@ -450,9 +450,9 @@ const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
               type="number"
               value={selectedNode.xp_reward || 0}
               onChange={(e) =>
-              updateNode(selectedNode.id, {
-              xp_reward: parseInt(e.target.value) || 0,
-              })
+                updateNode(selectedNode.id, {
+                  xp_reward: parseInt(e.target.value) || 0,
+                })
               }
               className="w-full px-4 py-3 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               min="0"

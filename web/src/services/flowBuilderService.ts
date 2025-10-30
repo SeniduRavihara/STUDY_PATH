@@ -149,40 +149,4 @@ export class FlowBuilderService {
     };
   }
 
-  // Optimized: Load only flow structure (no MCQs, no quiz packs)
-  static async loadFlowStructure(
-    flowId: string
-  ): Promise<{ flow: Flow; flow_nodes: FlowNode[] } | null> {
-    // Get flow first
-    const { data: flow, error: flowError } = await supabase
-      .from("flows")
-      .select("*")
-      .eq("id", flowId)
-      .single();
-
-    if (flowError) {
-      console.error("Error fetching flow:", flowError);
-      throw flowError;
-    }
-
-    if (!flow) return null;
-
-    // Get flow nodes separately
-    const { data: nodes, error: nodesError } = await supabase
-      .from("flow_nodes")
-      .select("*")
-      .eq("flow_id", flowId)
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-
-    if (nodesError) {
-      console.error("Error fetching flow nodes:", nodesError);
-      throw nodesError;
-    }
-
-    return {
-      flow,
-      flow_nodes: nodes || [],
-    };
-  }
 }
