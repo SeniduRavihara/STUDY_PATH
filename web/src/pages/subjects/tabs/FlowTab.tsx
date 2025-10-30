@@ -27,7 +27,7 @@ const FlowTab: React.FC<FlowTabProps> = ({
       topics={topics}
       onTopicsChange={onTopicsChange}
       subjectId={subjectId}
-      currentFlowId={undefined} // Will be set when flow is created
+      // currentFlowId={undefined} // Will be set when flow is created
     />
   );
 };

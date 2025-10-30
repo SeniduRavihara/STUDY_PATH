@@ -1,5 +1,6 @@
 import { Plus, Settings, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useModal } from "../../contexts/ModalContext";
 import { AuthService } from "../../services/authService";
 import { FlowBuilderService } from "../../services/flowBuilderService";
 import { type FlowNode, type TopicWithChildren } from "../../types/database";
@@ -22,7 +23,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   onNodesChange,
   subjectName,
   topics,
-  onTopicsChange,
+  // onTopicsChange,
   subjectId,
   currentFlowId,
 }) => {
@@ -36,7 +37,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [flowId, setFlowId] = useState<string | null>(currentFlowId || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const modal = useModal();
 
   // Topics are already hierarchical
   const hierarchicalTopics = topics;
@@ -79,6 +80,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
         localStorage.removeItem(`lastSelectedTopic_${subjectId}`);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subjectId, topics]);
 
   // Save selected topic to localStorage when it changes
@@ -100,15 +102,13 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
       setIsLoading(true);
       try {
-        // Get flows for this topic
-        const flows = await FlowBuilderService.getFlowsByTopic(currentTopicId);
+        // Get flow for this topic
+        const flow = await FlowBuilderService.getFlowByTopic(currentTopicId);
+        console.log("Flow for topic:", flow);
 
-        if (flows.length > 0) {
-          // Load the first flow (you can modify this logic to load a specific flow)
-          const flow = flows[0];
-          await loadFlow(flow.id, false); // Don't show alert when auto-loading
+        if (flow) {
+          await loadFlow(flow.id, false);
         } else {
-          // No flow exists for this topic, start fresh
           onNodesChange([]);
           setFlowId(null);
         }
@@ -123,6 +123,7 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     };
 
     loadExistingFlow();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTopicId]);
 
   const getNodeColor = () => {
@@ -143,15 +144,46 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     return null;
   };
 
-  const addNode = () => {
+  const addNode = async () => {
     // Get the highest sort_order from existing nodes and add 1
     const maxSortOrder =
       nodes.length > 0 ? Math.max(...nodes.map((n) => n.sort_order || 1)) : 0;
     const newSortOrder = maxSortOrder + 1;
 
+    // Ensure flowId exists before adding node
+    let currentFlowId = flowId;
+    if (!currentFlowId) {
+      // Try to create a new flow if possible
+      if (!currentTopicId) {
+        alert("Please select a topic before adding nodes.");
+        return;
+      }
+      try {
+        const user = await AuthService.getCurrentUser();
+        if (!user) {
+          alert("Please log in to add nodes.");
+          return;
+        }
+        const flow = await FlowBuilderService.createFlow({
+          topicId: currentTopicId,
+          name: `${getCurrentTopic()?.name || "Topic"} Flow`,
+          description: `Learning flow for ${
+            getCurrentTopic()?.name || "topic"
+          }`,
+          createdBy: user.id,
+        });
+        currentFlowId = flow.id;
+        setFlowId(currentFlowId);
+      } catch (error) {
+        console.error("Error creating flow before adding node:", error);
+        alert("Error creating flow. Please try again.");
+        return;
+      }
+    }
+
     const newNode: FlowNode = {
       id: `node-${Date.now()}`,
-      flow_id: flowId || "", // Use current flow ID or empty string
+      flow_id: currentFlowId || "",
       title: `New Learning Node`,
       description: `A new learning node that you can customize with content blocks`,
       sort_order: newSortOrder,
@@ -161,15 +193,26 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
       difficulty: "medium",
       xp_reward: 20,
       estimated_time: 10,
-      content_blocks: [], // Start with empty content blocks - user adds them manually
+      content_blocks: [],
       is_active: true,
-      created_by: null, // Will be set when saved
+      created_by: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    // New node created
+    // Add node to UI immediately
     onNodesChange([...nodes, newNode]);
+
+    // Save node to database
+    try {
+      await FlowBuilderService.saveFlowNodes(currentFlowId, [
+        ...nodes,
+        newNode,
+      ]);
+    } catch (error) {
+      console.error("Error saving new node to database:", error);
+      // Optionally show a toast or revert UI change
+    }
   };
 
   const updateNode = (nodeId: string, updates: Partial<FlowNode>) => {
@@ -227,7 +270,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     // };
 
     // onTopicsChange(updateTopicFlow(topics));
-
   };
 
   // Save flow to database
@@ -273,55 +315,19 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     }
   };
 
-  // Load flow from database
+  // Load flow Nodes from database
   const loadFlow = async (flowId: string, showAlert: boolean = true) => {
     try {
       const flowWithNodes = await FlowBuilderService.loadFlowWithNodes(flowId);
       if (flowWithNodes) {
-        // Convert database nodes back to FlowNode format
-        const convertedNodes: FlowNode[] = flowWithNodes.nodes.map(
-          (node: {
-            id: string;
-            title: string;
-            description: string;
-            sort_order: number;
-            config: unknown;
-            connections: string[];
-            status: string;
-            difficulty: string;
-            xp_reward: number;
-            estimated_time?: number;
-            content_blocks?: unknown[];
-            flow_id: string;
-            is_active: boolean;
-            created_by: string | null;
-            created_at: string;
-            updated_at: string;
-          }) => ({
-            id: node.id,
-            flow_id: node.flow_id,
-            title: node.title,
-            description: node.description,
-            sort_order: node.sort_order,
-            config: node.config,
-            connections: node.connections || [],
-            status: node.status as FlowNode["status"],
-            difficulty: node.difficulty as FlowNode["difficulty"],
-            xp_reward: node.xp_reward,
-            estimated_time: node.estimated_time,
-            content_blocks: node.content_blocks || [],
-            is_active: node.is_active,
-            created_by: node.created_by,
-            created_at: node.created_at,
-            updated_at: node.updated_at,
-          })
-        );
+        // nodes is already FlowNode[] - no conversion needed!
+        onNodesChange(flowWithNodes.nodes);
+        // console.log("SENU", flowWithNodes.nodes);
 
-        onNodesChange(convertedNodes);
         setFlowId(flowId);
 
         if (showAlert) {
-          alert("Flow loaded successfully!");
+          modal.alert("Flow loaded successfully!");
         }
       }
     } catch (error) {
@@ -407,52 +413,47 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
             }}
           >
             {/* Course Title */}
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <button
-                    onClick={() => {
-                      setShowTopicSelector(true);
-                    }}
-                    className="flex items-center gap-3 w-full bg-dark-700 hover:bg-dark-600 border border-primary-500/30 rounded-xl px-6 py-4 shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 group cursor-pointer"
-                    style={{ minHeight: 64 }}
-                  >
-                    <span className="inline-flex items-center justify-center w-9 h-9 bg-primary-500/10 rounded-full mr-3">
-                      {/* Topic icon */}
-                      <svg
-                        width="20"
-                        height="20"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          fill="#38bdf8"
-                          opacity="0.15"
-                        />
-                        <path
-                          d="M8 12h8M8 16h8M8 8h8"
-                          stroke="#38bdf8"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </span>
-                    <div className="flex flex-col items-start">
-                      <h3 className="text-white text-xl font-bold group-hover:text-primary-400 transition-colors">
-                        {selectedTopicName ||
-                          getCurrentTopic()?.name ||
-                          "Select a Topic"}
-                      </h3>
-                      <p className="text-primary-400 text-xs mt-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                        Click to{" "}
-                        {getCurrentTopic() ? "change topic" : "select topic"}
-                      </p>
-                    </div>
-                  </button>
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <button
+                  onClick={() => {
+                    setShowTopicSelector(true);
+                  }}
+                  className="flex items-center gap-3 w-full bg-dark-700 hover:bg-dark-600 border border-primary-500/30 rounded-xl px-6 py-4 shadow transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-400 group cursor-pointer"
+                  style={{ minHeight: 64 }}
+                >
+                  <span className="inline-flex items-center justify-center w-9 h-9 bg-primary-500/10 rounded-full mr-3">
+                    {/* Topic icon */}
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        fill="#38bdf8"
+                        opacity="0.15"
+                      />
+                      <path
+                        d="M8 12h8M8 16h8M8 8h8"
+                        stroke="#38bdf8"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <div className="flex flex-col items-start">
+                    <h3 className="text-white text-xl font-bold group-hover:text-primary-400 transition-colors">
+                      {selectedTopicName ||
+                        getCurrentTopic()?.name ||
+                        "Select a Topic"}
+                    </h3>
+                    <p className="text-primary-400 text-xs mt-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                      Click to{" "}
+                      {getCurrentTopic() ? "change topic" : "select topic"}
+                    </p>
+                  </div>
+                </button>
               </div>
+            </div>
           </div>
 
           {/* Flow Canvas */}

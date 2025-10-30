@@ -18,7 +18,10 @@ CREATE TABLE IF NOT EXISTS public.flows (
     total_nodes INTEGER DEFAULT 0,
     estimated_duration INTEGER DEFAULT 0, -- in minutes
     difficulty TEXT CHECK (difficulty IN ('easy', 'medium', 'hard')) DEFAULT 'medium',
-    total_xp INTEGER DEFAULT 0
+    total_xp INTEGER DEFAULT 0,
+    
+    -- Constraints
+    UNIQUE(topic_id)
 );
 
 -- 2) Enable Row-Level Security

@@ -9,6 +9,16 @@ export type Topic = Database["public"]["Tables"]["topics"]["Row"];
 export type TopicInsert = Database["public"]["Tables"]["topics"]["Insert"];
 export type TopicUpdate = Database["public"]["Tables"]["topics"]["Update"];
 
+export type Flow = Database["public"]["Tables"]["flows"]["Row"];
+export type FlowInsert = Database["public"]["Tables"]["flows"]["Insert"];
+export type FlowUpdate = Database["public"]["Tables"]["flows"]["Update"];
+
+export type FlowNodeDb = Database["public"]["Tables"]["flow_nodes"]["Row"];
+export type FlowNodeInsert =
+  Database["public"]["Tables"]["flow_nodes"]["Insert"];
+export type FlowNodeUpdate =
+  Database["public"]["Tables"]["flow_nodes"]["Update"];
+
 // Extended Topic interface for hierarchical display
 export interface TopicWithChildren extends Topic {
   children?: TopicWithChildren[];
@@ -16,7 +26,7 @@ export interface TopicWithChildren extends Topic {
 }
 
 // Flow/Node types
-export type FlowNodeDb = Database["public"]["Tables"]["flow_nodes"]["Row"];
+// export type FlowNodeDb = Database["public"]["Tables"]["flow_nodes"]["Row"];
 
 export interface FlowNode extends Omit<FlowNodeDb, "content_blocks"> {
   content_blocks: ContentBlock[];
