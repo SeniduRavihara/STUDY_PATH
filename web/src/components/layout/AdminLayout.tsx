@@ -65,8 +65,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         } ${sidebarCollapsed ? "w-16" : "w-64"}`}
       >
         <div
-          className={`flex items-center justify-between h-16 border-b border-dark-800 ${
-            sidebarCollapsed ? "px-2" : "px-6"
+          className={`flex items-center h-16 border-b border-dark-800 ${
+            sidebarCollapsed ? "px-2 justify-center" : "px-6 justify-between"
           }`}
         >
           <div
@@ -74,9 +74,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               sidebarCollapsed ? "gap-2" : "space-x-3"
             }`}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-purple rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
+            {!sidebarCollapsed && (
+              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-accent-purple rounded-lg flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+            )}
             {!sidebarCollapsed && (
               <span className="text-xl font-bold text-white">StudyPath</span>
             )}
