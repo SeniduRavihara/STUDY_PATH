@@ -1,5 +1,5 @@
-import React, { useRef } from "react";
 import { CheckCircle, FileText, Play, Settings } from "lucide-react";
+import React, { useRef } from "react";
 import { type FlowNode, type TopicWithChildren } from "../../types/database";
 
 interface FlowCanvasProps {
@@ -19,12 +19,12 @@ interface PositionedFlowNode extends FlowNode {
 
 // 3-Column Grid System Configuration (matching mobile app)
 const FLOW_CONFIG = {
-  nodeSpacing: 140, // Vertical spacing between nodes
-  leftColumnX: 0.2, // 20% from left edge (left column)
+  nodeSpacing: 140, // Vertical spacing between nodes (reduced from 140)
+  leftColumnX: 0.3, // 25% from left edge (left column)
   centerColumnX: 0.5, // 50% from left edge (center column)
-  rightColumnX: 0.8, // 80% from left edge (right column)
-  startY: 100, // Start 100px from top
-  nodeSize: 110, // Node diameter for positioning
+  rightColumnX: 0.7, // 75% from left edge (right column)
+  startY: 80, // Start 80px from top (reduced from 100)
+  nodeSize: 120, // Node diameter for positioning
   connectionOffset: 25, // Vertical offset for L-shaped connections
 };
 
@@ -303,7 +303,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
         </div>
       )}
       <div
-        className="relative mx-auto"
+        className="relative mx-auto "
         style={{
           minHeight: totalContentHeight,
           width: "800px", // Fixed width for consistent centering
@@ -313,7 +313,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
         {/* SVG Connections */}
         <svg
           height={totalContentHeight}
-          width="800"
+          width="700"
           style={{ position: "absolute", top: 0, left: 0 }}
         >
           {verticalPaths.map((path, index) => (
@@ -321,7 +321,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
               key={index}
               d={path}
               stroke="#666666"
-              strokeWidth="6"
+              strokeWidth="8"
               fill="none"
               opacity={0.8}
               strokeLinecap="round"
