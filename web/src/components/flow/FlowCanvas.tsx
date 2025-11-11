@@ -1,5 +1,5 @@
-import { CheckCircle, FileText, Play, Settings } from "lucide-react";
-import React, { useRef } from "react";
+import { CheckCircle, FileText, Play, Plus, Settings, Zap } from "lucide-react";
+import React, { useRef, useState } from "react";
 import { type FlowNode, type TopicWithChildren } from "../../types/database";
 
 interface FlowCanvasProps {
@@ -19,14 +19,44 @@ interface PositionedFlowNode extends FlowNode {
 
 // 3-Column Grid System Configuration (matching mobile app)
 const FLOW_CONFIG = {
-  nodeSpacing: 140, // Vertical spacing between nodes (reduced from 140)
+  nodeSpacing: 160, // Vertical spacing between nodes - increased for better breathing room
   leftColumnX: 0.3, // 25% from left edge (left column)
   centerColumnX: 0.5, // 50% from left edge (center column)
   rightColumnX: 0.7, // 75% from left edge (right column)
-  startY: 80, // Start 80px from top (reduced from 100)
-  nodeSize: 120, // Node diameter for positioning
+  startY: 100, // Start 100px from top
+  nodeSize: 100, // Node size - slightly smaller for cleaner look
   connectionOffset: 25, // Vertical offset for L-shaped connections
 };
+
+// Connection and styling constants for easy adjustments
+const CONNECTION_CONFIG = {
+  strokeWidth: 8, // Thickness of connection lines
+  cornerRadius: 30, // Radius for rounded corners in L-shaped paths
+  opacity: 0.6, // Opacity of connection lines
+  color: "#8b5cf6", // Purple color for connections
+};
+
+const NODE_CONFIG = {
+  borderRadius: 24, // Border radius for node circles
+  width: 100, // Node width
+  height: 100, // Node height
+};
+
+// Optional intermediate node configuration
+const OPTIONAL_NODE_CONFIG = {
+  width: 90, // Slightly smaller than regular nodes
+  height: 90,
+  borderRadius: 20,
+  backgroundColor: "#4c4563", // Darker purple/gray color from image
+  iconColor: "#ffffff",
+};
+
+// Interface for optional intermediate nodes (UI only, no database)
+interface OptionalNode {
+  id: string;
+  title: string;
+  description?: string;
+}
 
 // 3-Column Grid Flow Pattern (Center acts as transition hub) - Mobile Logic
 const POSITION_PATTERN = [
@@ -108,17 +138,18 @@ const getNodeAnchorPoint = (
 ): { x: number; y: number } => {
   const centerX = node.position?.x || 0;
   const centerY = node.position?.y || 0;
-  const halfSize = FLOW_CONFIG.nodeSize / 2;
+  const halfWidth = NODE_CONFIG.width / 2;
+  const halfHeight = NODE_CONFIG.height / 2;
 
   switch (direction) {
     case "top":
-      return { x: centerX, y: centerY - halfSize };
+      return { x: centerX, y: centerY - halfHeight };
     case "bottom":
-      return { x: centerX, y: centerY + halfSize };
+      return { x: centerX, y: centerY + halfHeight };
     case "left":
-      return { x: centerX - halfSize, y: centerY };
+      return { x: centerX - halfWidth, y: centerY };
     case "right":
-      return { x: centerX + halfSize, y: centerY };
+      return { x: centerX + halfWidth, y: centerY };
     case "center":
       return { x: centerX, y: centerY };
     default:
@@ -176,7 +207,7 @@ const createVerticalFlowPath = (
   const nextPos = getSmartPosition((endNode.sort_order || 1) - 1);
 
   let path: string;
-  const cornerRadius = 8; // Small radius to smooth the sharp turns
+  const cornerRadius = CONNECTION_CONFIG.cornerRadius; // Larger radius for more rounded L-shaped corners
 
   // Mobile-inspired L-shaped patterns with smooth corners
   if (currentPos === "center" && nextPos === "right") {
@@ -252,6 +283,12 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // State for optional intermediate nodes (UI only)
+  // Array index represents position: 0 = between nodes 1-3, 1 = between 3-5, 2 = between 5-7, etc.
+  const [optionalNodes, setOptionalNodes] = useState<(OptionalNode | null)[]>(
+    []
+  );
+
   // Helper function to get node icon (all nodes use the same triangle play icon)
   const getNodeIcon = () => {
     return Play;
@@ -259,7 +296,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
 
   // Helper function to get node color (all nodes use the same color for now)
   const getNodeColor = () => {
-    return ["#10b981", "#059669"];
+    return ["#a78bfa", "#8b5cf6"]; // Softer purple gradient
   };
 
   // Compute flow positions
@@ -267,6 +304,52 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
 
   // Generate vertical paths
   const verticalPaths = generateVerticalFlowPaths(flowNodes);
+
+  // Calculate positions for optional intermediate nodes (between 1-3, 3-5, 5-7, etc.)
+  const getOptionalNodePosition = (
+    index: number,
+    containerWidth: number = 800
+  ) => {
+    // Optional node at index i sits between flow nodes (2*i) and (2*i + 2)
+    // For example: index 0 = between nodes 0 and 2 (nodes 1 and 3 in 1-based)
+    const beforeNodeIndex = index * 2;
+    const afterNodeIndex = index * 2 + 2;
+
+    if (
+      beforeNodeIndex >= flowNodes.length ||
+      afterNodeIndex >= flowNodes.length
+    ) {
+      return null;
+    }
+
+    const beforeNode = flowNodes[beforeNodeIndex];
+    const afterNode = flowNodes[afterNodeIndex];
+
+    // Position in center, between the two nodes
+    const y =
+      ((beforeNode.position?.y || 0) + (afterNode.position?.y || 0)) / 2;
+    const x = containerWidth * FLOW_CONFIG.centerColumnX; // Always in center
+
+    return { x, y };
+  };
+
+  // Handler to add optional node
+  const handleAddOptionalNode = (index: number) => {
+    const newOptionalNodes = [...optionalNodes];
+    newOptionalNodes[index] = {
+      id: `optional-${Date.now()}`,
+      title: "Optional Node",
+      description: "Click to edit",
+    };
+    setOptionalNodes(newOptionalNodes);
+  };
+
+  // Handler to remove optional node
+  const handleRemoveOptionalNode = (index: number) => {
+    const newOptionalNodes = [...optionalNodes];
+    newOptionalNodes[index] = null;
+    setOptionalNodes(newOptionalNodes);
+  };
 
   // Calculate total content height
   const totalContentHeight =
@@ -279,10 +362,11 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative overflow-auto flex justify-center"
+      className="relative overflow-auto flex justify-center bg-dark-900"
       style={{
         height: "600px",
-        background: "radial-gradient(circle, #374151 1px, transparent 1px)",
+        background:
+          "#1f2937 radial-gradient(circle, #374151 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }}
     >
@@ -320,10 +404,10 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
             <path
               key={index}
               d={path}
-              stroke="#666666"
-              strokeWidth="8"
+              stroke={CONNECTION_CONFIG.color}
+              strokeWidth={CONNECTION_CONFIG.strokeWidth}
               fill="none"
-              opacity={0.8}
+              opacity={CONNECTION_CONFIG.opacity}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -336,19 +420,11 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
           const nodeColor = getNodeColor();
 
           const getNodeSize = () => {
-            const baseSize = FLOW_CONFIG.nodeSize;
-            switch (node.status) {
-              case "current":
-                return baseSize;
-              case "completed":
-                return baseSize * 0.9;
-              case "available":
-                return baseSize * 0.85;
-              case "locked":
-                return baseSize * 0.8;
-              default:
-                return baseSize * 0.85;
-            }
+            // Return width and height from constants
+            return {
+              width: NODE_CONFIG.width,
+              height: NODE_CONFIG.height,
+            };
           };
 
           const getNodeIconName = () => {
@@ -367,17 +443,17 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
           const getStatusColor = () => {
             switch (node.status) {
               case "completed":
-                return ["#10b981", "#059669"];
+                return ["#a78bfa", "#8b5cf6"]; // Purple for completed
               case "current":
-                return ["#8b5cf6", "#7c3aed"];
+                return ["#a78bfa", "#8b5cf6"]; // Purple for current
               case "locked":
-                return ["#6b7280", "#4b5563"];
+                return ["#4b5563", "#374151"]; // Dark gray for locked
               default:
                 return nodeColor;
             }
           };
 
-          const nodeSize = getNodeSize();
+          const { width: nodeWidth, height: nodeHeight } = getNodeSize();
           const StatusIcon = getNodeIconName();
           const statusColor = getStatusColor();
           const isDisabled = node.status === "locked";
@@ -389,44 +465,55 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
                 selectedNode?.id === node.id ? "ring-2 ring-primary-500" : ""
               }`}
               style={{
-                left: (node.position?.x || 0) - nodeSize / 2,
-                top: (node.position?.y || 0) - nodeSize / 2,
+                left: (node.position?.x || 0) - nodeWidth / 2,
+                top: (node.position?.y || 0) - nodeHeight / 2,
               }}
               onClick={() => onNodeSelect(node)}
             >
               <button disabled={isDisabled} className="relative group">
                 {/* Node Circle */}
                 <div
-                  className="flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
+                  className="flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
                   style={{
-                    width: nodeSize,
-                    height: nodeSize,
-                    borderRadius: 16,
+                    width: nodeWidth,
+                    height: nodeHeight,
+                    borderRadius: NODE_CONFIG.borderRadius, // Much larger border radius for rounded square look
                     background: `linear-gradient(135deg, ${statusColor[0]}, ${statusColor[1]})`,
-                    boxShadow: `0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 ${statusColor[0]}40`,
+                    boxShadow:
+                      node.status === "locked"
+                        ? `0 2px 8px rgba(0, 0, 0, 0.1)`
+                        : `0 4px 12px rgba(139, 92, 246, 0.3)`,
+                    border:
+                      node.status === "locked" ? "2px solid #f3f4f6" : "none",
                   }}
                 >
-                  <StatusIcon className="w-8 h-8 text-white" />
+                  <StatusIcon
+                    className={`${
+                      node.status === "locked"
+                        ? "w-6 h-6 text-gray-500"
+                        : "w-8 h-8 text-white"
+                    }`}
+                  />
                 </div>
 
                 {/* Node Label */}
                 <div
-                  className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-center"
-                  style={{ minWidth: 100 }}
+                  className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 text-center"
+                  style={{ minWidth: 120 }}
                 >
                   <p
-                    className="text-xs font-semibold"
+                    className="text-sm font-medium"
                     style={{
-                      color: node.status === "locked" ? "#6b7280" : "#ffffff",
+                      color: node.status === "locked" ? "#9ca3af" : "#ffffff",
                     }}
                   >
                     {node.title}
                   </p>
                   {(node.xp_reward || 0) > 0 && (
                     <p
-                      className="text-xs mt-1"
+                      className="text-xs mt-1 font-semibold"
                       style={{
-                        color: node.status === "locked" ? "#6b7280" : "#fbbf24",
+                        color: node.status === "locked" ? "#9ca3af" : "#fbbf24",
                       }}
                     >
                       +{node.xp_reward || 0} XP
@@ -436,7 +523,7 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
 
                 {/* Difficulty Indicator */}
                 {node.status !== "locked" && (
-                  <div className="absolute -top-2 -right-2 bg-white rounded-full px-2 py-1 min-w-[20px]">
+                  <div className="absolute -top-2 -right-2 bg-white rounded-full px-2.5 py-1 min-w-[28px] shadow-md">
                     <p
                       className="text-xs font-bold text-center"
                       style={{
@@ -460,6 +547,91 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
             </div>
           );
         })}
+
+        {/* Optional Intermediate Nodes & Add Buttons */}
+        {flowNodes.length > 2 &&
+          Array.from({ length: Math.floor(flowNodes.length / 2) }).map(
+            (_, index) => {
+              const position = getOptionalNodePosition(index);
+              if (!position) return null;
+
+              const optionalNode = optionalNodes[index];
+              const hasOptionalNode = !!optionalNode;
+
+              return (
+                <div key={`optional-slot-${index}`}>
+                  {hasOptionalNode ? (
+                    // Render optional node
+                    <div
+                      className="absolute select-none cursor-pointer group"
+                      style={{
+                        left: position.x - OPTIONAL_NODE_CONFIG.width / 2,
+                        top: position.y - OPTIONAL_NODE_CONFIG.height / 2,
+                      }}
+                      onClick={() => {
+                        // For now, just allow deletion on click
+                        if (confirm("Remove this optional node?")) {
+                          handleRemoveOptionalNode(index);
+                        }
+                      }}
+                    >
+                      <div
+                        className="flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                        style={{
+                          width: OPTIONAL_NODE_CONFIG.width,
+                          height: OPTIONAL_NODE_CONFIG.height,
+                          borderRadius: OPTIONAL_NODE_CONFIG.borderRadius,
+                          backgroundColor: OPTIONAL_NODE_CONFIG.backgroundColor,
+                          boxShadow: "0 4px 12px rgba(76, 69, 99, 0.4)",
+                        }}
+                      >
+                        <Zap
+                          className="text-white"
+                          size={36}
+                          strokeWidth={2.5}
+                        />
+                      </div>
+                      {/* Optional Node Label */}
+                      <div
+                        className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 text-center"
+                        style={{ minWidth: 120 }}
+                      >
+                        <p className="text-sm font-medium text-gray-400">
+                          {optionalNode.title}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    // Render + button to add optional node
+                    <button
+                      className="absolute group"
+                      style={{
+                        left: position.x - 20,
+                        top: position.y - 20,
+                      }}
+                      onClick={() => handleAddOptionalNode(index)}
+                    >
+                      <div
+                        className="flex items-center justify-center transition-all duration-300 hover:scale-110"
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 12,
+                          backgroundColor: "#374151",
+                          border: "2px dashed #6b7280",
+                        }}
+                      >
+                        <Plus
+                          className="text-gray-400 group-hover:text-white"
+                          size={24}
+                        />
+                      </div>
+                    </button>
+                  )}
+                </div>
+              );
+            }
+          )}
 
         {/* Empty state */}
         {nodes.length === 0 && (
