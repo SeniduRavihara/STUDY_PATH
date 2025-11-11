@@ -47,20 +47,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           console.error("Web Auth: Error getting session:", error);
         }
 
-        console.log(
-          "Web Auth: Initial session restored:",
-          session?.user?.email
-        );
+        // console.log(
+        //   "Web Auth: Initial session restored:",
+        //   session?.user?.email
+        // );
 
-        if (session) {
-          console.log("Web Auth: User session found - auto login successful!");
-          console.log(
-            "Web Auth: Session expires at:",
-            new Date(session.expires_at! * 1000)
-          );
-        } else {
-          console.log("Web Auth: No session found - user needs to login");
-        }
+        // if (session) {
+        //   console.log("Web Auth: User session found - auto login successful!");
+        //   console.log(
+        //     "Web Auth: Session expires at:",
+        //     new Date(session.expires_at! * 1000)
+        //   );
+        // } else {
+        //   console.log("Web Auth: No session found - user needs to login");
+        // }
 
         setSession(session);
         setUser(session?.user ?? null);

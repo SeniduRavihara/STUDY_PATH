@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ContentBlockEditor, {
   type ContentBlock,
-} from "../components/ContentBlockEditor";
+} from "../components/content/ContentBlockEditor";
 
 export default function TestContentBlocks() {
   const [blocks, setBlocks] = useState<ContentBlock[]>([

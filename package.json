@@ -1,0 +1,12 @@
+{
+  "name": "study-path",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "types": "supabase gen types typescript --local > shared/database.types.ts",
+    "types:remote": "supabase gen types typescript --project-id YOUR_PROJECT_ID > shared/database.types.ts",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status"
+  }
+}

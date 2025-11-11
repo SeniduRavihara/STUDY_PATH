@@ -1,0 +1,568 @@
+// import { Edit, Filter, HelpCircle, Plus, Save, Trash2, X } from "lucide-react";
+// import React, { useEffect, useState } from "react";
+
+// interface MCQ {
+//   id: string;
+//   subject_id: string;
+//   chapter_id: string;
+//   question: string;
+//   options: string[];
+//   correct_answer: number;
+//   explanation: string;
+//   difficulty: "easy" | "medium" | "hard";
+//   created_at: string;
+//   updated_at: string;
+// }
+
+// interface Chapter {
+//   id: string;
+//   title: string;
+//   subjects: {
+//     id: string;
+//     name: string;
+//     color: string;
+//   };
+// }
+
+// interface Subject {
+//   id: string;
+//   name: string;
+//   color: string[];
+// }
+
+// const MCQManager: React.FC = () => {
+//   const [mcqs, setMcqs] = useState<MCQ[]>([]);
+//   const [filteredMcqs, setFilteredMcqs] = useState<MCQ[]>([]);
+//   const [chapters, setChapters] = useState<Chapter[]>([]);
+//   const [subjects, setSubjects] = useState<Subject[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [showForm, setShowForm] = useState(false);
+//   const [editingMCQ, setEditingMCQ] = useState<MCQ | null>(null);
+//   const [selectedSubject, setSelectedSubject] = useState<string>("");
+//   const [formData, setFormData] = useState({
+//     subject_id: "",
+//     chapter_id: "",
+//     question: "",
+//     options: ["", "", "", ""],
+//     correct_answer: 0,
+//     explanation: "",
+//     difficulty: "medium" as "easy" | "medium" | "hard",
+//   });
+
+//   useEffect(() => {
+//     fetchData();
+//   }, []);
+
+//   useEffect(() => {
+//     if (selectedSubject === "") {
+//       setFilteredMcqs(mcqs);
+//     } else {
+//       const filtered = mcqs.filter((mcq) => {
+//         // Check if MCQ belongs to the selected subject directly
+//         if (mcq.subject_id === selectedSubject) {
+//           return true;
+//         }
+//         // Also check if MCQ belongs to a chapter of the selected subject
+//         const chapter = chapters.find((c) => c.id === mcq.chapter_id);
+//         return chapter && chapter.subjects.id === selectedSubject;
+//       });
+//       setFilteredMcqs(filtered);
+//     }
+//   }, [selectedSubject, mcqs, chapters]);
+
+//   const fetchData = async () => {
+//     try {
+//       const [mcqsData, chaptersData, subjectsData] = await Promise.all([
+//         // TODO: Replace with new MCQService, ChapterService, SubjectService
+//         // MCQService.getMCQs(),
+//         // ChapterService.getChapters(),
+//         // SubjectService.getSubjects(),
+//       ]);
+
+//       if (mcqsData.data) {
+//         setMcqs(mcqsData.data);
+//         setFilteredMcqs(mcqsData.data);
+//       }
+//       if (chaptersData.data) setChapters(chaptersData.data);
+//       if (subjectsData.data) setSubjects(subjectsData.data);
+//     } catch (error) {
+//       console.error("Error fetching data:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+
+//     try {
+//       if (editingMCQ) {
+//         // TODO: Replace with new MCQService
+//         // await MCQService.updateMCQ(editingMCQ.id, formData);
+//       } else {
+//         // TODO: Replace with new MCQService
+//         // await MCQService.createMCQ(formData);
+//       }
+
+//       setShowForm(false);
+//       setEditingMCQ(null);
+//       resetForm();
+//       fetchData();
+//     } catch (error) {
+//       console.error("Error saving MCQ:", error);
+//     }
+//   };
+
+//   const handleEdit = (mcq: MCQ) => {
+//     setEditingMCQ(mcq);
+//     setFormData({
+//       subject_id: mcq.subject_id,
+//       chapter_id: mcq.chapter_id,
+//       question: mcq.question,
+//       options: [...mcq.options],
+//       correct_answer: mcq.correct_answer,
+//       explanation: mcq.explanation,
+//       difficulty: mcq.difficulty,
+//     });
+//     setShowForm(true);
+//   };
+
+//   const handleDelete = async (id: string) => {
+//     if (window.confirm("Are you sure you want to delete this MCQ?")) {
+//       try {
+//         // TODO: Replace with new MCQService
+//         // await MCQService.deleteMCQ(id);
+//         fetchData();
+//       } catch (error) {
+//         console.error("Error deleting MCQ:", error);
+//       }
+//     }
+//   };
+
+//   const resetForm = () => {
+//     setFormData({
+//       subject_id: "",
+//       chapter_id: "",
+//       question: "",
+//       options: ["", "", "", ""],
+//       correct_answer: 0,
+//       explanation: "",
+//       difficulty: "medium",
+//     });
+//   };
+
+//   const addOption = () => {
+//     if (formData.options.length < 6) {
+//       setFormData((prev) => ({
+//         ...prev,
+//         options: [...prev.options, ""],
+//       }));
+//     }
+//   };
+
+//   const removeOption = (index: number) => {
+//     if (formData.options.length > 2) {
+//       const newOptions = formData.options.filter((_, i) => i !== index);
+//       setFormData((prev) => ({
+//         ...prev,
+//         options: newOptions,
+//         correct_answer:
+//           prev.correct_answer >= index
+//             ? Math.max(0, prev.correct_answer - 1)
+//             : prev.correct_answer,
+//       }));
+//     }
+//   };
+
+//   const updateOption = (index: number, value: string) => {
+//     const newOptions = [...formData.options];
+//     newOptions[index] = value;
+//     setFormData((prev) => ({ ...prev, options: newOptions }));
+//   };
+
+//   const getDifficultyColor = (difficulty: string) => {
+//     switch (difficulty) {
+//       case "easy":
+//         return "text-green-500 bg-green-500/10";
+//       case "medium":
+//         return "text-yellow-500 bg-yellow-500/10";
+//       case "hard":
+//         return "text-red-500 bg-red-500/10";
+//       default:
+//         return "text-gray-500 bg-gray-500/10";
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="flex items-center justify-center h-64">
+//         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-6">
+//       {/* Header */}
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold text-white">MCQ Management</h1>
+//           <p className="text-dark-400 mt-2">
+//             Create and manage multiple choice questions for specific subjects
+//             and chapters
+//           </p>
+//         </div>
+//         <button
+//           onClick={() => setShowForm(true)}
+//           className="btn-primary flex items-center space-x-2"
+//         >
+//           <Plus className="w-5 h-5" />
+//           <span>Add New MCQ</span>
+//         </button>
+//       </div>
+
+//       {/* Subject Filter */}
+//       <div className="card">
+//         <div className="flex items-center space-x-4">
+//           <div className="flex items-center space-x-2">
+//             <Filter className="w-5 h-5 text-dark-400" />
+//             <span className="text-white font-medium">Filter by Subject:</span>
+//           </div>
+//           <select
+//             value={selectedSubject}
+//             onChange={(e) => setSelectedSubject(e.target.value)}
+//             className="px-4 py-2 bg-dark-800 border border-dark-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+//           >
+//             <option value="">All Subjects</option>
+//             {subjects.map((subject) => (
+//               <option key={subject.id} value={subject.id}>
+//                 {subject.name}
+//               </option>
+//             ))}
+//           </select>
+//           {selectedSubject && (
+//             <button
+//               onClick={() => setSelectedSubject("")}
+//               className="text-dark-400 hover:text-white transition-colors"
+//               title="Clear filter"
+//             >
+//               <X className="w-4 h-4" />
+//             </button>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* MCQ Form */}
+//       {showForm && (
+//         <div className="card">
+//           <div className="flex items-center justify-between mb-6">
+//             <h2 className="text-xl font-semibold text-white">
+//               {editingMCQ ? "Edit MCQ" : "Create New MCQ"}
+//             </h2>
+//             <button
+//               onClick={() => {
+//                 setShowForm(false);
+//                 setEditingMCQ(null);
+//                 resetForm();
+//               }}
+//               className="text-dark-400 hover:text-white"
+//             >
+//               <X className="w-6 h-6" />
+//             </button>
+//           </div>
+
+//           <form onSubmit={handleSubmit} className="space-y-6">
+//             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//               <div>
+//                 <label className="block text-sm font-medium text-dark-200 mb-2">
+//                   Subject *
+//                 </label>
+//                 <select
+//                   value={formData.subject_id}
+//                   onChange={(e) =>
+//                     setFormData((prev) => ({
+//                       ...prev,
+//                       subject_id: e.target.value,
+//                       chapter_id: "", // Reset chapter when subject changes
+//                     }))
+//                   }
+//                   className="input-field w-full"
+//                   required
+//                 >
+//                   <option value="">Select a subject</option>
+//                   {subjects.map((subject) => (
+//                     <option key={subject.id} value={subject.id}>
+//                       {subject.name}
+//                     </option>
+//                   ))}
+//                 </select>
+//               </div>
+
+//               <div>
+//                 <label className="block text-sm font-medium text-dark-200 mb-2">
+//                   Chapter (Optional)
+//                 </label>
+//                 <select
+//                   value={formData.chapter_id}
+//                   onChange={(e) =>
+//                     setFormData((prev) => ({
+//                       ...prev,
+//                       chapter_id: e.target.value,
+//                     }))
+//                   }
+//                   className="input-field w-full"
+//                   disabled={!formData.subject_id}
+//                 >
+//                   <option value="">No specific chapter</option>
+//                   {chapters
+//                     .filter(
+//                       (chapter) => chapter.subjects.id === formData.subject_id
+//                     )
+//                     .map((chapter) => (
+//                       <option key={chapter.id} value={chapter.id}>
+//                         {chapter.title}
+//                       </option>
+//                     ))}
+//                 </select>
+//                 <p className="text-xs text-dark-400 mt-1">
+//                   {!formData.subject_id
+//                     ? "Select a subject first to see available chapters"
+//                     : "Leave empty to create a general subject MCQ"}
+//                 </p>
+//               </div>
+//             </div>
+
+//             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//               <div>
+//                 <label className="block text-sm font-medium text-dark-200 mb-2">
+//                   Difficulty
+//                 </label>
+//                 <select
+//                   value={formData.difficulty}
+//                   onChange={(e) =>
+//                     setFormData((prev) => ({
+//                       ...prev,
+//                       difficulty: e.target.value as any,
+//                     }))
+//                   }
+//                   className="input-field w-full"
+//                 >
+//                   <option value="easy">Easy</option>
+//                   <option value="medium">Medium</option>
+//                   <option value="hard">Hard</option>
+//                 </select>
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-dark-200 mb-2">
+//                 Question
+//               </label>
+//               <textarea
+//                 value={formData.question}
+//                 onChange={(e) =>
+//                   setFormData((prev) => ({ ...prev, question: e.target.value }))
+//                 }
+//                 className="input-field w-full h-24 resize-none"
+//                 placeholder="Enter your question here..."
+//                 required
+//               />
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-dark-200 mb-2">
+//                 Options
+//               </label>
+//               <div className="space-y-3">
+//                 {formData.options.map((option, index) => (
+//                   <div key={index} className="flex items-center space-x-3">
+//                     <input
+//                       type="radio"
+//                       name="correct_answer"
+//                       value={index}
+//                       checked={formData.correct_answer === index}
+//                       onChange={(e) =>
+//                         setFormData((prev) => ({
+//                           ...prev,
+//                           correct_answer: parseInt(e.target.value),
+//                         }))
+//                       }
+//                       className="text-primary-500"
+//                     />
+//                     <input
+//                       type="text"
+//                       value={option}
+//                       onChange={(e) => updateOption(index, e.target.value)}
+//                       className="input-field flex-1"
+//                       placeholder={`Option ${index + 1}`}
+//                       required
+//                     />
+//                     {formData.options.length > 2 && (
+//                       <button
+//                         type="button"
+//                         onClick={() => removeOption(index)}
+//                         className="text-accent-red hover:text-red-400"
+//                       >
+//                         <Trash2 className="w-4 h-4" />
+//                       </button>
+//                     )}
+//                   </div>
+//                 ))}
+//                 {formData.options.length < 6 && (
+//                   <button
+//                     type="button"
+//                     onClick={addOption}
+//                     className="btn-secondary text-sm"
+//                   >
+//                     <Plus className="w-4 h-4 mr-2" />
+//                     Add Option
+//                   </button>
+//                 )}
+//               </div>
+//             </div>
+
+//             <div>
+//               <label className="block text-sm font-medium text-dark-200 mb-2">
+//                 Explanation
+//               </label>
+//               <textarea
+//                 value={formData.explanation}
+//                 onChange={(e) =>
+//                   setFormData((prev) => ({
+//                     ...prev,
+//                     explanation: e.target.value,
+//                   }))
+//                 }
+//                 className="input-field w-full h-20 resize-none"
+//                 placeholder="Explain why this answer is correct..."
+//                 required
+//               />
+//             </div>
+
+//             <div className="flex justify-end space-x-3">
+//               <button
+//                 type="button"
+//                 onClick={() => {
+//                   setShowForm(false);
+//                   setEditingMCQ(null);
+//                   resetForm();
+//                 }}
+//                 className="btn-secondary"
+//               >
+//                 Cancel
+//               </button>
+//               <button type="submit" className="btn-primary">
+//                 <Save className="w-4 h-4 mr-2" />
+//                 {editingMCQ ? "Update MCQ" : "Create MCQ"}
+//               </button>
+//             </div>
+//           </form>
+//         </div>
+//       )}
+
+//       {/* MCQ List */}
+//       <div className="card">
+//         <h3 className="text-xl font-semibold text-white mb-6">
+//           {selectedSubject ? "Filtered MCQs" : "All MCQs"} (
+//           {filteredMcqs.length})
+//         </h3>
+
+//         {filteredMcqs.length === 0 ? (
+//           <div className="text-center py-12">
+//             <HelpCircle className="w-16 h-16 text-dark-400 mx-auto mb-4" />
+//             <p className="text-dark-400 text-lg">
+//               {selectedSubject
+//                 ? "No MCQs found for this subject"
+//                 : "No MCQs created yet"}
+//             </p>
+//             <p className="text-dark-500">
+//               {selectedSubject
+//                 ? "Try selecting a different subject or create new MCQs"
+//                 : "Start by creating your first MCQ question"}
+//             </p>
+//           </div>
+//         ) : (
+//           <div className="space-y-4">
+//             {filteredMcqs.map((mcq) => {
+//               const chapter = chapters.find((c) => c.id === mcq.chapter_id);
+//               const subject = subjects.find((s) => s.id === mcq.subject_id);
+//               return (
+//                 <div
+//                   key={mcq.id}
+//                   className="p-4 bg-dark-700 rounded-lg border border-dark-600"
+//                 >
+//                   <div className="flex items-start justify-between">
+//                     <div className="flex-1">
+//                       <div className="flex items-center space-x-3 mb-3">
+//                         <div className="flex items-center space-x-2">
+//                           <div
+//                             className="w-3 h-3 rounded-full"
+//                             style={{
+//                               backgroundColor: subject?.color?.[0] || "#6b7280",
+//                             }}
+//                           />
+//                           <span className="text-sm text-dark-300">
+//                             {subject?.name || "Unknown Subject"}
+//                             {chapter && ` - ${chapter.title}`}
+//                           </span>
+//                         </div>
+//                         <span
+//                           className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+//                             mcq.difficulty
+//                           )}`}
+//                         >
+//                           {mcq.difficulty}
+//                         </span>
+//                       </div>
+
+//                       <p className="text-white font-medium mb-3">
+//                         {mcq.question}
+//                       </p>
+
+//                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+//                         {mcq.options.map((option, index) => (
+//                           <div
+//                             key={index}
+//                             className={`p-2 rounded text-sm ${
+//                               index === mcq.correct_answer
+//                                 ? "bg-green-500/20 text-green-400 border border-green-500/30"
+//                                 : "bg-dark-600 text-dark-300"
+//                             }`}
+//                           >
+//                             {String.fromCharCode(65 + index)}. {option}
+//                           </div>
+//                         ))}
+//                       </div>
+
+//                       <p className="text-dark-400 text-sm">
+//                         <span className="font-medium">Explanation:</span>{" "}
+//                         {mcq.explanation}
+//                       </p>
+//                     </div>
+
+//                     <div className="flex items-center space-x-2 ml-4">
+//                       <button
+//                         onClick={() => handleEdit(mcq)}
+//                         className="p-2 text-dark-400 hover:text-white hover:bg-dark-600 rounded-lg transition-colors"
+//                       >
+//                         <Edit className="w-4 h-4" />
+//                       </button>
+//                       <button
+//                         onClick={() => handleDelete(mcq.id)}
+//                         className="p-2 text-dark-400 hover:text-accent-red hover:bg-dark-600 rounded-lg transition-colors"
+//                       >
+//                         <Trash2 className="w-4 h-4" />
+//                       </button>
+//                     </div>
+//                   </div>
+//                 </div>
+//               );
+//             })}
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default MCQManager;

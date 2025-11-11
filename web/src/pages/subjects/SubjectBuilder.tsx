@@ -1,0 +1,293 @@
+import {
+  ArrowLeft,
+  BookOpen,
+  Eye,
+  FileText,
+  Save,
+  Settings,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useModal } from "../../contexts/ModalContext";
+import { SubjectService, TopicService } from "../../services";
+import type {
+  FlowNode,
+  Subject,
+  TopicWithChildren,
+} from "../../types/database";
+import FlowTab from "./tabs/FlowTab";
+import OverviewTab from "./tabs/OverviewTab";
+import PreviewTab from "./tabs/PreviewTab";
+import SettingsTab from "./tabs/SettingsTab";
+import TopicsTab from "./tabs/topicsTab/TopicsTab";
+
+const SubjectBuilder: React.FC = () => {
+  const navigate = useNavigate();
+  const { subjectId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modal = useModal();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "overview"
+  );
+  const [subject, setSubject] = useState<Subject | null>(null);
+  const [topics, setTopics] = useState<TopicWithChildren[]>([]);
+  const [flowNodes, setFlowNodes] = useState<FlowNode[]>([]);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    console.log("Flow nodes updated:", flowNodes);
+  }, [flowNodes]);
+
+  // Sync activeTab with URL parameter
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Load subject and topics data from database
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+
+        if (subjectId) {
+          // Check if subjectId is a valid UUID format
+          const uuidRegex =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidRegex.test(subjectId)) {
+            console.log(
+              "Invalid subject ID format, redirecting to subjects list"
+            );
+            navigate("/admin/subjects");
+            return;
+          }
+
+          // Load subject data
+          const subjectData = await SubjectService.getSubjectById(subjectId);
+          if (subjectData) {
+            setSubject(subjectData);
+
+            // Load topics for this subject
+            const topicsData = await TopicService.getTopicsBySubject(subjectId);
+            setTopics(topicsData);
+          }
+        } else {
+          // No subjectId in URL, redirect to subjects list
+          navigate("/admin/subjects");
+          setSubject(null);
+          setTopics([]);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [navigate, subjectId]);
+
+  const tabs = [
+    { id: "overview", name: "Overview", icon: BookOpen, stepId: 1 },
+    { id: "topics", name: "Topics", icon: FileText, stepId: 2 },
+    { id: "flow", name: "Flow Builder", icon: FileText, stepId: 3 },
+    { id: "preview", name: "Preview", icon: Eye, stepId: 4 },
+    { id: "settings", name: "Settings", icon: Settings, stepId: 5 },
+  ];
+
+  // Synchronize tab navigation
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    // Update URL with tab parameter
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("tab", tabId);
+    setSearchParams(newSearchParams);
+  };
+
+  const handleSave = async () => {
+    if (!subject || !subjectId) return;
+
+    setIsSaving(true);
+    try {
+      await SubjectService.updateSubject(subjectId, {
+        name: subject.name,
+        description: subject.description,
+        icon: subject.icon,
+        color: subject.color,
+      });
+      await modal.alert("Subject saved successfully!");
+    } catch (error) {
+      console.error("Error saving subject:", error);
+      await modal.alert("Error saving subject. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!subject || !subjectId) return;
+
+    if (flowNodes.length === 0) {
+      await modal.alert(
+        "Please create at least one learning node before publishing."
+      );
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Update subject status in the database
+      await SubjectService.updateSubject(subjectId, { status: "published" });
+      // Optionally: save flowNodes to the database here
+
+      setIsSaving(false);
+      await modal.alert("Subject published successfully!");
+      navigate("/admin/subjects");
+    } catch (error) {
+      setIsSaving(false);
+      console.error("Error publishing subject:", error);
+      await modal.alert("Error publishing subject. Please try again.");
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "overview":
+        return (
+          <OverviewTab subject={subject} onSubjectDataChange={setSubject} />
+        );
+
+      case "topics":
+        return (
+          <TopicsTab
+            topics={topics}
+            onTopicsChange={setTopics}
+            subjectId={subject?.id || ""}
+          />
+        );
+
+      case "flow":
+        return (
+          <FlowTab
+            nodes={flowNodes}
+            onNodesChange={setFlowNodes}
+            subjectName={subject?.name || ""}
+            topics={topics}
+            onTopicsChange={setTopics}
+            subjectId={subject?.id || ""}
+          />
+        );
+
+      case "settings":
+        return <SettingsTab />;
+
+      case "preview":
+        return <PreviewTab />;
+
+      default:
+        return null;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-dark-950 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading Subject Builder...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-dark-950">
+      {/* Header */}
+      <div className="bg-dark-900 border-b border-dark-800 rounded-t-2xl">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate("/admin/subjects")}
+                className="text-dark-400 hover:text-white transition-colors"
+              >
+                <ArrowLeft className="w-6 h-6" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">
+                  {subject?.name || "New Subject"}
+                </h1>
+                <p className="text-dark-400">
+                  Build your learning flow and content
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-4 py-2 bg-dark-700 text-white rounded-lg hover:bg-dark-600 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Save className="w-4 h-4" />
+                    <span>Save</span>
+                  </div>
+                )}
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={isSaving}
+                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
+              >
+                Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs UI */}
+      <div className="bg-dark-900 border-b border-dark-800">
+        <div className="px-6">
+          <div className="flex space-x-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-dark-800 text-white border-b-2 border-primary-500"
+                      : "text-dark-400 hover:text-white hover:bg-dark-800"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
+      </div>
+    </div>
+  );
+};
+
+export default SubjectBuilder;
