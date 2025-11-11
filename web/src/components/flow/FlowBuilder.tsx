@@ -168,9 +168,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     }
   }, [nodes, pendingOpenNodeId, pendingOpenNodeOrder]);
 
-  // const getNodeColor = () => {
-  //   return ["#10b981", "#059669"];
-  // };
 
   const findTopicByIdHierarchical = (
     topics: TopicWithChildren[],

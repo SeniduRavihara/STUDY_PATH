@@ -26,6 +26,10 @@ CREATE TABLE IF NOT EXISTS public.flow_nodes (
     
     -- Node connections (which nodes this connects to)
     connections UUID[] DEFAULT '{}', -- Array of node IDs this node connects to
+
+    -- Practice / optional nodes
+    is_practice_node BOOLEAN DEFAULT FALSE, -- true for practice (optional) nodes
+    optional_position INTEGER, -- position index for practice nodes (e.g., 1 => between 1-3)
     
     -- Metadata
     is_active BOOLEAN DEFAULT true,
@@ -61,6 +65,7 @@ CREATE POLICY "Flow nodes are manageable by flow creators" ON public.flow_nodes
 CREATE INDEX IF NOT EXISTS idx_flow_nodes_flow_id ON public.flow_nodes(flow_id);
 CREATE INDEX IF NOT EXISTS idx_flow_nodes_status ON public.flow_nodes(status);
 CREATE INDEX IF NOT EXISTS idx_flow_nodes_sort_order ON public.flow_nodes(flow_id, sort_order);
+CREATE INDEX IF NOT EXISTS idx_flow_nodes_optional_position ON public.flow_nodes(optional_position);
 
 -- 5) Update trigger
 CREATE TRIGGER update_flow_nodes_updated_at
