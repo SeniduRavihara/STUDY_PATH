@@ -1,12 +1,12 @@
 import { CheckCircle, FileText, Play, Plus, Settings, Zap } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { type FlowNode, type TopicWithChildren } from "../../types/database";
 
 interface FlowCanvasProps {
   nodes: FlowNode[];
   selectedNode: FlowNode | null;
   onNodeSelect: (node: FlowNode) => void;
-  onAddNode: () => void;
+  onAddNode: (isPracticeNode?: boolean, optionalPosition?: number) => void;
   isLoading: boolean;
   currentTopicId: string;
   getCurrentTopic: () => TopicWithChildren | null;
@@ -50,13 +50,6 @@ const OPTIONAL_NODE_CONFIG = {
   backgroundColor: "#4c4563", // Darker purple/gray color from image
   iconColor: "#ffffff",
 };
-
-// Interface for optional intermediate nodes (UI only, no database)
-interface OptionalNode {
-  id: string;
-  title: string;
-  description?: string;
-}
 
 // 3-Column Grid Flow Pattern (Center acts as transition hub) - Mobile Logic
 const POSITION_PATTERN = [
@@ -283,11 +276,9 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // State for optional intermediate nodes (UI only)
-  // Array index represents position: 0 = between nodes 1-3, 1 = between 3-5, 2 = between 5-7, etc.
-  const [optionalNodes, setOptionalNodes] = useState<(OptionalNode | null)[]>(
-    []
-  );
+  // Separate regular nodes and practice nodes from the nodes array
+  const regularNodes = nodes.filter((node) => !node.is_practice_node);
+  const practiceNodesFromDB = nodes.filter((node) => node.is_practice_node);
 
   // Helper function to get node icon (all nodes use the same triangle play icon)
   const getNodeIcon = () => {
@@ -299,21 +290,22 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
     return ["#a78bfa", "#8b5cf6"]; // Softer purple gradient
   };
 
-  // Compute flow positions
-  const flowNodes = generateFlowPositions(nodes, 800); // Fixed width for consistent positioning
+  // Compute flow positions (only for regular nodes)
+  const flowNodes = generateFlowPositions(regularNodes, 800); // Fixed width for consistent positioning
 
   // Generate vertical paths
   const verticalPaths = generateVerticalFlowPaths(flowNodes);
 
   // Calculate positions for optional intermediate nodes (between 1-3, 3-5, 5-7, etc.)
   const getOptionalNodePosition = (
-    index: number,
+    optionalPosition: number, // 1-based: 1 = between nodes 1-3, 2 = between nodes 3-5, etc.
     containerWidth: number = 800
   ) => {
-    // Optional node at index i sits between flow nodes (2*i) and (2*i + 2)
-    // For example: index 0 = between nodes 0 and 2 (nodes 1 and 3 in 1-based)
-    const beforeNodeIndex = index * 2;
-    const afterNodeIndex = index * 2 + 2;
+    // Convert 1-based optional_position to 0-based node indices
+    // optional_position 1 = between nodes at index 0 and 2 (nodes 1 and 3)
+    // optional_position 2 = between nodes at index 2 and 4 (nodes 3 and 5)
+    const beforeNodeIndex = (optionalPosition - 1) * 2;
+    const afterNodeIndex = (optionalPosition - 1) * 2 + 2;
 
     if (
       beforeNodeIndex >= flowNodes.length ||
@@ -334,21 +326,9 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
   };
 
   // Handler to add optional node
-  const handleAddOptionalNode = (index: number) => {
-    const newOptionalNodes = [...optionalNodes];
-    newOptionalNodes[index] = {
-      id: `optional-${Date.now()}`,
-      title: "Optional Node",
-      description: "Click to edit",
-    };
-    setOptionalNodes(newOptionalNodes);
-  };
-
-  // Handler to remove optional node
-  const handleRemoveOptionalNode = (index: number) => {
-    const newOptionalNodes = [...optionalNodes];
-    newOptionalNodes[index] = null;
-    setOptionalNodes(newOptionalNodes);
+  const handleAddOptionalNode = (optionalPosition: number) => {
+    // Call parent's addNode with practice node parameters (1-based position)
+    onAddNode(true, optionalPosition);
   };
 
   // Calculate total content height
@@ -552,16 +532,20 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
         {flowNodes.length > 2 &&
           Array.from({ length: Math.floor(flowNodes.length / 2) }).map(
             (_, index) => {
-              const position = getOptionalNodePosition(index);
+              const optionalPosition = index + 1; // Convert to 1-based (1, 2, 3, ...)
+              const position = getOptionalNodePosition(optionalPosition);
               if (!position) return null;
 
-              const optionalNode = optionalNodes[index];
-              const hasOptionalNode = !!optionalNode;
+              // Find practice node at this optional_position (1-based)
+              const practiceNode = practiceNodesFromDB.find(
+                (node) => node.optional_position === optionalPosition
+              );
+              const hasPracticeNode = !!practiceNode;
 
               return (
                 <div key={`optional-slot-${index}`}>
-                  {hasOptionalNode ? (
-                    // Render optional node
+                  {hasPracticeNode ? (
+                    // Render practice node from DB
                     <div
                       className="absolute select-none cursor-pointer group"
                       style={{
@@ -569,10 +553,8 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
                         top: position.y - OPTIONAL_NODE_CONFIG.height / 2,
                       }}
                       onClick={() => {
-                        // For now, just allow deletion on click
-                        if (confirm("Remove this optional node?")) {
-                          handleRemoveOptionalNode(index);
-                        }
+                        // Select the practice node for editing
+                        onNodeSelect(practiceNode);
                       }}
                     >
                       <div
@@ -591,25 +573,25 @@ const FlowCanvas: React.FC<FlowCanvasProps> = ({
                           strokeWidth={2.5}
                         />
                       </div>
-                      {/* Optional Node Label */}
+                      {/* Practice Node Label */}
                       <div
                         className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 text-center"
                         style={{ minWidth: 120 }}
                       >
                         <p className="text-sm font-medium text-gray-400">
-                          {optionalNode.title}
+                          {practiceNode.title}
                         </p>
                       </div>
                     </div>
                   ) : (
-                    // Render + button to add optional node
+                    // Render + button to add practice node
                     <button
                       className="absolute group"
                       style={{
                         left: position.x - 20,
                         top: position.y - 20,
                       }}
-                      onClick={() => handleAddOptionalNode(index)}
+                      onClick={() => handleAddOptionalNode(optionalPosition)}
                     >
                       <div
                         className="flex items-center justify-center transition-all duration-300 hover:scale-110"

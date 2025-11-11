@@ -109,6 +109,8 @@ export class FlowBuilderService {
       estimated_time: node.estimated_time || 10,
       content_blocks: node.content_blocks || [],
       connections: node.connections || [],
+      is_practice_node: node.is_practice_node || false,
+      optional_position: node.optional_position || null,
     }));
 
     const { error: insertError } = await supabase
@@ -148,5 +150,4 @@ export class FlowBuilderService {
       nodes,
     };
   }
-
 }

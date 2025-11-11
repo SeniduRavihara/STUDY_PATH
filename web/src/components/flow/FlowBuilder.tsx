@@ -168,7 +168,6 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     }
   }, [nodes, pendingOpenNodeId, pendingOpenNodeOrder]);
 
-
   const findTopicByIdHierarchical = (
     topics: TopicWithChildren[],
     topicId: string
@@ -183,7 +182,10 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     return null;
   };
 
-  const addNode = async () => {
+  const addNode = async (
+    isPracticeNode: boolean = false,
+    optionalPosition?: number
+  ) => {
     // Get the highest sort_order from existing nodes and add 1
     const maxSortOrder =
       nodes.length > 0 ? Math.max(...nodes.map((n) => n.sort_order || 1)) : 0;
@@ -223,17 +225,29 @@ const FlowBuilder: React.FC<FlowBuilderProps> = ({
     const newNode: FlowNode = {
       id: `node-${Date.now()}`,
       flow_id: currentFlowId || "",
-      title: `New Learning Node`,
-      description: `A new learning node that you can customize with content blocks`,
-      sort_order: newSortOrder,
+      title: isPracticeNode ? `Practice Node` : `New Learning Node`,
+      description: isPracticeNode
+        ? `Practice what you've learned`
+        : `A new learning node that you can customize with content blocks`,
+      sort_order: isPracticeNode ? 0 : newSortOrder, // Practice nodes use optional_position, not sort_order
       config: {},
       connections: [],
-      status: nodes.length === 0 ? "current" : "available",
+      status: isPracticeNode
+        ? "available"
+        : nodes.length === 0
+        ? "current"
+        : "available",
       difficulty: "medium",
       xp_reward: 20,
       estimated_time: 10,
       content_blocks: [],
       is_active: true,
+      is_practice_node: isPracticeNode,
+      optional_position: isPracticeNode
+        ? optionalPosition !== undefined
+          ? optionalPosition
+          : null
+        : null,
       created_by: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
