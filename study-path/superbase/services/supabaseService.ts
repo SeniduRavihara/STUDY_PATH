@@ -447,7 +447,6 @@ export class SupabaseService {
     // Insert new nodes
     const flowNodes = nodes.map((node) => ({
       flow_id: flowId,
-      node_type: node.type,
       title: node.title,
       description: node.description,
       sort_order: node.sort_order || 1,
@@ -456,8 +455,10 @@ export class SupabaseService {
       xp_reward: node.xp || 0,
       difficulty: node.difficulty || "medium",
       estimated_time: parseInt(node.estimatedTime?.replace(" min", "") || "5"),
-      content_data: node.config || {},
+      content_blocks: node.content_blocks || [],
       connections: node.connections || [],
+      is_practice_node: node.is_practice_node || false,
+      optional_position: node.optional_position || null,
     }));
 
     const { error: insertError } = await supabase
@@ -634,6 +635,110 @@ export class SupabaseService {
       .eq("user_id", userId)
       .eq("subject_id", subjectId)
       .eq("is_active", true)
+      .maybeSingle();
+
+    return { data, error };
+  }
+
+  // ===== NODE CONTENT & PROGRESS =====
+
+  static async getNodeWithContent(nodeId: string) {
+    const { data, error } = await supabase
+      .from("flow_nodes")
+      .select("*")
+      .eq("id", nodeId)
+      .single();
+
+    return { data, error };
+  }
+
+  static async updateNodeProgress(
+    userId: string,
+    nodeId: string,
+    status: "locked" | "available" | "completed" | "current",
+    progressData?: any
+  ) {
+    // First check if progress record exists
+    const { data: existing } = await supabase
+      .from("user_node_progress")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("node_id", nodeId)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing record
+      const { data, error } = await supabase
+        .from("user_node_progress")
+        .update({
+          status,
+          progress_data: progressData,
+          last_accessed_at: new Date().toISOString(),
+          ...(status === "completed" && {
+            completed_at: new Date().toISOString(),
+          }),
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+
+      return { data, error };
+    } else {
+      // Insert new record
+      const { data, error } = await supabase
+        .from("user_node_progress")
+        .insert({
+          user_id: userId,
+          node_id: nodeId,
+          status,
+          progress_data: progressData,
+          started_at: new Date().toISOString(),
+          last_accessed_at: new Date().toISOString(),
+          ...(status === "completed" && {
+            completed_at: new Date().toISOString(),
+          }),
+        })
+        .select()
+        .single();
+
+      return { data, error };
+    }
+  }
+
+  static async awardXP(userId: string, xpAmount: number) {
+    // Get current XP
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("total_xp")
+      .eq("id", userId)
+      .single();
+
+    if (fetchError || !user) {
+      return { error: fetchError };
+    }
+
+    // Update XP
+    const newTotalXp = (user.total_xp || 0) + xpAmount;
+
+    const { data, error } = await supabase
+      .from("users")
+      .update({
+        total_xp: newTotalXp,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+      .select()
+      .single();
+
+    return { data, error };
+  }
+
+  static async getUserNodeProgress(userId: string, nodeId: string) {
+    const { data, error } = await supabase
+      .from("user_node_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("node_id", nodeId)
       .maybeSingle();
 
     return { data, error };

@@ -13,6 +13,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  FlashcardActivity,
+  MCQActivity,
+  PollActivity,
+  QuizActivity,
+} from "../../components/feed-activities";
 import { FeedPost, FeedService } from "../../lib/feedService";
 
 type SubjectColors = {
@@ -45,6 +51,15 @@ export default function FeedScreen() {
       }
 
       setPosts(data || []);
+
+      // Mark posts as viewed (non-blocking)
+      if (data && data.length > 0) {
+        data.slice(0, 5).forEach((post) => {
+          FeedService.markPostViewed(post.id).catch((err) =>
+            console.log("Failed to mark post viewed:", err)
+          );
+        });
+      }
     } catch (error) {
       console.error("Error loading feed posts:", error);
       Alert.alert("Error", "Failed to load feed posts");
@@ -66,7 +81,7 @@ export default function FeedScreen() {
       const isLiked = likedPosts.has(postId);
 
       // Optimistically update UI
-      setLikedPosts(prev => {
+      setLikedPosts((prev) => {
         const newSet = new Set(prev);
         if (isLiked) {
           newSet.delete(postId);
@@ -76,15 +91,15 @@ export default function FeedScreen() {
         return newSet;
       });
 
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
           post.id === postId
             ? {
                 ...post,
                 likes: isLiked ? post.likes - 1 : post.likes + 1,
               }
-            : post,
-        ),
+            : post
+        )
       );
 
       // Update in database
@@ -95,7 +110,7 @@ export default function FeedScreen() {
       if (error) {
         console.error("Error updating like:", error);
         // Revert optimistic update
-        setLikedPosts(prev => {
+        setLikedPosts((prev) => {
           const newSet = new Set(prev);
           if (isLiked) {
             newSet.add(postId);
@@ -104,15 +119,15 @@ export default function FeedScreen() {
           }
           return newSet;
         });
-        setPosts(prevPosts =>
-          prevPosts.map(post =>
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
             post.id === postId
               ? {
                   ...post,
                   likes: isLiked ? post.likes + 1 : post.likes - 1,
                 }
-              : post,
-          ),
+              : post
+          )
         );
       }
     } catch (error) {
@@ -127,23 +142,23 @@ export default function FeedScreen() {
 
   // Set up real-time subscription for feed updates
   useEffect(() => {
-    const subscription = FeedService.subscribeToFeedUpdates(payload => {
+    const subscription = FeedService.subscribeToFeedUpdates((payload) => {
       console.log("Real-time feed update:", payload);
 
       if (payload.eventType === "INSERT") {
         // New post added
-        setPosts(prevPosts => [payload.new, ...prevPosts]);
+        setPosts((prevPosts) => [payload.new, ...prevPosts]);
       } else if (payload.eventType === "UPDATE") {
         // Post updated (like count, etc.)
-        setPosts(prevPosts =>
-          prevPosts.map(post =>
-            post.id === payload.new.id ? payload.new : post,
-          ),
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === payload.new.id ? payload.new : post
+          )
         );
       } else if (payload.eventType === "DELETE") {
         // Post deleted
-        setPosts(prevPosts =>
-          prevPosts.filter(post => post.id !== payload.old.id),
+        setPosts((prevPosts) =>
+          prevPosts.filter((post) => post.id !== payload.old.id)
         );
       }
     });
@@ -156,7 +171,7 @@ export default function FeedScreen() {
   const subjectColors: SubjectColors = FeedService.getSubjectColors();
 
   const getPostTypeIcon = (
-    type: FeedPost["type"],
+    type: FeedPost["type"]
   ): keyof typeof Ionicons.glyphMap => {
     switch (type) {
       case "achievement":
@@ -182,14 +197,14 @@ export default function FeedScreen() {
       if (result.success) {
         Alert.alert(
           "Success",
-          result.message || "Quiz pack imported successfully!",
+          result.message || "Quiz pack imported successfully!"
         );
         // Refresh the feed to show updated pack status
         loadFeedPosts();
       } else {
         Alert.alert(
           result.error === "Already imported" ? "Already Imported" : "Error",
-          result.message || "Failed to import quiz pack",
+          result.message || "Failed to import quiz pack"
         );
       }
     } catch (error) {
@@ -227,23 +242,23 @@ export default function FeedScreen() {
     try {
       const { data, error } = await FeedService.createComment(
         selectedPostId,
-        newComment.trim(),
+        newComment.trim()
       );
       if (error) {
         console.error("Error creating comment:", error);
         Alert.alert("Error", "Failed to add comment");
       } else {
         // Add the new comment to the list
-        setComments(prev => [...prev, data]);
+        setComments((prev) => [...prev, data]);
         setNewComment("");
 
         // Update the post's comment count
-        setPosts(prevPosts =>
-          prevPosts.map(post =>
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
             post.id === selectedPostId
               ? { ...post, comments: post.comments + 1 }
-              : post,
-          ),
+              : post
+          )
         );
       }
     } catch (error) {
@@ -268,10 +283,7 @@ export default function FeedScreen() {
       }
     >
       {/* Header */}
-      <LinearGradient
-        colors={["#0f0f23", "#1a1a2e"]}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#0f0f23", "#1a1a2e"]} style={styles.header}>
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.headerTitle}>Study Feed</Text>
@@ -303,7 +315,7 @@ export default function FeedScreen() {
           </View>
         )}
 
-        {posts.map(post => (
+        {posts.map((post) => (
           <View key={post.id} style={styles.postCard}>
             {/* User Info */}
             <View style={styles.postHeader}>
@@ -328,11 +340,15 @@ export default function FeedScreen() {
                   </View>
                 </View>
                 <View style={styles.userStatsRow}>
-                  <Text style={styles.userStats}>{post.users.points} points</Text>
+                  <Text style={styles.userStats}>
+                    {post.users.points} points
+                  </Text>
                   <Text style={styles.userStatsSeparator}>•</Text>
                   <View style={styles.streakContainer}>
                     <Ionicons name="flame" size={14} color="#FF6B6B" />
-                    <Text style={styles.streakText}>{post.users.streak} days</Text>
+                    <Text style={styles.streakText}>
+                      {post.users.streak} days
+                    </Text>
                   </View>
                   <Text style={styles.userStatsSeparator}>•</Text>
                   <Text style={styles.timeAgo}>
@@ -363,8 +379,46 @@ export default function FeedScreen() {
             {/* Content */}
             <Text style={styles.postContent}>{post.content}</Text>
 
+            {/* Interactive Activities */}
+            {post.activity_type === "poll" && post.activity_data && (
+              <PollActivity
+                postId={post.id}
+                question={post.activity_data.question}
+                options={post.activity_data.options}
+                allowMultiple={post.activity_data.allow_multiple}
+              />
+            )}
+
+            {post.activity_type === "quiz" && post.activity_data && (
+              <QuizActivity
+                postId={post.id}
+                title={post.activity_data.title}
+                questions={post.activity_data.questions}
+              />
+            )}
+
+            {post.activity_type === "mcq_single" && post.activity_data && (
+              <MCQActivity
+                postId={post.id}
+                question={post.activity_data.question}
+                options={post.activity_data.options}
+                correctAnswer={post.activity_data.correct_answer}
+                explanation={post.activity_data.explanation}
+              />
+            )}
+
+            {(post.activity_type === "flashcard" ||
+              post.activity_type === "flashcard_deck") &&
+              post.activity_data && (
+                <FlashcardActivity
+                  postId={post.id}
+                  title={post.activity_data.title || "Flashcards"}
+                  cards={post.activity_data.cards}
+                />
+              )}
+
             {/* Media */}
-            {post.media_url && (
+            {post.media_url && post.activity_type !== "video_quiz" && (
               <Image
                 source={{ uri: post.media_url }}
                 style={styles.postImage}
@@ -484,7 +538,7 @@ export default function FeedScreen() {
           <TouchableOpacity
             style={styles.modalContent}
             activeOpacity={1}
-            onPress={e => e.stopPropagation()}
+            onPress={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <View style={styles.modalHeader}>
@@ -515,7 +569,7 @@ export default function FeedScreen() {
                 </View>
               ) : (
                 <View style={styles.commentsContent}>
-                  {comments.map(comment => (
+                  {comments.map((comment) => (
                     <View key={comment.id} style={styles.commentCard}>
                       {/* Comment User Info */}
                       <View style={styles.commentHeader}>
@@ -595,7 +649,7 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
   },
   header: {
     paddingHorizontal: 24,
@@ -603,32 +657,32 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerSubtitle: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 16,
   },
   addButton: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     padding: 12,
     borderRadius: 9999,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 80,
   },
   loadingText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 18,
   },
   postsContainer: {
@@ -637,45 +691,45 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 80,
   },
   emptyText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 18,
   },
   emptySubtext: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 14,
     marginTop: 8,
   },
   postCard: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     borderRadius: 24,
     padding: 20,
     marginBottom: 16,
   },
   postHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
   },
   avatarContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   avatar: {
     width: 48,
     height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatarText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
+    color: "#ffffff",
+    fontWeight: "bold",
     fontSize: 18,
   },
   userInfo: {
@@ -683,65 +737,65 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   userNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   userName: {
-    color: '#ffffff',
-    fontWeight: 'bold',
+    color: "#ffffff",
+    fontWeight: "bold",
     fontSize: 16,
   },
   levelBadge: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 9999,
     marginLeft: 8,
   },
   levelText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 12,
   },
   rankBadge: {
-    backgroundColor: 'rgba(234, 179, 8, 0.2)',
+    backgroundColor: "rgba(234, 179, 8, 0.2)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 9999,
     marginLeft: 8,
   },
   rankText: {
-    color: '#facc15',
+    color: "#facc15",
     fontSize: 12,
   },
   userStatsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   userStats: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
   },
   userStatsSeparator: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginHorizontal: 8,
   },
   streakContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   streakText: {
-    color: '#f87171',
+    color: "#f87171",
     fontSize: 14,
     marginLeft: 4,
   },
   timeAgo: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
   },
   badgesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   subjectBadge: {
@@ -751,41 +805,41 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   subjectText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   achievementBadge: {
-    backgroundColor: '#eab308',
+    backgroundColor: "#eab308",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 9999,
   },
   achievementText: {
-    color: '#000000',
+    color: "#000000",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   xpBadge: {
-    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    backgroundColor: "rgba(34, 197, 94, 0.2)",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 9999,
     marginLeft: 8,
   },
   xpText: {
-    color: '#4ade80',
+    color: "#4ade80",
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   postContent: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 16,
     lineHeight: 24,
     marginBottom: 16,
   },
   postImage: {
-    width: '100%',
+    width: "100%",
     height: 192,
     borderRadius: 16,
     marginBottom: 16,
@@ -794,86 +848,86 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   importedBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    backgroundColor: "rgba(16, 185, 129, 0.2)",
     padding: 12,
     borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderColor: "rgba(16, 185, 129, 0.3)",
   },
   importedText: {
-    color: '#4ade80',
-    fontWeight: '600',
+    color: "#4ade80",
+    fontWeight: "600",
     marginLeft: 8,
   },
   importButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     padding: 12,
     borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   importButtonText: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
     marginLeft: 8,
   },
   packInfo: {
     marginTop: 8,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
     padding: 12,
     borderRadius: 12,
   },
   packInfoText: {
-    color: '#60a5fa',
+    color: "#60a5fa",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
   },
   packInfoImported: {
-    color: '#4ade80',
+    color: "#4ade80",
   },
   actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#334155',
+    borderTopColor: "#334155",
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   actionText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
   actionTextLiked: {
-    color: '#f87171',
+    color: "#f87171",
   },
   bottomSpacer: {
     height: 32,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    justifyContent: "flex-start",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 64,
   },
   modalContent: {
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
     borderRadius: 24,
-    width: '100%',
+    width: "100%",
     maxWidth: 448,
-    height: '90%',
+    height: "90%",
     borderWidth: 1,
-    borderColor: 'rgba(51, 65, 85, 0.5)',
+    borderColor: "rgba(51, 65, 85, 0.5)",
   },
   modalHeader: {
     paddingHorizontal: 24,
@@ -882,12 +936,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
   },
   modalHeaderContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
   closeButton: {
-    backgroundColor: 'rgba(51, 65, 85, 0.8)',
+    backgroundColor: "rgba(51, 65, 85, 0.8)",
     padding: 8,
     borderRadius: 9999,
   },
@@ -897,26 +951,26 @@ const styles = StyleSheet.create({
   },
   loadingCommentsContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 80,
   },
   loadingCommentsText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 18,
   },
   emptyCommentsContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 80,
   },
   emptyCommentsText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 18,
   },
   emptyCommentsSubtext: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 14,
     marginTop: 8,
   },
@@ -924,31 +978,31 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   commentCard: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
   },
   commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   commentAvatarContainer: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   commentAvatar: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   commentAvatarText: {
-    color: '#ffffff',
-    fontWeight: 'bold',
+    color: "#ffffff",
+    fontWeight: "bold",
     fontSize: 14,
   },
   commentUserInfo: {
@@ -956,50 +1010,50 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   commentUserNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   commentUserName: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
     fontSize: 14,
   },
   commentLevelBadge: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 9999,
     marginLeft: 8,
   },
   commentLevelText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 12,
   },
   commentTimeAgo: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 12,
   },
   commentText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
     lineHeight: 20,
   },
   commentInputContainer: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(51, 65, 85, 0.5)',
+    borderTopColor: "rgba(51, 65, 85, 0.5)",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
   commentInputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
   },
   commentInput: {
     flex: 1,
-    backgroundColor: '#334155',
-    color: '#ffffff',
+    backgroundColor: "#334155",
+    color: "#ffffff",
     padding: 12,
     borderRadius: 16,
     marginRight: 12,
@@ -1010,9 +1064,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   sendButtonActive: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
   },
   sendButtonInactive: {
-    backgroundColor: '#475569',
+    backgroundColor: "#475569",
   },
 });

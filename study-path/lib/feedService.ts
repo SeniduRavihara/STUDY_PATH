@@ -1,4 +1,5 @@
 import { SupabaseService } from "../superbase/services/supabaseService";
+import { FeedRecommendationService } from "./feedRecommendationService";
 
 // Types for feed posts
 export interface FeedUser {
@@ -7,6 +8,15 @@ export interface FeedUser {
   points: number;
   streak: number;
   rank: string;
+}
+
+export interface PostContext {
+  target_subjects?: string[];
+  target_topics?: string[];
+  difficulty?: "easy" | "medium" | "hard" | null;
+  learning_stage?: "beginner" | "intermediate" | "advanced" | null;
+  node_types?: ("lesson" | "quiz" | "practice" | "project" | "milestone")[];
+  show_to_all?: boolean;
 }
 
 export interface FeedPost {
@@ -27,8 +37,13 @@ export interface FeedPost {
   comments: number;
   media_url: string | null;
   pack_data: any | null;
+  post_context?: PostContext | null;
+  priority?: number;
+  activity_type?: string | null;
+  activity_data?: any | null;
   created_at: string;
   users: FeedUser;
+  relevance_score?: number;
 }
 
 export interface CreateFeedPostData {
@@ -48,23 +63,129 @@ export interface CreateFeedPostData {
 }
 
 export class FeedService {
-  // Get all feed posts
+  // Get personalized feed posts for the current user
   static async getFeedPosts(): Promise<{
     data: FeedPost[] | null;
     error: any;
   }> {
     try {
-      const { data, error } = await SupabaseService.getFeedPosts();
-      return { data: data as FeedPost[] | null, error };
+      // Get current user
+      const { user } = await SupabaseService.getCurrentUser();
+      if (!user) {
+        // If not logged in, return all "show_to_all" posts
+        const { data, error } = await SupabaseService.getFeedPosts();
+        return { data: data as FeedPost[] | null, error };
+      }
+
+      // Get personalized posts using recommendation service
+      const personalizedPosts =
+        await FeedRecommendationService.getPersonalizedPosts(user.id, 50);
+
+      // Transform PersonalizedPost[] to FeedPost[] format
+      // Note: We need to fetch user data separately as the DB function doesn't join users table
+      const postIds = personalizedPosts.map((p) => p.id);
+
+      if (postIds.length === 0) {
+        return { data: [], error: null };
+      }
+
+      // Fetch full post data with user info
+      const { data: fullPosts, error } = await SupabaseService.getFeedPosts();
+
+      if (error) {
+        return { data: null, error };
+      }
+
+      // Filter and sort posts based on personalized recommendations
+      const sortedPosts = (fullPosts || [])
+        .filter((post: any) => postIds.includes(post.id))
+        .map((post: any) => {
+          const personalizedPost = personalizedPosts.find(
+            (p) => p.id === post.id
+          );
+          return {
+            ...post,
+            relevance_score: personalizedPost?.relevance_score || 0,
+            post_context: personalizedPost?.post_context,
+            priority: personalizedPost?.priority,
+          };
+        })
+        .sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+
+      return { data: sortedPosts as FeedPost[], error: null };
     } catch (error) {
-      console.error("Error fetching feed posts:", error);
+      console.error("Error fetching personalized feed posts:", error);
+      // Fallback to regular feed on error
+      const { data, error: fallbackError } =
+        await SupabaseService.getFeedPosts();
+      return { data: data as FeedPost[] | null, error: fallbackError };
+    }
+  }
+
+  // Get posts for a specific subject
+  static async getPostsForSubject(
+    subjectId: string
+  ): Promise<{ data: FeedPost[] | null; error: any }> {
+    try {
+      const { user } = await SupabaseService.getCurrentUser();
+      if (!user) {
+        return { data: null, error: { message: "User not authenticated" } };
+      }
+
+      const posts = await FeedRecommendationService.getPostsForSubject(
+        subjectId,
+        user.id,
+        20
+      );
+
+      return { data: posts as FeedPost[], error: null };
+    } catch (error) {
+      console.error("Error fetching subject posts:", error);
       return { data: null, error };
+    }
+  }
+
+  // Get posts for a specific topic
+  static async getPostsForTopic(
+    topicId: string
+  ): Promise<{ data: FeedPost[] | null; error: any }> {
+    try {
+      const { user } = await SupabaseService.getCurrentUser();
+      if (!user) {
+        return { data: null, error: { message: "User not authenticated" } };
+      }
+
+      const posts = await FeedRecommendationService.getPostsForTopic(
+        topicId,
+        user.id,
+        20
+      );
+
+      return { data: posts as FeedPost[], error: null };
+    } catch (error) {
+      console.error("Error fetching topic posts:", error);
+      return { data: null, error };
+    }
+  }
+
+  // Mark a post as viewed (for recommendation algorithm)
+  static async markPostViewed(
+    postId: string,
+    engaged: boolean = false
+  ): Promise<void> {
+    try {
+      const { user } = await SupabaseService.getCurrentUser();
+      if (!user) return;
+
+      await FeedRecommendationService.markPostViewed(user.id, postId, engaged);
+    } catch (error) {
+      console.error("Error marking post as viewed:", error);
     }
   }
 
   // Get a single feed post by ID
   static async getFeedPostById(
-    postId: string,
+    postId: string
   ): Promise<{ data: FeedPost | null; error: any }> {
     try {
       const { data, error } = await SupabaseService.getFeedPostById(postId);
@@ -77,7 +198,7 @@ export class FeedService {
 
   // Create a new feed post
   static async createFeedPost(
-    postData: CreateFeedPostData,
+    postData: CreateFeedPostData
   ): Promise<{ data: FeedPost | null; error: any }> {
     try {
       // Get current user
@@ -100,12 +221,12 @@ export class FeedService {
   // Update a feed post
   static async updateFeedPost(
     postId: string,
-    updates: Partial<CreateFeedPostData>,
+    updates: Partial<CreateFeedPostData>
   ): Promise<{ data: FeedPost | null; error: any }> {
     try {
       const { data, error } = await SupabaseService.updateFeedPost(
         postId,
-        updates,
+        updates
       );
       return { data: data as FeedPost | null, error };
     } catch (error) {
@@ -127,7 +248,7 @@ export class FeedService {
 
   // Like a post
   static async likePost(
-    postId: string,
+    postId: string
   ): Promise<{ data: FeedPost | null; error: any }> {
     try {
       const { data, error } = await SupabaseService.likePost(postId);
@@ -140,7 +261,7 @@ export class FeedService {
 
   // Unlike a post
   static async unlikePost(
-    postId: string,
+    postId: string
   ): Promise<{ data: FeedPost | null; error: any }> {
     try {
       const { data, error } = await SupabaseService.unlikePost(postId);
@@ -153,7 +274,7 @@ export class FeedService {
 
   // Increment comments count
   static async incrementComments(
-    postId: string,
+    postId: string
   ): Promise<{ data: FeedPost | null; error: any }> {
     try {
       const { data, error } = await SupabaseService.incrementComments(postId);
@@ -174,7 +295,7 @@ export class FeedService {
     const now = new Date();
     const postDate = new Date(dateString);
     const diffInSeconds = Math.floor(
-      (now.getTime() - postDate.getTime()) / 1000,
+      (now.getTime() - postDate.getTime()) / 1000
     );
 
     if (diffInSeconds < 60) {
@@ -205,12 +326,13 @@ export class FeedService {
 
   // Import MCQs from educational pack posts to SQLite
   static async importMCQPack(
-    postId: string,
+    postId: string
   ): Promise<{ success: boolean; error?: any; message?: string }> {
     try {
       // Get the post with pack data
-      const { data: post, error: postError } =
-        await this.getFeedPostById(postId);
+      const { data: post, error: postError } = await this.getFeedPostById(
+        postId
+      );
       if (postError || !post || !post.pack_data) {
         return { success: false, error: "Post not found or no pack data" };
       }
@@ -220,7 +342,7 @@ export class FeedService {
       const existingQuizzes =
         await drizzleQuizService.default.getQuizzesBySubject(post.subject);
       const alreadyImported = existingQuizzes.some(
-        quiz => quiz.importedFromPostId === postId && quiz.isImported === true,
+        (quiz) => quiz.importedFromPostId === postId && quiz.isImported === true
       );
 
       // If Supabase says imported but SQLite is empty, reset the Supabase flag
@@ -260,8 +382,9 @@ export class FeedService {
         importedFromPostId: postId,
       };
 
-      const result =
-        await drizzleQuizService.default.createQuizFromPack(quizData);
+      const result = await drizzleQuizService.default.createQuizFromPack(
+        quizData
+      );
 
       if (result.success) {
         // Update the post to mark it as imported
@@ -312,12 +435,12 @@ export class FeedService {
   // Create a new comment
   static async createComment(
     postId: string,
-    content: string,
+    content: string
   ): Promise<{ data: any | null; error: any }> {
     try {
       const { data, error } = await SupabaseService.createComment(
         postId,
-        content,
+        content
       );
       return { data, error };
     } catch (error) {
@@ -338,9 +461,9 @@ export class FeedService {
       }
 
       const packPosts = posts.filter(
-        post =>
+        (post) =>
           (post.type === "quiz_pack" || post.type === "lesson_pack") &&
-          post.pack_data?.imported === true,
+          post.pack_data?.imported === true
       );
 
       for (const post of packPosts) {

@@ -15,7 +15,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { AuthService } from "../../services/authService";
-import { FeedService } from "../../services/feedService";
+import { FeedService, type PostContext } from "../../services/feedService";
 import { SubjectService } from "../../services/subjectService";
 
 interface FeedPost {
@@ -35,6 +35,8 @@ interface FeedPost {
   comments: number;
   media_url: string | null;
   pack_data: Record<string, unknown> | null;
+  priority?: number;
+  post_context?: PostContext | null;
   created_at: string;
   users: {
     id: string;
@@ -52,6 +54,7 @@ interface Subject {
 const FeedPostManager: React.FC = () => {
   const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [topics, setTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingPost, setEditingPost] = useState<FeedPost | null>(null);
@@ -67,6 +70,17 @@ const FeedPostManager: React.FC = () => {
     achievement: "",
     points_earned: 0,
     media_url: "",
+    priority: 0,
+    activity_type: "post" as string,
+    activity_data: {} as any,
+    post_context: {
+      target_subjects: [] as string[],
+      target_topics: [] as string[],
+      difficulty: null as "easy" | "medium" | "hard" | null,
+      learning_stage: null as "beginner" | "intermediate" | "advanced" | null,
+      node_types: [] as string[],
+      show_to_all: true,
+    },
   });
 
   useEffect(() => {
@@ -83,7 +97,24 @@ const FeedPostManager: React.FC = () => {
       if (feedPostsRes.data) {
         setFeedPosts(feedPostsRes.data);
       }
-      if (subjectsRes) setSubjects(subjectsRes);
+      if (subjectsRes) {
+        setSubjects(subjectsRes);
+        // Load all topics for all subjects
+        const allTopics: any[] = [];
+        for (const subject of subjectsRes) {
+          const topicsData = await SubjectService.getSubjectTopics(subject.id);
+          if (topicsData) {
+            allTopics.push(
+              ...topicsData.map((t: any) => ({
+                ...t,
+                subject_id: subject.id,
+                subject_name: subject.name,
+              }))
+            );
+          }
+        }
+        setTopics(allTopics);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -99,7 +130,7 @@ const FeedPostManager: React.FC = () => {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `feed-posts/${fileName}`;
 
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from("feed-media")
         .upload(filePath, file);
 
@@ -142,6 +173,10 @@ const FeedPostManager: React.FC = () => {
         user_id: user.id,
         likes: 0,
         comments: 0,
+        priority: formData.priority,
+        post_context: formData.post_context,
+        activity_type: formData.activity_type,
+        activity_data: formData.activity_data,
       };
 
       const { data, error } = await FeedService.createFeedPost(postData);
@@ -216,6 +251,17 @@ const FeedPostManager: React.FC = () => {
       achievement: "",
       points_earned: 0,
       media_url: "",
+      priority: 0,
+      activity_type: "post",
+      activity_data: {},
+      post_context: {
+        target_subjects: [],
+        target_topics: [],
+        difficulty: null,
+        learning_stage: null,
+        node_types: [],
+        show_to_all: true,
+      },
     });
     setEditingPost(null);
   };
@@ -228,6 +274,17 @@ const FeedPostManager: React.FC = () => {
       achievement: post.achievement || "",
       points_earned: post.points_earned,
       media_url: post.media_url || "",
+      priority: post.priority || 0,
+      activity_type: (post as any).activity_type || "post",
+      activity_data: (post as any).activity_data || {},
+      post_context: {
+        target_subjects: post.post_context?.target_subjects || [],
+        target_topics: post.post_context?.target_topics || [],
+        difficulty: post.post_context?.difficulty || null,
+        learning_stage: post.post_context?.learning_stage || null,
+        node_types: post.post_context?.node_types || [],
+        show_to_all: post.post_context?.show_to_all ?? true,
+      },
     });
     setEditingPost(post);
     setShowCreateForm(true);
@@ -455,10 +512,471 @@ const FeedPostManager: React.FC = () => {
                         points_earned: parseInt(e.target.value) || 0,
                       })
                     }
-                    className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500"
+                    className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white placeholder-dark-400 focus:outline-none focus:border-primary-500"
                     min="0"
                   />
                 </div>
+              </div>
+
+              {/* Activity Type Selector */}
+              <div className="bg-dark-700 p-4 rounded-lg">
+                <label className="block text-sm font-medium text-dark-300 mb-2">
+                  Activity Type
+                </label>
+                <select
+                  value={formData.activity_type}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      activity_type: e.target.value,
+                      activity_data: {},
+                    });
+                  }}
+                  className="w-full bg-dark-600 border border-dark-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500"
+                >
+                  <option value="post">Regular Post</option>
+                  <option value="poll">Poll</option>
+                  <option value="mcq_single">Single MCQ</option>
+                  <option value="quiz">Quiz (Multiple Questions)</option>
+                  <option value="flashcard">Flashcard</option>
+                  <option value="flashcard_deck">Flashcard Deck</option>
+                </select>
+
+                {/* Poll Builder */}
+                {formData.activity_type === "poll" && (
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Poll Question
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.activity_data.question || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              question: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                        placeholder="What's your question?"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Options (one per line)
+                      </label>
+                      <textarea
+                        value={(formData.activity_data.options || [])
+                          .map((o: any) => o.text)
+                          .join("\n")}
+                        onChange={(e) => {
+                          const lines = e.target.value
+                            .split("\n")
+                            .filter((l) => l.trim());
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              options: lines.map((text, idx) => ({
+                                id: `opt_${idx}`,
+                                text,
+                              })),
+                            },
+                          });
+                        }}
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                        rows={4}
+                        placeholder="Option 1&#10;Option 2&#10;Option 3"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* MCQ Builder */}
+                {formData.activity_type === "mcq_single" && (
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Question
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.activity_data.question || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              question: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Options (one per line)
+                      </label>
+                      <textarea
+                        value={(formData.activity_data.options || [])
+                          .map((o: any) => o.text)
+                          .join("\n")}
+                        onChange={(e) => {
+                          const lines = e.target.value
+                            .split("\n")
+                            .filter((l) => l.trim());
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              options: lines.map((text, idx) => ({
+                                id: `opt_${idx}`,
+                                text,
+                              })),
+                            },
+                          });
+                        }}
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                        rows={4}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Correct Answer (index, starting from 0)
+                      </label>
+                      <input
+                        type="number"
+                        value={
+                          formData.activity_data.correct_answer
+                            ? parseInt(
+                                formData.activity_data.correct_answer.replace(
+                                  "opt_",
+                                  ""
+                                )
+                              )
+                            : 0
+                        }
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              correct_answer: `opt_${e.target.value}`,
+                            },
+                          })
+                        }
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                        min="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Explanation (optional)
+                      </label>
+                      <textarea
+                        value={formData.activity_data.explanation || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              explanation: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Flashcard Builder */}
+                {(formData.activity_type === "flashcard" ||
+                  formData.activity_type === "flashcard_deck") && (
+                  <div className="mt-4 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.activity_data.title || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              title: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-dark-300 mb-1">
+                        Cards (Format: Front | Back | Hint, one per line)
+                      </label>
+                      <textarea
+                        value={(formData.activity_data.cards || [])
+                          .map(
+                            (c: any) =>
+                              `${c.front} | ${c.back}${
+                                c.hint ? " | " + c.hint : ""
+                              }`
+                          )
+                          .join("\n")}
+                        onChange={(e) => {
+                          const lines = e.target.value
+                            .split("\n")
+                            .filter((l) => l.trim());
+                          setFormData({
+                            ...formData,
+                            activity_data: {
+                              ...formData.activity_data,
+                              cards: lines.map((line, idx) => {
+                                const [front, back, hint] = line
+                                  .split("|")
+                                  .map((s) => s.trim());
+                                return { id: `card_${idx}`, front, back, hint };
+                              }),
+                            },
+                          });
+                        }}
+                        className="w-full bg-dark-600 border border-dark-500 rounded px-2 py-1 text-white text-sm"
+                        rows={6}
+                        placeholder="sin(30°) | 1/2 | Memorize special angles&#10;cos(60°) | 1/2&#10;tan(45°) | 1"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Post Targeting Section */}
+              <div className="border-t border-dark-600 pt-4 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold text-white">
+                    📍 Post Targeting
+                  </h4>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.post_context.show_to_all}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          post_context: {
+                            ...formData.post_context,
+                            show_to_all: e.target.checked,
+                          },
+                        })
+                      }
+                      className="w-4 h-4 rounded"
+                    />
+                    <span className="text-sm text-dark-300">Show to All</span>
+                  </label>
+                </div>
+
+                {!formData.post_context.show_to_all && (
+                  <div className="space-y-4 bg-dark-750 p-4 rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Target Subjects */}
+                      <div>
+                        <label className="block text-sm font-medium text-dark-300 mb-2">
+                          Target Subjects
+                        </label>
+                        <select
+                          multiple
+                          value={formData.post_context.target_subjects || []}
+                          onChange={(e) => {
+                            const selected = Array.from(
+                              e.target.selectedOptions,
+                              (option) => option.value
+                            );
+                            setFormData({
+                              ...formData,
+                              post_context: {
+                                ...formData.post_context,
+                                target_subjects: selected,
+                              },
+                            });
+                          }}
+                          className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500 h-24"
+                        >
+                          {subjects.map((subject) => (
+                            <option key={subject.id} value={subject.id}>
+                              {subject.name}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-dark-400 mt-1">
+                          Hold Ctrl/Cmd to select multiple
+                        </p>
+                      </div>
+
+                      {/* Target Topics */}
+                      <div>
+                        <label className="block text-sm font-medium text-dark-300 mb-2">
+                          Target Topics
+                        </label>
+                        <select
+                          multiple
+                          value={formData.post_context.target_topics || []}
+                          onChange={(e) => {
+                            const selected = Array.from(
+                              e.target.selectedOptions,
+                              (option) => option.value
+                            );
+                            setFormData({
+                              ...formData,
+                              post_context: {
+                                ...formData.post_context,
+                                target_topics: selected,
+                              },
+                            });
+                          }}
+                          className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500 h-24"
+                        >
+                          {topics.map((topic) => (
+                            <option key={topic.id} value={topic.id}>
+                              {topic.subject_name} - {topic.name}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-dark-400 mt-1">
+                          Hold Ctrl/Cmd to select multiple
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* Difficulty */}
+                      <div>
+                        <label className="block text-sm font-medium text-dark-300 mb-2">
+                          Difficulty
+                        </label>
+                        <select
+                          value={formData.post_context.difficulty || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              post_context: {
+                                ...formData.post_context,
+                                difficulty: e.target.value as any,
+                              },
+                            })
+                          }
+                          className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">Any</option>
+                          <option value="easy">Easy</option>
+                          <option value="medium">Medium</option>
+                          <option value="hard">Hard</option>
+                        </select>
+                      </div>
+
+                      {/* Learning Stage */}
+                      <div>
+                        <label className="block text-sm font-medium text-dark-300 mb-2">
+                          Learning Stage
+                        </label>
+                        <select
+                          value={formData.post_context.learning_stage || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              post_context: {
+                                ...formData.post_context,
+                                learning_stage: e.target.value as any,
+                              },
+                            })
+                          }
+                          className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500"
+                        >
+                          <option value="">Any</option>
+                          <option value="beginner">Beginner</option>
+                          <option value="intermediate">Intermediate</option>
+                          <option value="advanced">Advanced</option>
+                        </select>
+                      </div>
+
+                      {/* Priority */}
+                      <div>
+                        <label className="block text-sm font-medium text-dark-300 mb-2">
+                          Priority
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.priority}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              priority: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          className="w-full bg-dark-700 border border-dark-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-primary-500"
+                          min="0"
+                          max="100"
+                        />
+                        <p className="text-xs text-dark-400 mt-1">
+                          0=normal, higher=important
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Node Types */}
+                    <div>
+                      <label className="block text-sm font-medium text-dark-300 mb-2">
+                        Node Types (when to show)
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          "lesson",
+                          "quiz",
+                          "practice",
+                          "project",
+                          "milestone",
+                        ].map((type) => (
+                          <label
+                            key={type}
+                            className="flex items-center gap-2 px-3 py-2 bg-dark-700 rounded-lg cursor-pointer hover:bg-dark-600"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={(
+                                formData.post_context.node_types || []
+                              ).includes(type)}
+                              onChange={(e) => {
+                                const currentTypes =
+                                  formData.post_context.node_types || [];
+                                const updated = e.target.checked
+                                  ? [...currentTypes, type]
+                                  : currentTypes.filter((t) => t !== type);
+                                setFormData({
+                                  ...formData,
+                                  post_context: {
+                                    ...formData.post_context,
+                                    node_types: updated,
+                                  },
+                                });
+                              }}
+                              className="w-4 h-4"
+                            />
+                            <span className="text-sm text-white capitalize">
+                              {type}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>

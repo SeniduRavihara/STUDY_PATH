@@ -442,6 +442,200 @@ export type Database = {
         };
         Relationships: [];
       };
+      feed_posts: {
+        Row: {
+          achievement: string | null;
+          activity_data: Json | null;
+          activity_type: string | null;
+          comments: number | null;
+          content: string;
+          created_at: string;
+          id: string;
+          likes: number | null;
+          media_url: string | null;
+          pack_data: Json | null;
+          points_earned: number | null;
+          post_context: Json | null;
+          priority: number | null;
+          subject: string | null;
+          type: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          achievement?: string | null;
+          activity_data?: Json | null;
+          activity_type?: string | null;
+          comments?: number | null;
+          content: string;
+          created_at?: string;
+          id?: string;
+          likes?: number | null;
+          media_url?: string | null;
+          pack_data?: Json | null;
+          points_earned?: number | null;
+          post_context?: Json | null;
+          priority?: number | null;
+          subject?: string | null;
+          type: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          achievement?: string | null;
+          activity_data?: Json | null;
+          activity_type?: string | null;
+          comments?: number | null;
+          content?: string;
+          created_at?: string;
+          id?: string;
+          likes?: number | null;
+          media_url?: string | null;
+          pack_data?: Json | null;
+          points_earned?: number | null;
+          post_context?: Json | null;
+          priority?: number | null;
+          subject?: string | null;
+          type?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feed_posts_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      feed_activity_responses: {
+        Row: {
+          activity_type: string;
+          completed_at: string | null;
+          id: string;
+          post_id: string;
+          response_data: Json;
+          score: number | null;
+          time_spent_seconds: number | null;
+          user_id: string;
+        };
+        Insert: {
+          activity_type: string;
+          completed_at?: string | null;
+          id?: string;
+          post_id: string;
+          response_data: Json;
+          score?: number | null;
+          time_spent_seconds?: number | null;
+          user_id: string;
+        };
+        Update: {
+          activity_type?: string;
+          completed_at?: string | null;
+          id?: string;
+          post_id?: string;
+          response_data?: Json;
+          score?: number | null;
+          time_spent_seconds?: number | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feed_activity_responses_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "feed_posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "feed_activity_responses_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      feed_poll_votes: {
+        Row: {
+          id: string;
+          option_id: string;
+          post_id: string;
+          user_id: string;
+          voted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          option_id: string;
+          post_id: string;
+          user_id: string;
+          voted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          option_id?: string;
+          post_id?: string;
+          user_id?: string;
+          voted_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feed_poll_votes_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "feed_posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "feed_poll_votes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      post_views: {
+        Row: {
+          engaged: boolean | null;
+          id: string;
+          post_id: string;
+          user_id: string;
+          viewed_at: string | null;
+        };
+        Insert: {
+          engaged?: boolean | null;
+          id?: string;
+          post_id: string;
+          user_id: string;
+          viewed_at?: string | null;
+        };
+        Update: {
+          engaged?: boolean | null;
+          id?: string;
+          post_id?: string;
+          user_id?: string;
+          viewed_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey";
+            columns: ["post_id"];
+            isOneToOne: false;
+            referencedRelation: "feed_posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "post_views_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

@@ -106,33 +106,38 @@ export default function FlowStudyScreen() {
       if (flowWithNodes && flowWithNodes.nodes) {
         // Convert database nodes back to LearningNode format
         const convertedNodes: LearningNode[] = flowWithNodes.nodes.map(
-          (node: any) => ({
-            id: node.id,
-            title: node.title,
-            type:
-              node.node_type === "start"
-                ? "lesson"
-                : node.node_type === "end"
-                ? "milestone"
-                : node.node_type === "quiz"
-                ? "quiz"
-                : node.node_type === "practice"
-                ? "practice"
-                : node.node_type === "assignment"
-                ? "project"
-                : "lesson",
-            status: node.status,
-            difficulty: node.difficulty,
-            xp: node.xp_reward,
-            position: { x: 0, y: 0 }, // Will be calculated by grid system
-            icon: getNodeIcon(node.node_type),
-            color: getNodeColor(node.node_type),
-            description: node.description,
-            estimatedTime: `${node.estimated_time} min`,
-            is_practice_node: node.is_practice_node || false,
-            optional_position: node.optional_position || undefined,
-            config: node.config, // Preserve the config including quiz_pack_id
-          })
+          (node: any) => {
+            // Determine node type from config or default to lesson
+            const nodeType =
+              node.config?.node_type ||
+              (node.is_practice_node ? "practice" : "lesson");
+
+            return {
+              id: node.id,
+              title: node.title,
+              type:
+                nodeType === "quiz"
+                  ? "quiz"
+                  : nodeType === "practice"
+                  ? "practice"
+                  : nodeType === "project"
+                  ? "project"
+                  : nodeType === "milestone"
+                  ? "milestone"
+                  : "lesson",
+              status: node.status,
+              difficulty: node.difficulty,
+              xp: node.xp_reward,
+              position: { x: 0, y: 0 }, // Will be calculated by grid system
+              icon: getNodeIcon(nodeType),
+              color: getNodeColor(nodeType),
+              description: node.description,
+              estimatedTime: `${node.estimated_time} min`,
+              is_practice_node: node.is_practice_node || false,
+              optional_position: node.optional_position || undefined,
+              config: node.config, // Preserve the config including quiz_pack_id
+            };
+          }
         );
 
         setLearningNodes(convertedNodes);
@@ -185,20 +190,16 @@ export default function FlowStudyScreen() {
   // Helper functions for node conversion
   const getNodeIcon = (nodeType: string): keyof typeof Ionicons.glyphMap => {
     switch (nodeType) {
-      case "start":
-        return "play-circle";
-      case "study":
+      case "lesson":
         return "book";
       case "quiz":
         return "help-circle";
-      case "video":
-        return "videocam";
-      case "assignment":
+      case "project":
         return "document-text";
-      case "assessment":
-        return "checkmark-circle";
-      case "end":
+      case "milestone":
         return "trophy";
+      case "practice":
+        return "flash";
       default:
         return "book";
     }
@@ -206,22 +207,16 @@ export default function FlowStudyScreen() {
 
   const getNodeColor = (nodeType: string): [string, string] => {
     switch (nodeType) {
-      case "start":
-        return ["#10b981", "#059669"];
-      case "study":
+      case "lesson":
         return ["#3b82f6", "#1d4ed8"];
       case "quiz":
         return ["#f59e0b", "#d97706"];
-      case "video":
-        return ["#8b5cf6", "#7c3aed"];
-      case "assignment":
+      case "project":
         return ["#6366f1", "#4f46e5"];
-      case "assessment":
-        return ["#ef4444", "#dc2626"];
+      case "milestone":
+        return ["#fbbf24", "#f59e0b"];
       case "practice":
         return ["#8b5cf6", "#7c3aed"];
-      case "end":
-        return ["#fbbf24", "#f59e0b"];
       default:
         return ["#6b7280", "#4b5563"];
     }
@@ -409,15 +404,13 @@ export default function FlowStudyScreen() {
   const handleModalConfirm = () => {
     if (!selectedNode) return;
 
-    // Navigate to node content screen for all node types
-    // The content screen will display the content blocks
+    // Navigate to node journey screen to display content blocks sequentially
     router.push({
-      pathname: "/study/node-content",
+      pathname: "/study/node-journey",
       params: {
         nodeId: selectedNode.id,
         nodeTitle: selectedNode.title,
         flowId: currentFlowId || "",
-        nodeType: selectedNode.type,
       },
     });
 
