@@ -11,7 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-View,
+  View,
 } from "react-native";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -30,23 +30,35 @@ export default function SubscribeScreen() {
   const [subscribing, setSubscribing] = useState<string | null>(null);
 
   // Helper function to get valid icon name
-  const getValidIcon = (iconName: string | null): keyof typeof Ionicons.glyphMap => {
+  const getValidIcon = (
+    iconName: string | null
+  ): keyof typeof Ionicons.glyphMap => {
     if (!iconName) return "book";
-    
+
     const validIcons = [
-      "book", "library", "school", "calculator", "flask", "bulb", "globe", 
-      "code-slash", "phone-portrait", "logo-python", "brain", "git-branch"
+      "book",
+      "library",
+      "school",
+      "calculator",
+      "flask",
+      "bulb",
+      "globe",
+      "code-slash",
+      "phone-portrait",
+      "logo-python",
+      "brain",
+      "git-branch",
     ];
-    
+
     if (validIcons.includes(iconName)) {
       return iconName as keyof typeof Ionicons.glyphMap;
     }
-    
+
     return "book";
   };
 
-  // Load available subjects
-  const loadAvailableSubjects = useCallback(async () => {
+  // Load all subjects
+  const loadAllSubjects = useCallback(async () => {
     if (!user?.id) {
       console.log("No user ID available");
       setLoading(false);
@@ -55,9 +67,14 @@ export default function SubscribeScreen() {
 
     try {
       console.log("Loading available subjects for user:", user.id);
-      const subjects = await SubscriptionService.getAvailableSubjects(user.id);
-      console.log("Available subjects:", subjects);
+      const subjects = await SubscriptionService.getAllSubjects();
+      console.log("All subjects from database:", subjects);
+      console.log("Number of subjects:", subjects.length);
+      subjects.forEach((subject, index) => {
+        console.log(`Subject ${index}:`, subject.name, subject.id);
+      });
       setAvailableSubjects(subjects);
+      console.log("setAvailableSubjects called with:", subjects.length, "subjects");
     } catch (error) {
       console.error("Error loading available subjects:", error);
       Alert.alert("Error", "Failed to load subjects. Please try again.");
@@ -69,7 +86,7 @@ export default function SubscribeScreen() {
   // Refresh data
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadAvailableSubjects();
+    await loadAllSubjects();
     setRefreshing(false);
   };
 
@@ -80,9 +97,22 @@ export default function SubscribeScreen() {
     setSubscribing(subjectId);
 
     try {
+      // Check if already subscribed
+      const alreadySubscribed = await SubscriptionService.isSubscribed(user.id, subjectId);
+      
+      if (alreadySubscribed) {
+        Alert.alert(
+          "Already Subscribed",
+          `You're already subscribed to ${subjectName}.`,
+          [{ text: "OK" }]
+        );
+        setSubscribing(null);
+        return;
+      }
+
       const success = await SubscriptionService.subscribeToSubject(
         user.id,
-        subjectId,
+        subjectId
       );
 
       if (success) {
@@ -94,12 +124,12 @@ export default function SubscribeScreen() {
               text: "OK",
               onPress: () => {
                 // Remove the subscribed subject from available list
-                setAvailableSubjects(prev =>
-                  prev.filter(subject => subject.id !== subjectId),
+                setAvailableSubjects((prev) =>
+                  prev.filter((subject) => subject.id !== subjectId)
                 );
               },
             },
-          ],
+          ]
         );
       } else {
         Alert.alert("Error", "Failed to subscribe. Please try again.");
@@ -114,14 +144,19 @@ export default function SubscribeScreen() {
 
   // Load subjects on component mount
   useEffect(() => {
-    loadAvailableSubjects();
-  }, [loadAvailableSubjects]);
+    loadAllSubjects();
+  }, [loadAllSubjects]);
+
+  // Debug: Log when availableSubjects changes
+  useEffect(() => {
+    console.log("availableSubjects changed:", availableSubjects.length, "subjects");
+  }, [availableSubjects]);
 
   // Filter subjects based on search term
   const filteredSubjects = availableSubjects.filter(
-    subject =>
+    (subject) =>
       subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      subject.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      subject.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -132,18 +167,11 @@ export default function SubscribeScreen() {
       }
     >
       {/* Header */}
-      <LinearGradient
-        colors={["#0f0f23", "#1a1a2e"]}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#0f0f23", "#1a1a2e"]} style={styles.header}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.headerTitle}>
-              Browse Subjects
-            </Text>
-            <Text style={styles.headerSubtitle}>
-              Subscribe to new subjects
-            </Text>
+            <Text style={styles.headerTitle}>Browse Subjects</Text>
+            <Text style={styles.headerSubtitle}>Subscribe to new subjects</Text>
           </View>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -185,7 +213,7 @@ export default function SubscribeScreen() {
             </Text>
           </View>
         ) : (
-          filteredSubjects.map(subject => (
+          filteredSubjects.map((subject) => (
             <View key={subject.id} style={styles.subjectCardWrapper}>
               <LinearGradient
                 colors={["#1a1a2e", "#16213e"]}
@@ -193,8 +221,16 @@ export default function SubscribeScreen() {
               >
                 <View style={styles.subjectContent}>
                   <LinearGradient
-                  colors={(subject.color as [ColorValue, ColorValue]) || (['#3B82F6', '#3B82F6'] as [ColorValue, ColorValue])}
-                  style={styles.subjectIcon}
+                    colors={
+                      subject.color &&
+                      Array.isArray(subject.color) &&
+                      subject.color.length === 2 &&
+                      typeof subject.color[0] === 'string' &&
+                      typeof subject.color[1] === 'string'
+                        ? (subject.color as [ColorValue, ColorValue])
+                        : (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])
+                    }
+                    style={styles.subjectIcon}
                   >
                     <Ionicons
                       name={getValidIcon(subject.icon)}
@@ -205,9 +241,7 @@ export default function SubscribeScreen() {
 
                   <View style={styles.subjectInfo}>
                     <View style={styles.subjectTitleRow}>
-                      <Text style={styles.subjectTitle}>
-                        {subject.name}
-                      </Text>
+                      <Text style={styles.subjectTitle}>{subject.name}</Text>
                       <View style={styles.difficultyBadge}>
                         <Text style={styles.difficultyText}>
                           {subject.difficulty}
@@ -232,7 +266,8 @@ export default function SubscribeScreen() {
                         disabled={subscribing === subject.id}
                         style={[
                           styles.subscribeButton,
-                          subscribing === subject.id && styles.subscribeButtonDisabled,
+                          subscribing === subject.id &&
+                            styles.subscribeButtonDisabled,
                         ]}
                       >
                         <Text style={styles.subscribeButtonText}>

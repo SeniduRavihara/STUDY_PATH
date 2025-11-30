@@ -1,9 +1,20 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState, useEffect, useCallback } from "react";
-import { Alert, View, ActivityIndicator, Text, TouchableOpacity, Modal, ScrollView, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import CustomModal from "../../../components/CustomModal";
-import { LearningFlowPath, LearningNode } from "../../../components/LearningFlowPath";
+import {
+  LearningFlowPath,
+  LearningNode,
+} from "../../../components/LearningFlowPath";
 import { useAuth } from "../../../contexts/AuthContext";
 import { SupabaseService } from "../../../superbase/services/supabaseService";
 
@@ -31,21 +42,22 @@ export default function FlowStudyScreen() {
   useEffect(() => {
     const loadTopics = async () => {
       if (!parsedSubject?.id || !user?.id) return;
-      
+
       try {
         // Get topics for this subject from database
-        const { data: topics, error } = await SupabaseService.getTopicsBySubject(parsedSubject.id);
-        
+        const { data: topics, error } =
+          await SupabaseService.getTopicsBySubject(parsedSubject.id);
+
         if (error) {
           console.error("Error loading topics:", error);
           return;
         }
-        
+
         console.log("Loaded topics from database:", topics);
-        
+
         // Store topics in state for use in UI
         setTopics(topics);
-        
+
         if (topics && topics.length > 0) {
           // Find the first leaf topic (topic without children) for flow assignment
           const findFirstLeafTopic = (topicList: any[]): any => {
@@ -58,13 +70,16 @@ export default function FlowStudyScreen() {
             }
             return null;
           };
-          
+
           const firstLeafTopic = findFirstLeafTopic(topics);
           if (firstLeafTopic) {
             console.log("Using first leaf topic:", firstLeafTopic);
             setCurrentTopicId(firstLeafTopic.id);
           } else {
-            console.log("No leaf topics found for subject:", parsedSubject.name);
+            console.log(
+              "No leaf topics found for subject:",
+              parsedSubject.name
+            );
           }
         } else {
           console.log("No topics found for subject:", parsedSubject.name);
@@ -75,109 +90,140 @@ export default function FlowStudyScreen() {
     };
 
     loadTopics();
-    }, [parsedSubject?.id, parsedSubject?.name, user?.id]);
+  }, [parsedSubject?.id, parsedSubject?.name, user?.id]);
 
-    // Load flow from database
-    const loadFlow = useCallback(async (flowId: string) => {
+  // Load flow from database
+  const loadFlow = useCallback(async (flowId: string) => {
     try {
-    const { data: flowWithNodes, error } = await SupabaseService.loadFlowWithNodes(flowId);
+      const { data: flowWithNodes, error } =
+        await SupabaseService.loadFlowWithNodes(flowId);
 
-    if (error) {
-      console.error("Error loading flow:", error);
-    return;
-    }
+      if (error) {
+        console.error("Error loading flow:", error);
+        return;
+      }
 
-    if (flowWithNodes && flowWithNodes.nodes) {
-    // Convert database nodes back to LearningNode format
-    const convertedNodes: LearningNode[] = flowWithNodes.nodes.map((node: any) => ({
-      id: node.id,
-      title: node.title,
-      type: node.node_type === "start" ? "lesson" :
-          node.node_type === "end" ? "milestone" :
-          node.node_type === "quiz" ? "quiz" :
-          node.node_type === "assignment" ? "project" : "lesson",
-      status: node.status,
-    difficulty: node.difficulty,
-    xp: node.xp_reward,
-    position: { x: 0, y: 0 }, // Will be calculated by grid system
-      icon: getNodeIcon(node.node_type),
-        color: getNodeColor(node.node_type),
-      description: node.description,
-      estimatedTime: `${node.estimated_time} min`,
-      config: node.config // Preserve the config including quiz_pack_id
-    }));
+      if (flowWithNodes && flowWithNodes.nodes) {
+        // Convert database nodes back to LearningNode format
+        const convertedNodes: LearningNode[] = flowWithNodes.nodes.map(
+          (node: any) => ({
+            id: node.id,
+            title: node.title,
+            type:
+              node.node_type === "start"
+                ? "lesson"
+                : node.node_type === "end"
+                ? "milestone"
+                : node.node_type === "quiz"
+                ? "quiz"
+                : node.node_type === "practice"
+                ? "practice"
+                : node.node_type === "assignment"
+                ? "project"
+                : "lesson",
+            status: node.status,
+            difficulty: node.difficulty,
+            xp: node.xp_reward,
+            position: { x: 0, y: 0 }, // Will be calculated by grid system
+            icon: getNodeIcon(node.node_type),
+            color: getNodeColor(node.node_type),
+            description: node.description,
+            estimatedTime: `${node.estimated_time} min`,
+            is_practice_node: node.is_practice_node || false,
+            optional_position: node.optional_position || undefined,
+            config: node.config, // Preserve the config including quiz_pack_id
+          })
+        );
 
-    setLearningNodes(convertedNodes);
-      setCurrentFlowId(flowId);
+        setLearningNodes(convertedNodes);
+        setCurrentFlowId(flowId);
       }
     } catch (error) {
       console.error("Error loading flow:", error);
-      }
+    }
   }, []);
 
-    // Load existing flow when topic is selected
-    useEffect(() => {
+  // Load existing flow when topic is selected
+  useEffect(() => {
     const loadExistingFlow = async () => {
-    if (!currentTopicId || !user?.id) return;
+      if (!currentTopicId || !user?.id) return;
 
-    setIsLoading(true);
-    try {
-      // Get flows for this topic
-      const { data: flows, error } = await SupabaseService.getFlowsByTopic(currentTopicId);
+      setIsLoading(true);
+      try {
+        // Get flows for this topic
+        const { data: flows, error } = await SupabaseService.getFlowsByTopic(
+          currentTopicId
+        );
 
-    if (error) {
-      console.error("Error loading flows:", error);
-    return;
-    }
+        if (error) {
+          console.error("Error loading flows:", error);
+          return;
+        }
 
-    if (flows && flows.length > 0) {
-    // Load the first flow
-    const flow = flows[0];
-    await loadFlow(flow.id);
-    } else {
-    // No flow exists for this topic, start fresh
-    setLearningNodes([]);
-    setCurrentFlowId(null);
-    }
-    } catch (error) {
-    console.error("Error loading existing flow:", error);
-    // On error, start fresh
-    setLearningNodes([]);
+        if (flows && flows.length > 0) {
+          // Load the first flow
+          const flow = flows[0];
+          await loadFlow(flow.id);
+        } else {
+          // No flow exists for this topic, start fresh
+          setLearningNodes([]);
+          setCurrentFlowId(null);
+        }
+      } catch (error) {
+        console.error("Error loading existing flow:", error);
+        // On error, start fresh
+        setLearningNodes([]);
         setCurrentFlowId(null);
-    } finally {
-    setIsLoading(false);
-    }
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadExistingFlow();
-    }, [currentTopicId, user?.id, loadFlow]);
-
-
+  }, [currentTopicId, user?.id, loadFlow]);
 
   // Helper functions for node conversion
   const getNodeIcon = (nodeType: string): keyof typeof Ionicons.glyphMap => {
     switch (nodeType) {
-      case "start": return "play-circle";
-      case "study": return "book";
-      case "quiz": return "help-circle";
-      case "video": return "videocam";
-      case "assignment": return "document-text";
-      case "assessment": return "checkmark-circle";
-      case "end": return "trophy";
-      default: return "book";
+      case "start":
+        return "play-circle";
+      case "study":
+        return "book";
+      case "quiz":
+        return "help-circle";
+      case "video":
+        return "videocam";
+      case "assignment":
+        return "document-text";
+      case "assessment":
+        return "checkmark-circle";
+      case "end":
+        return "trophy";
+      default:
+        return "book";
     }
   };
 
   const getNodeColor = (nodeType: string): [string, string] => {
     switch (nodeType) {
-      case "start": return ["#10b981", "#059669"];
-      case "study": return ["#3b82f6", "#1d4ed8"];
-      case "quiz": return ["#f59e0b", "#d97706"];
-      case "video": return ["#8b5cf6", "#7c3aed"];
-      case "assignment": return ["#6366f1", "#4f46e5"];
-      case "assessment": return ["#ef4444", "#dc2626"];
-      case "end": return ["#fbbf24", "#f59e0b"];
-      default: return ["#6b7280", "#4b5563"];
+      case "start":
+        return ["#10b981", "#059669"];
+      case "study":
+        return ["#3b82f6", "#1d4ed8"];
+      case "quiz":
+        return ["#f59e0b", "#d97706"];
+      case "video":
+        return ["#8b5cf6", "#7c3aed"];
+      case "assignment":
+        return ["#6366f1", "#4f46e5"];
+      case "assessment":
+        return ["#ef4444", "#dc2626"];
+      case "practice":
+        return ["#8b5cf6", "#7c3aed"];
+      case "end":
+        return ["#fbbf24", "#f59e0b"];
+      default:
+        return ["#6b7280", "#4b5563"];
     }
   };
 
@@ -200,7 +246,7 @@ export default function FlowStudyScreen() {
 
   // Calculate course progress
   const completedNodes = learningNodes.filter(
-    node => node.status === "completed",
+    (node) => node.status === "completed"
   ).length;
   const totalNodes = learningNodes.length;
   const courseProgress = (completedNodes / totalNodes) * 100;
@@ -244,7 +290,7 @@ export default function FlowStudyScreen() {
           style={[
             styles.topicItem,
             isSelected && styles.topicItemSelected,
-            { paddingLeft: indentLevel + 16 }
+            { paddingLeft: indentLevel + 16 },
           ]}
         >
           <View style={styles.topicItemContent}>
@@ -254,40 +300,51 @@ export default function FlowStudyScreen() {
                 onPress={() => toggleTopicExpansion(topic.id)}
                 style={styles.expandButton}
               >
-                <Ionicons 
-                  name={isExpanded ? "chevron-down" : "chevron-forward"} 
-                  size={12} 
-                  color="#9ca3af" 
+                <Ionicons
+                  name={isExpanded ? "chevron-down" : "chevron-forward"}
+                  size={12}
+                  color="#9ca3af"
                 />
               </TouchableOpacity>
             )}
-            
+
             {/* Topic Content with dot leaders */}
             <View style={styles.topicContentRow}>
-              <Text style={[
-                styles.topicName,
-                isSelected && styles.topicNameSelected
-              ]}>
+              <Text
+                style={[
+                  styles.topicName,
+                  isSelected && styles.topicNameSelected,
+                ]}
+              >
                 {topic.name}
               </Text>
-              
+
               {/* Dot leaders */}
               <View style={styles.dotLeaders}>
                 <View style={styles.dotLeadersLine} />
               </View>
-              
+
               {/* Status indicator */}
-              <View style={[
-                styles.statusIndicator,
-                topic.hasFlow ? styles.statusIndicatorGreen :
-                isLeafTopic ? styles.statusIndicatorBlue :
-                styles.statusIndicatorGray
-              ]} />
+              <View
+                style={[
+                  styles.statusIndicator,
+                  topic.hasFlow
+                    ? styles.statusIndicatorGreen
+                    : isLeafTopic
+                    ? styles.statusIndicatorBlue
+                    : styles.statusIndicatorGray,
+                ]}
+              />
             </View>
 
             {/* Selection Indicator */}
             {isSelected && (
-              <Ionicons name="checkmark" size={16} color="#60a5fa" style={styles.checkmark} />
+              <Ionicons
+                name="checkmark"
+                size={16}
+                color="#60a5fa"
+                style={styles.checkmark}
+              />
             )}
           </View>
         </TouchableOpacity>
@@ -295,7 +352,9 @@ export default function FlowStudyScreen() {
         {/* Children */}
         {isExpanded && hasChildren && (
           <View>
-            {topic.children.map((child: any) => renderTopicItem(child, level + 1))}
+            {topic.children.map((child: any) =>
+              renderTopicItem(child, level + 1)
+            )}
           </View>
         )}
       </View>
@@ -304,7 +363,11 @@ export default function FlowStudyScreen() {
 
   const getCurrentTopic = () => {
     if (!currentTopicId) {
-      return { id: null, name: "No Topic Selected", description: "Please select a topic" };
+      return {
+        id: null,
+        name: "No Topic Selected",
+        description: "Please select a topic",
+      };
     }
 
     // Find topic in the hierarchical structure from database
@@ -320,11 +383,13 @@ export default function FlowStudyScreen() {
     };
 
     // For now, return a basic topic object if not found
-    return findTopicInHierarchy(topics, currentTopicId!) || {
-      id: currentTopicId,
-      name: "Unknown Topic",
-      description: "Topic not found"
-    };
+    return (
+      findTopicInHierarchy(topics, currentTopicId!) || {
+        id: currentTopicId,
+        name: "Unknown Topic",
+        description: "Topic not found",
+      }
+    );
   };
 
   const handleNodePress = (node: LearningNode) => {
@@ -344,42 +409,19 @@ export default function FlowStudyScreen() {
   const handleModalConfirm = () => {
     if (!selectedNode) return;
 
-    // Navigate based on node type
-    switch (selectedNode.type) {
-      case "lesson":
-        router.push({
-          pathname: "/study/lesson",
-          params: {
-            lessonId: selectedNode.id,
-            lessonTitle: selectedNode.title,
-          },
-        });
-        break;
+    // Navigate to node content screen for all node types
+    // The content screen will display the content blocks
+    router.push({
+      pathname: "/study/node-content",
+      params: {
+        nodeId: selectedNode.id,
+        nodeTitle: selectedNode.title,
+        flowId: currentFlowId || "",
+        nodeType: selectedNode.type,
+      },
+    });
 
-      case "quiz":
-        // Find the original node data to get quiz pack info
-        const originalNode = learningNodes.find(n => n.id === selectedNode.id);
-        const quizPackId = originalNode?.config?.quiz_pack_id;
-        
-        router.push({
-          pathname: "/study/take-quiz",
-          params: {
-            quizId: selectedNode.id,
-            quizTitle: selectedNode.title,
-            quizPackId: quizPackId || "",
-            subject: JSON.stringify(parsedSubject),
-          },
-        });
-        break;
-
-      case "project":
-        Alert.alert("Coming Soon", "Project feature coming soon!");
-        break;
-
-      case "milestone":
-        // Milestone doesn't need navigation, just show success
-        break;
-    }
+    setModalVisible(false);
   };
 
   if (!parsedSubject) {
@@ -395,9 +437,7 @@ export default function FlowStudyScreen() {
       <View style={styles.loadingContainer}>
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color="#00d4ff" />
-          <Text style={styles.loadingTitle}>
-            Loading Learning Path...
-          </Text>
+          <Text style={styles.loadingTitle}>Loading Learning Path...</Text>
           <Text style={styles.loadingSubtitle}>
             Preparing your personalized study flow
           </Text>
@@ -416,7 +456,7 @@ export default function FlowStudyScreen() {
         courseProgress={courseProgress}
         onTitlePress={() => setShowTopicSelector(true)}
       />
-      
+
       {selectedNode && (
         <CustomModal
           visible={modalVisible}
@@ -434,7 +474,10 @@ export default function FlowStudyScreen() {
               : "Start"
           }
           cancelText="Cancel"
-          showCancel={selectedNode.status !== "locked" && selectedNode.type !== "milestone"}
+          showCancel={
+            selectedNode.status !== "locked" &&
+            selectedNode.type !== "milestone"
+          }
         />
       )}
 
@@ -449,9 +492,7 @@ export default function FlowStudyScreen() {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <View>
-                <Text style={styles.modalTitle}>
-                  Select Topic
-                </Text>
+                <Text style={styles.modalTitle}>Select Topic</Text>
                 <Text style={styles.modalSubtitle}>
                   Choose a topic to load its learning flow
                 </Text>
@@ -464,7 +505,10 @@ export default function FlowStudyScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={styles.topicsScrollView}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={styles.topicsScrollView}
+            >
               {topics.length > 0 ? (
                 <View style={styles.topicsList}>
                   {/* Hierarchical Topics */}
@@ -491,62 +535,62 @@ export default function FlowStudyScreen() {
 const styles = StyleSheet.create({
   errorContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#0f172a",
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0f172a',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#0f172a",
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
     marginTop: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loadingSubtitle: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 8,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 16,
   },
   modalContainer: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     borderRadius: 16,
     padding: 24,
-    width: '100%',
+    width: "100%",
     maxWidth: 448,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 24,
   },
   modalTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   modalSubtitle: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 4,
   },
@@ -564,31 +608,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   topicItemSelected: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+    backgroundColor: "rgba(59, 130, 246, 0.2)",
   },
   topicItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   expandButton: {
     marginRight: 8,
     width: 16,
     height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   topicContentRow: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   topicName: {
     fontSize: 14,
-    color: '#ffffff',
+    color: "#ffffff",
   },
   topicNameSelected: {
-    color: '#60a5fa',
-    fontWeight: '600',
+    color: "#60a5fa",
+    fontWeight: "600",
   },
   dotLeaders: {
     flex: 1,
@@ -596,7 +640,7 @@ const styles = StyleSheet.create({
   },
   dotLeadersLine: {
     height: 1,
-    backgroundColor: '#6b7280',
+    backgroundColor: "#6b7280",
   },
   statusIndicator: {
     width: 8,
@@ -604,13 +648,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusIndicatorGreen: {
-    backgroundColor: '#10b981',
+    backgroundColor: "#10b981",
   },
   statusIndicatorBlue: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
   },
   statusIndicatorGray: {
-    backgroundColor: '#6b7280',
+    backgroundColor: "#6b7280",
   },
   checkmark: {
     marginLeft: 8,
@@ -618,16 +662,16 @@ const styles = StyleSheet.create({
   emptyState: {
     padding: 16,
     borderRadius: 12,
-    backgroundColor: '#334155',
+    backgroundColor: "#334155",
     marginHorizontal: 8,
   },
   emptyStateTitle: {
-    color: '#ffffff',
-    fontWeight: '600',
+    color: "#ffffff",
+    fontWeight: "600",
     fontSize: 18,
   },
   emptyStateText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
     marginTop: 4,
   },

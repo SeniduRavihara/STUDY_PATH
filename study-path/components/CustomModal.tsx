@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
-ColorValue,
-Modal,
-StyleSheet,
-Text,
-TouchableOpacity,
-TouchableWithoutFeedback,
+  ColorValue,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -17,7 +17,7 @@ interface CustomModalProps {
   title: string;
   description: string;
   estimatedTime?: string;
-  type: "lesson" | "quiz" | "project" | "milestone";
+  type: "lesson" | "quiz" | "project" | "milestone" | "practice";
   onConfirm: () => void;
   confirmText?: string;
   cancelText?: string;
@@ -46,6 +46,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
         return "rocket";
       case "milestone":
         return "trophy";
+      case "practice":
+        return "flash";
       default:
         return "book";
     }
@@ -61,6 +63,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
         return ["#667eea", "#764ba2"];
       case "milestone":
         return ["#FFD700", "#FFA500"];
+      case "practice":
+        return ["#8b5cf6", "#7c3aed"];
       default:
         return ["#667eea", "#764ba2"];
     }
@@ -76,6 +80,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
         return "Project";
       case "milestone":
         return "Milestone";
+      case "practice":
+        return "Practice";
       default:
         return "Content";
     }
@@ -110,9 +116,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
                     />
                   </View>
                   <View style={styles.headerText}>
-                    <Text style={styles.typeTitle}>
-                      {getTypeText()}
-                    </Text>
+                    <Text style={styles.typeTitle}>{getTypeText()}</Text>
                     <Text style={styles.estimatedTime}>
                       {estimatedTime && `Estimated time: ${estimatedTime}`}
                     </Text>
@@ -122,12 +126,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
 
               {/* Content */}
               <View style={styles.contentContainer}>
-                <Text style={styles.title}>
-                  {title}
-                </Text>
-                <Text style={styles.description}>
-                  {description}
-                </Text>
+                <Text style={styles.title}>{title}</Text>
+                <Text style={styles.description}>{description}</Text>
 
                 {/* Action Buttons */}
                 <View style={styles.buttonRow}>

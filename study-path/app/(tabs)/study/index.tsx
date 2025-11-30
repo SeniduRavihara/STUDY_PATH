@@ -10,15 +10,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { useAuth } from "../../../contexts/AuthContext";
 import {
   Subject,
-  SubscriptionService
+  SubscriptionService,
 } from "../../../superbase/services/subscriptionService";
-
-
 
 export default function StudyScreen() {
   const router = useRouter();
@@ -72,7 +70,7 @@ export default function StudyScreen() {
     setTimeout(() => {
       router.push({
         pathname: "/study/flow",
-        params: { subject: JSON.stringify(subject) }
+        params: { subject: JSON.stringify(subject) },
       });
       setNavigatingToFlow(null);
     }, 300);
@@ -83,7 +81,7 @@ export default function StudyScreen() {
     if (parsedSubject) {
       router.replace({
         pathname: "/study/flow",
-        params: { subject: JSON.stringify(parsedSubject) }
+        params: { subject: JSON.stringify(parsedSubject) },
       });
     }
   }, [parsedSubject, router]);
@@ -96,16 +94,11 @@ export default function StudyScreen() {
       }
     >
       {/* Header */}
-      <LinearGradient
-        colors={["#0f0f23", "#1a1a2e"]}
-        style={styles.header}
-      >
+      <LinearGradient colors={["#0f0f23", "#1a1a2e"]} style={styles.header}>
         <View style={styles.headerContent}>
           <View>
             <Text style={styles.headerTitle}>Study Hub</Text>
-            <Text style={styles.headerSubtitle}>
-              Your subscribed subjects
-            </Text>
+            <Text style={styles.headerSubtitle}>Your subscribed subjects</Text>
           </View>
           <TouchableOpacity style={styles.searchButton}>
             <Ionicons name="search" size={24} color="#00d4ff" />
@@ -121,9 +114,7 @@ export default function StudyScreen() {
             onPress={handleSubscribeToSubjects}
             style={styles.addButton}
           >
-            <Text style={styles.addButtonText}>
-              + Add Subject
-            </Text>
+            <Text style={styles.addButtonText}>+ Add Subject</Text>
           </TouchableOpacity>
         </View>
 
@@ -134,9 +125,7 @@ export default function StudyScreen() {
         ) : subscribedSubjects.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="book-outline" size={64} color="#6b7280" />
-            <Text style={styles.emptyTitle}>
-              No Subjects Yet
-            </Text>
+            <Text style={styles.emptyTitle}>No Subjects Yet</Text>
             <Text style={styles.emptyText}>
               Subscribe to subjects to start learning
             </Text>
@@ -163,15 +152,21 @@ export default function StudyScreen() {
                   <View style={styles.loadingOverlay}>
                     <View style={styles.loadingCard}>
                       <ActivityIndicator size="small" color="#00d4ff" />
-                      <Text style={styles.loadingCardText}>
-                        Loading...
-                      </Text>
+                      <Text style={styles.loadingCardText}>Loading...</Text>
                     </View>
                   </View>
                 )}
                 <View style={styles.subjectContent}>
                   <LinearGradient
-                    colors={(subject.color as [ColorValue, ColorValue]) || (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])}
+                    colors={
+                      subject.color &&
+                      Array.isArray(subject.color) &&
+                      subject.color.length === 2 &&
+                      typeof subject.color[0] === "string" &&
+                      typeof subject.color[1] === "string"
+                        ? (subject.color as [ColorValue, ColorValue])
+                        : (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])
+                    }
                     style={styles.iconContainer}
                   >
                     <Ionicons
@@ -183,9 +178,7 @@ export default function StudyScreen() {
 
                   <View style={styles.subjectInfo}>
                     <View style={styles.subjectTitleRow}>
-                      <Text style={styles.subjectTitle}>
-                        {subject.name}
-                      </Text>
+                      <Text style={styles.subjectTitle}>{subject.name}</Text>
                       <View style={styles.difficultyBadge}>
                         <Text style={styles.difficultyText}>
                           {subject.difficulty}
@@ -195,8 +188,8 @@ export default function StudyScreen() {
 
                     <View style={styles.subjectStatsRow}>
                       <Text style={styles.chaptersText}>
-                        {subject.user_progress?.completed_chapters || 0}/{subject.chapters} chapters
-                        completed
+                        {subject.user_progress?.completed_chapters || 0}/
+                        {subject.chapters} chapters completed
                       </Text>
                       <View style={styles.xpContainer}>
                         <Ionicons name="star" size={16} color="#FFD700" />
@@ -208,13 +201,21 @@ export default function StudyScreen() {
 
                     <View style={styles.progressBarContainer}>
                       <LinearGradient
-                      colors={(subject.color as [ColorValue, ColorValue]) || (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])}
-                      style={[
-                      styles.progressBar,
-                      {
-                      width: `${((subject.user_progress?.completed_chapters || 0) / subject.chapters) * 100}%`
-                      }
-                      ]}
+                        colors={
+                          (subject.color as [ColorValue, ColorValue]) ||
+                          (["#3B82F6", "#3B82F6"] as [ColorValue, ColorValue])
+                        }
+                        style={[
+                          styles.progressBar,
+                          {
+                            width: `${
+                              ((subject.user_progress?.completed_chapters ||
+                                0) /
+                                subject.chapters) *
+                              100
+                            }%`,
+                          },
+                        ]}
                       />
                     </View>
 
@@ -244,7 +245,7 @@ export default function StudyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f172a',
+    backgroundColor: "#0f172a",
   },
   header: {
     paddingHorizontal: 24,
@@ -252,21 +253,21 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   headerSubtitle: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 16,
   },
   searchButton: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     padding: 12,
     borderRadius: 9999,
   },
@@ -275,59 +276,59 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   subjectsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   sectionTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   addButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
   },
   addButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   loadingContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 32,
   },
   loadingText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 32,
   },
   emptyTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 16,
   },
   emptyText: {
-    color: '#9ca3af',
-    textAlign: 'center',
+    color: "#9ca3af",
+    textAlign: "center",
     marginTop: 8,
   },
   browseButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: "#2563eb",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 9999,
     marginTop: 16,
   },
   browseButtonText: {
-    color: '#ffffff',
-    fontWeight: '500',
+    color: "#ffffff",
+    fontWeight: "500",
   },
   subjectCard: {
     marginBottom: 16,
@@ -337,32 +338,32 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   loadingOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 10,
   },
   loadingCard: {
-    backgroundColor: '#1e293b',
+    backgroundColor: "#1e293b",
     padding: 16,
     borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   loadingCardText: {
-    color: '#ffffff',
+    color: "#ffffff",
     marginLeft: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   subjectContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   iconContainer: {
     padding: 16,
@@ -373,47 +374,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   subjectTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   subjectTitle: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   difficultyBadge: {
-    backgroundColor: '#334155',
+    backgroundColor: "#334155",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 9999,
   },
   difficultyText: {
-    color: '#d1d5db',
+    color: "#d1d5db",
     fontSize: 12,
   },
   subjectStatsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   chaptersText: {
-    color: '#9ca3af',
+    color: "#9ca3af",
     fontSize: 14,
   },
   xpContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   xpText: {
-    color: '#facc15',
+    color: "#facc15",
     fontSize: 14,
     marginLeft: 4,
   },
   progressBarContainer: {
-    backgroundColor: '#334155',
+    backgroundColor: "#334155",
     borderRadius: 9999,
     height: 8,
   },
@@ -422,12 +423,12 @@ const styles = StyleSheet.create({
     height: 8,
   },
   streakContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginTop: 8,
   },
   streakText: {
-    color: '#f87171',
+    color: "#f87171",
     fontSize: 12,
     marginLeft: 4,
   },

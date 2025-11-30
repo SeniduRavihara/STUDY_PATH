@@ -51,6 +51,9 @@ export default function SubscribeScreen() {
     try {
       const subjects = await SubscriptionService.getAvailableSubjects(user.id);
       setAllSubjects(subjects);
+
+      console.log("SENIDUU", subjects.length);
+      
     } catch {
       console.error("Error loading subjects");
       Alert.alert("Error", "Failed to load subjects. Please try again.");

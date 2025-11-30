@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import React, { useState } from "react";
 import {
-Animated,
-ColorValue,
-Dimensions,
-ScrollView,
-StyleSheet,
-Text,
-TouchableOpacity,
+  Animated,
+  ColorValue,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -19,7 +19,7 @@ const { width: screenWidth } = Dimensions.get("window");
 export interface LearningNode {
   id: string;
   title: string;
-  type: "lesson" | "quiz" | "project" | "milestone";
+  type: "lesson" | "quiz" | "project" | "milestone" | "practice";
   status: "locked" | "available" | "completed" | "current";
   difficulty: "easy" | "medium" | "hard";
   xp: number;
@@ -28,6 +28,8 @@ export interface LearningNode {
   color: [string, string];
   description?: string;
   estimatedTime?: string;
+  is_practice_node?: boolean;
+  optional_position?: number;
   config?: {
     quiz_pack_id?: string;
     [key: string]: any;
@@ -50,13 +52,22 @@ interface LearningFlowPathProps {
 
 // 3-Column Grid System Configuration
 const FLOW_CONFIG = {
-  nodeSpacing: 140,
-  leftColumnX: 0.2,
+  nodeSpacing: 160, // Match web's increased spacing
+  leftColumnX: 0.25, // Adjusted to match web's 0.3 proportion
   centerColumnX: 0.5,
-  rightColumnX: 0.8,
+  rightColumnX: 0.75, // Adjusted to match web's 0.7 proportion
   startY: 100,
-  nodeSize: 110,
+  nodeSize: 100, // Match web's node size
   connectionOffset: 25,
+};
+
+// Optional practice node configuration
+const OPTIONAL_NODE_CONFIG = {
+  width: 90, // Slightly smaller than regular nodes
+  height: 90,
+  borderRadius: 20,
+  backgroundColor: "#4c4563", // Darker purple/gray color from web
+  iconColor: "#ffffff",
 };
 
 // 3-Column Grid Flow Pattern (Center acts as transition hub)
@@ -186,7 +197,7 @@ const createVerticalFlowPath = (
 
   let path: string;
 
-  const cornerRadius = 8;
+  const cornerRadius = 30; // Match web's larger corner radius (30px)
 
   if (currentPos === "center" && nextPos === "right") {
     const cornerX = end.x - cornerRadius;
@@ -317,13 +328,13 @@ const LearningNodeComponent: React.FC<{
   const getNodeColor = (): [ColorValue, ColorValue] => {
     switch (node.status) {
       case "completed":
-        return ["#10b981", "#059669"];
+        return ["#a78bfa", "#8b5cf6"]; // Softer purple for completed (match web)
       case "current":
-        return ["#8b5cf6", "#7c3aed"];
+        return ["#a78bfa", "#8b5cf6"]; // Softer purple for current (match web)
       case "locked":
-        return ["#6b7280", "#4b5563"];
+        return ["#6b7280", "#4b5563"]; // Dark gray for locked
       default:
-        return node.color as [ColorValue, ColorValue];
+        return ["#a78bfa", "#8b5cf6"]; // Softer purple gradient (match web)
     }
   };
 
@@ -436,8 +447,39 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
   courseProgress,
   onTitlePress,
 }) => {
-  const flowNodes = generateVerticalFlowPositions(nodes);
+  // Separate regular nodes and practice nodes
+  const regularNodes = nodes.filter((node) => !node.is_practice_node);
+  const practiceNodes = nodes.filter((node) => node.is_practice_node);
+
+  const flowNodes = generateVerticalFlowPositions(regularNodes);
   const verticalPaths = generateVerticalFlowPaths(flowNodes);
+
+  // Calculate position for optional practice nodes (between nodes at positions like 1-3, 3-5, etc.)
+  const getOptionalNodePosition = (
+    optionalPosition: number // 1-based: 1 = between nodes 1-3, 2 = between nodes 3-5, etc.
+  ): { x: number; y: number } | null => {
+    // Convert 1-based optional_position to 0-based node indices
+    const beforeNodeIndex = (optionalPosition - 1) * 2;
+    const afterNodeIndex = (optionalPosition - 1) * 2 + 2;
+
+    if (
+      beforeNodeIndex >= flowNodes.length ||
+      afterNodeIndex >= flowNodes.length
+    ) {
+      return null;
+    }
+
+    const beforeNode = flowNodes[beforeNodeIndex];
+    const afterNode = flowNodes[afterNodeIndex];
+
+    // Position in center, between the two nodes
+    const y =
+      ((beforeNode.position?.y || 0) + (afterNode.position?.y || 0)) / 2;
+    const { width: screenWidth } = Dimensions.get("window");
+    const x = screenWidth * FLOW_CONFIG.centerColumnX; // Always in center
+
+    return { x, y };
+  };
 
   const totalContentHeight =
     flowNodes.length > 0
@@ -575,10 +617,10 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
               <Path
                 key={index}
                 d={path}
-                stroke="#666666"
-                strokeWidth="6"
+                stroke="#8b5cf6"
+                strokeWidth="8"
                 fill="none"
-                opacity={0.8}
+                opacity={0.6}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -594,6 +636,71 @@ export const LearningFlowPath: React.FC<LearningFlowPathProps> = ({
               index={index}
             />
           ))}
+
+          {/* Optional Practice Nodes */}
+          {flowNodes.length > 2 &&
+            Array.from({ length: Math.floor(flowNodes.length / 2) }).map(
+              (_, index) => {
+                const optionalPosition = index + 1; // Convert to 1-based (1, 2, 3, ...)
+                const position = getOptionalNodePosition(optionalPosition);
+                if (!position) return null;
+
+                // Find practice node at this optional_position (1-based)
+                const practiceNode = practiceNodes.find(
+                  (node) => node.optional_position === optionalPosition
+                );
+
+                if (practiceNode) {
+                  // Render practice node
+                  return (
+                    <Animated.View
+                      key={`practice-${optionalPosition}`}
+                      style={[
+                        styles.nodeContainer,
+                        {
+                          left: position.x - OPTIONAL_NODE_CONFIG.width / 2,
+                          top: position.y - OPTIONAL_NODE_CONFIG.height / 2,
+                        },
+                      ]}
+                    >
+                      <TouchableOpacity
+                        onPress={() => onNodePress(practiceNode)}
+                        activeOpacity={0.8}
+                      >
+                        <View
+                          style={[
+                            styles.practiceNode,
+                            {
+                              width: OPTIONAL_NODE_CONFIG.width,
+                              height: OPTIONAL_NODE_CONFIG.height,
+                              borderRadius: OPTIONAL_NODE_CONFIG.borderRadius,
+                              backgroundColor:
+                                OPTIONAL_NODE_CONFIG.backgroundColor,
+                            },
+                          ]}
+                        >
+                          <Ionicons
+                            name="flash"
+                            size={36}
+                            color={OPTIONAL_NODE_CONFIG.iconColor}
+                          />
+                        </View>
+
+                        {/* Practice Node Label */}
+                        <View style={styles.nodeLabelContainer}>
+                          <Text style={styles.practiceNodeTitle}>
+                            {practiceNode.title}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  );
+                }
+
+                // No practice node at this position - could render + button here if needed
+                return null;
+              }
+            )}
         </View>
       </ScrollView>
 
@@ -750,7 +857,7 @@ const styles = StyleSheet.create({
   nodeGradient: {
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 16,
+    borderRadius: 24, // Match web's larger border radius for rounded square look
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -787,6 +894,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  practiceNode: {
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#4c4563",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  practiceNodeTitle: {
+    textAlign: "center",
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#9ca3af",
   },
   bottomPanel: {
     position: "absolute",

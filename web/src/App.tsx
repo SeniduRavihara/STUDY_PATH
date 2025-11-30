@@ -8,7 +8,7 @@ import {
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./components/pages/Dashboard";
 import DatabaseOverview from "./components/pages/DatabaseOverview";
-// import FeedPostManager from "./components/pages/FeedPostManager";
+import FeedPostManager from "./components/pages/FeedPostManager";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ModalProvider } from "./contexts/ModalContext";
 import { SidebarProvider } from "./contexts/SidebarContext";
@@ -86,9 +86,9 @@ const AdminRoutes: React.FC = () => {
               </div>
             }
           />
-          {/* <Route path="/mcqs" element={<MCQManager />} />
+          {/* <Route path="/mcqs" element={<MCQManager />} /> */}
           <Route path="/feed-posts" element={<FeedPostManager />} />
-          <Route path="/quiz-packs" element={<QuizPackManager />} />
+          {/* <Route path="/quiz-packs" element={<QuizPackManager />} />
           <Route path="/quiz-pack/:quizPackId" element={<QuizPackDetail />} />
           <Route path="/study-packs" element={<StudyPackManager />} /> */}
           <Route

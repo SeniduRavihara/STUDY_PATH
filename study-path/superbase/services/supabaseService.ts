@@ -371,7 +371,7 @@ export class SupabaseService {
   }
 
   // ===== FLOWS =====
-  
+
   static async getFlowsByTopic(topicId: string) {
     const { data, error } = await supabase
       .from("flows")
@@ -379,7 +379,7 @@ export class SupabaseService {
       .eq("topic_id", topicId)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
-    
+
     return { data, error };
   }
 
@@ -395,11 +395,11 @@ export class SupabaseService {
         topic_id: flowData.topicId,
         name: flowData.name,
         description: flowData.description,
-        created_by: flowData.createdBy
+        created_by: flowData.createdBy,
       })
       .select()
       .single();
-    
+
     return { data, error };
   }
 
@@ -410,21 +410,18 @@ export class SupabaseService {
       .eq("id", flowId)
       .select()
       .single();
-    
+
     return { data, error };
   }
 
   static async deleteFlow(flowId: string) {
-    const { error } = await supabase
-      .from("flows")
-      .delete()
-      .eq("id", flowId);
-    
+    const { error } = await supabase.from("flows").delete().eq("id", flowId);
+
     return { error };
   }
 
   // ===== FLOW NODES =====
-  
+
   static async getFlowNodes(flowId: string) {
     const { data, error } = await supabase
       .from("flow_nodes")
@@ -432,7 +429,7 @@ export class SupabaseService {
       .eq("flow_id", flowId)
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
-    
+
     return { data, error };
   }
 
@@ -442,13 +439,13 @@ export class SupabaseService {
       .from("flow_nodes")
       .delete()
       .eq("flow_id", flowId);
-    
+
     if (deleteError) {
       return { error: deleteError };
     }
 
     // Insert new nodes
-    const flowNodes = nodes.map(node => ({
+    const flowNodes = nodes.map((node) => ({
       flow_id: flowId,
       node_type: node.type,
       title: node.title,
@@ -460,13 +457,13 @@ export class SupabaseService {
       difficulty: node.difficulty || "medium",
       estimated_time: parseInt(node.estimatedTime?.replace(" min", "") || "5"),
       content_data: node.config || {},
-      connections: node.connections || []
+      connections: node.connections || [],
     }));
 
     const { error: insertError } = await supabase
       .from("flow_nodes")
       .insert(flowNodes);
-    
+
     return { error: insertError };
   }
 
@@ -477,33 +474,48 @@ export class SupabaseService {
       .select("*")
       .eq("id", flowId)
       .single();
-    
+
     if (flowError) {
       return { data: null, error: flowError };
     }
-    
+
     if (!flow) {
       return { data: null, error: null };
     }
-    
+
     // Get flow nodes
     const { data: nodes, error: nodesError } = await this.getFlowNodes(flowId);
-    
+
     if (nodesError) {
       return { data: null, error: nodesError };
     }
-    
-    return { 
+
+    return {
       data: {
         ...flow,
-        nodes: nodes || []
-      }, 
-      error: null 
+        nodes: nodes || [],
+      },
+      error: null,
     };
   }
 
+  static async getFlowNodeById(nodeId: string) {
+    const { data, error } = await supabase
+      .from("flow_nodes")
+      .select("*")
+      .eq("id", nodeId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching flow node:", error);
+      return { data: null, error };
+    }
+
+    return { data, error: null };
+  }
+
   // ===== TOPICS =====
-  
+
   static async getTopicsBySubject(subjectId: string) {
     const { data, error } = await supabase
       .from("topics")
@@ -512,15 +524,15 @@ export class SupabaseService {
       .eq("is_active", true)
       .order("level", { ascending: true })
       .order("sort_order", { ascending: true });
-    
+
     if (error) {
-      console.error('Error fetching topics:', error);
+      console.error("Error fetching topics:", error);
       return { data: null, error };
     }
-    
+
     // Convert flat array to hierarchical structure (same as web app)
     const hierarchicalTopics = this.buildTopicHierarchy(data || []);
-    
+
     return { data: hierarchicalTopics, error: null };
   }
 
@@ -528,16 +540,16 @@ export class SupabaseService {
   private static buildTopicHierarchy(topics: any[]): any[] {
     const topicMap = new Map<string, any>();
     const rootTopics: any[] = [];
-    
+
     // Create map of all topics
-    topics.forEach(topic => {
+    topics.forEach((topic) => {
       topicMap.set(topic.id, { ...topic, children: [] });
     });
-    
+
     // Build hierarchy
-    topics.forEach(topic => {
+    topics.forEach((topic) => {
       const topicWithChildren = topicMap.get(topic.id)!;
-      
+
       if (topic.parent_id) {
         const parent = topicMap.get(topic.parent_id);
         if (parent) {
@@ -547,23 +559,25 @@ export class SupabaseService {
         rootTopics.push(topicWithChildren);
       }
     });
-    
+
     return rootTopics;
   }
 
   // ===== USER SUBSCRIPTIONS =====
-  
+
   static async getUserSubscriptions(userId: string) {
-    const { data, error } = await supabase
-      .rpc('get_user_subscribed_subjects', { user_uuid: userId });
-    
+    const { data, error } = await supabase.rpc("get_user_subscribed_subjects", {
+      user_uuid: userId,
+    });
+
     return { data, error };
   }
 
   static async getAvailableSubjects(userId: string) {
-    const { data, error } = await supabase
-      .rpc('get_available_subjects', { user_uuid: userId });
-    
+    const { data, error } = await supabase.rpc("get_available_subjects", {
+      user_uuid: userId,
+    });
+
     return { data, error };
   }
 
@@ -573,11 +587,11 @@ export class SupabaseService {
       .insert({
         user_id: userId,
         subject_id: subjectId,
-        is_active: true
+        is_active: true,
       })
       .select()
       .single();
-    
+
     return { data, error };
   }
 
@@ -587,17 +601,21 @@ export class SupabaseService {
       .update({ is_active: false })
       .eq("user_id", userId)
       .eq("subject_id", subjectId);
-    
+
     return { error };
   }
 
-  static async updateSubscriptionProgress(userId: string, subjectId: string, updates: {
-    progress_percentage?: number;
-    last_accessed_at?: string;
-    total_time_spent?: number;
-    completed_topics?: number;
-    total_topics?: number;
-  }) {
+  static async updateSubscriptionProgress(
+    userId: string,
+    subjectId: string,
+    updates: {
+      progress_percentage?: number;
+      last_accessed_at?: string;
+      total_time_spent?: number;
+      completed_topics?: number;
+      total_topics?: number;
+    }
+  ) {
     const { data, error } = await supabase
       .from("user_subscriptions")
       .update(updates)
@@ -605,7 +623,7 @@ export class SupabaseService {
       .eq("subject_id", subjectId)
       .select()
       .single();
-    
+
     return { data, error };
   }
 
@@ -617,7 +635,7 @@ export class SupabaseService {
       .eq("subject_id", subjectId)
       .eq("is_active", true)
       .maybeSingle();
-    
+
     return { data, error };
   }
 }
